@@ -17,7 +17,9 @@
 #include<readline/readline.h>
 
 
+int esUnaRequestValida(char* request, char* parametro);
 int esUnaRequestYCual(char* palabra);
+int esUnParametroValido(int request, char* parametro);
 
 
 #include "requests.h"
