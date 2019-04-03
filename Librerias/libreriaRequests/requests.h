@@ -9,6 +9,10 @@
 #define JOURNAL 5
 #define ADD 6
 
+#define SC 0
+#define SHC 1
+#define EC 2
+
 #include<stdio.h>
 #include<stdlib.h>
 #include<commons/log.h>
@@ -18,8 +22,9 @@
 
 
 int esUnaRequestValida(char* request, char* parametro);
-int esUnaRequestYCual(char* palabra);
+int queRequestEs(char* palabra);
 int esUnParametroValido(int request, char* parametro);
+int queConsistenciaEs(char* string);
 
 
 #include "requests.h"

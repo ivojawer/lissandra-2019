@@ -3,13 +3,40 @@
 char *palabrasReservadas[7] = { "SELECT", "INSERT", "CREATE", "DESCRIBE",
 		"DROP", "JOURNAL", "ADD" }; //Las palabras estan ordenadas de forma tal que coincide su indice con su macro
 
-int esUnaRequestYCual(char* palabra) {
+int queRequestEs(char* palabra) {
 
 	for (int i = 0; i < 7; i++) {
 
 		if (!strcmp(palabra, palabrasReservadas[i])) {
 			return i;
 		}
+	}
+	return -1;
+}
+
+int esUnNumero(char* string) {
+	if (!atoi(string) && strcmp(string, "0")) {
+		return 0;
+	}
+	return 1;
+}
+
+int queConsistenciaEs(char* string)
+
+{
+	if (!strcmp(string, "SC"))
+	{
+		return SC;
+	}
+
+	if (!strcmp(string, "SHC"))
+	{
+		return SHC;
+	}
+
+	if(!strcmp(string, "EC"))
+	{
+		return EC;
 	}
 	return -1;
 }
@@ -35,7 +62,7 @@ int esUnParametroValido(int request, char* parametro) {
 				resultado = 0;
 			}
 
-			else if (!atoi(parametros[1]) && strcmp(parametros[1], "0")) //El segundo parametro es un int?
+			else if (esUnNumero(parametros[1])) //El segundo parametro es un int?
 					{
 				resultado = 0;
 			}
@@ -68,7 +95,7 @@ int esUnParametroValido(int request, char* parametro) {
 				resultado = 0;
 			}
 
-			else if (!atoi(parametros[1]) && strcmp(parametros[1], "0")) //El segundo parametro es un int?
+			else if (esUnNumero(parametros[1])) //El segundo parametro es un int?
 					{
 				resultado = 0;
 			}
@@ -81,7 +108,7 @@ int esUnParametroValido(int request, char* parametro) {
 
 			else if (parametros[3] != 0) //Si el cuarto parametro existe...
 					{
-				if (!atoi(parametros[3]) && strcmp(parametros[3], "0")) //Es un int?
+				if (esUnNumero(parametros[3])) //Es un int?
 						{
 					return 0; //TODO: Preguntar si un timestamp puede ser invalido
 				}
@@ -113,18 +140,17 @@ int esUnParametroValido(int request, char* parametro) {
 				resultado = 0;
 			}
 
-			else if (strcmp(parametros[1], "SC") && strcmp(parametros[1], "SHC")
-					&& strcmp(parametros[1], "EC")) //El segundo parametro una de las consistencias?
+			else if (!queConsistenciaEs(parametros[1])+1) //El segundo parametro una de las consistencias?
 							{
 				resultado = 0;
 			}
 
-			else if (!atoi(parametros[2]) && strcmp(parametros[2], "0")) //El tercer parametro es un int?
+			else if (esUnNumero(parametros[2])) //El tercer parametro es un int?
 					{
 				resultado = 0;
 			}
 
-			else if (!atoi(parametros[3]) && strcmp(parametros[3], "0")) //El cuarto parametro es un int?
+			else if (esUnNumero(parametros[3])) //El cuarto parametro es un int?
 					{
 				resultado = 0;
 			}
@@ -183,7 +209,7 @@ int esUnParametroValido(int request, char* parametro) {
 				resultado = 0;
 			}
 
-			else if (!atoi(parametros[1]) && strcmp(parametros[1], "0")) //El segundo parametro es un int?
+			else if (esUnNumero(parametros[1])) //El segundo parametro es un int?
 					{
 				resultado = 0;
 			} else if (strcmp(parametros[2], "TO")) //El tercer parametro es "TO"?
@@ -191,8 +217,7 @@ int esUnParametroValido(int request, char* parametro) {
 				resultado = 0;
 			}
 
-			else if (strcmp(parametros[3], "SC") && strcmp(parametros[3], "SHC")
-					&& strcmp(parametros[3], "EC")) //El cuarto parametro una de las consistencias?
+			else if (!queConsistenciaEs(parametros[3])+1) //El cuarto parametro una de las consistencias?
 							{
 				resultado = 0;
 			}
@@ -213,9 +238,10 @@ int esUnParametroValido(int request, char* parametro) {
 	}
 	return -1;
 }
+
 int esUnaRequestValida(char* request, char* parametro) {
 
-	int requestEnInt = esUnaRequestYCual(request);
+	int requestEnInt = queRequestEs(request);
 
 	if (requestEnInt == -1) { //No es una request
 		return 0;
