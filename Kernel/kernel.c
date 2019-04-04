@@ -11,7 +11,7 @@ int main() {
 	char* requestEnString = requestYParametros[0];
 	char* parametros = requestYParametros[1];
 
-	int requestEnInt = esUnaRequestYCual(requestEnString);
+	int requestEnInt = queRequestEs(requestEnString);
 
 	if (!( requestEnInt + 1)) //El +1 es para que tome el -1 como 0 y el request 0 como 1
 	{
