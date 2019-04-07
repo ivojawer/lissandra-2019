@@ -8,6 +8,7 @@
 #define DROP 4
 #define JOURNAL 5
 #define ADD 6
+#define RUN 7
 
 #define SC 0
 #define SHC 1

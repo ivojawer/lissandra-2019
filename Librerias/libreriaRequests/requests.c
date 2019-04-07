@@ -1,11 +1,11 @@
 #include "requests.h"
 
-char *palabrasReservadas[7] = { "SELECT", "INSERT", "CREATE", "DESCRIBE",
-		"DROP", "JOURNAL", "ADD" }; //Las palabras estan ordenadas de forma tal que coincide su indice con su macro
+char *palabrasReservadas[8] = { "SELECT", "INSERT", "CREATE", "DESCRIBE",
+		"DROP", "JOURNAL", "ADD", "RUN" }; //Las palabras estan ordenadas de forma tal que coincide su indice con su macro
 
 int queRequestEs(char* palabra) {
 
-	for (int i = 0; i < 7; i++) {
+	for (int i = 0; i < 8; i++) {
 
 		if (!strcmp(palabra, palabrasReservadas[i])) {
 			return i;
@@ -24,18 +24,15 @@ int esUnNumero(char* string) {
 int queConsistenciaEs(char* string)
 
 {
-	if (!strcmp(string, "SC"))
-	{
+	if (!strcmp(string, "SC")) {
 		return SC;
 	}
 
-	if (!strcmp(string, "SHC"))
-	{
+	if (!strcmp(string, "SHC")) {
 		return SHC;
 	}
 
-	if(!strcmp(string, "EC"))
-	{
+	if (!strcmp(string, "EC")) {
 		return EC;
 	}
 	return -1;
@@ -81,7 +78,7 @@ int esUnParametroValido(int request, char* parametro) {
 
 	case INSERT: //INSERT [NOMBRE_TABLA] [KEY] “[VALUE]” [Timestamp]
 
-		; //TODO: Pensar que onda con los timestamps y checkear si esta todo bien con ese tema
+		;
 
 		//IMPORTANTE: el timestamp es opcional en el FS y ¿no se pone en el kernel y memoria? (preguntar esto)
 		{
@@ -110,7 +107,7 @@ int esUnParametroValido(int request, char* parametro) {
 					{
 				if (esUnNumero(parametros[3])) //Es un int?
 						{
-					return 0; //TODO: Preguntar si un timestamp puede ser invalido
+					return 0;
 				}
 			}
 
@@ -128,7 +125,6 @@ int esUnParametroValido(int request, char* parametro) {
 	case CREATE:
 		; //CREATE [NOMBRE_TABLA] [TIPO_CONSISTENCIA] [NUMERO_PARTICIONES] [COMPACTION_TIME]
 
-		//TODO: Preguntar si el numero de particiones y el compaction time pueden ser 0
 		{
 
 			char**parametros = string_n_split(parametro, 4, " "); //Se separa en 4 parametros
@@ -140,8 +136,8 @@ int esUnParametroValido(int request, char* parametro) {
 				resultado = 0;
 			}
 
-			else if (!queConsistenciaEs(parametros[1])+1) //El segundo parametro una de las consistencias?
-							{
+			else if (!queConsistenciaEs(parametros[1]) + 1) //El segundo parametro una de las consistencias?
+					{
 				resultado = 0;
 			}
 
@@ -217,8 +213,8 @@ int esUnParametroValido(int request, char* parametro) {
 				resultado = 0;
 			}
 
-			else if (!queConsistenciaEs(parametros[3])+1) //El cuarto parametro una de las consistencias?
-							{
+			else if (!queConsistenciaEs(parametros[3]) + 1) //El cuarto parametro una de las consistencias?
+					{
 				resultado = 0;
 			}
 
@@ -233,6 +229,18 @@ int esUnParametroValido(int request, char* parametro) {
 			free(parametros);
 
 			return resultado;
+		}
+
+	case RUN: // RUN [path]
+		;
+		{
+			if (parametro == 0) { //Hay un parametro?
+
+				return 0;
+
+			}
+
+			return 1;
 		}
 
 	}
