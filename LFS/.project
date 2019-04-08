@@ -3,6 +3,7 @@
 	<name>LFS</name>
 	<comment></comment>
 	<projects>
+		<project>libreriaRequests</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
