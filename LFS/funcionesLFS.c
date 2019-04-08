@@ -1,7 +1,8 @@
 #include "funcionesLFS.h"
 
-void mandarAEjecutarRequest(int request, char* parametros) {
+void mandarAEjecutarRequest(int request, char* parametrosOriginal) {
 
+	char * parametros = string_duplicate(parametrosOriginal); //Esto es para que se pueda hacer un free() en consola.c sin que rompa
 
 	switch (request) {
 	case SELECT:
@@ -81,10 +82,10 @@ void insert(char* parametros) {
 
 void create(char* parametros) {
 
+
 }
 
 void describe(char* parametro) {
-
 
 }
 
