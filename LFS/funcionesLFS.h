@@ -12,6 +12,7 @@
 #include <unistd.h>
 
 void consola();
+void conexiones();
 void mandarAEjecutarRequest(int request, char* parametros);
 void Select(char* parametros);
 void insert(char* parametros);

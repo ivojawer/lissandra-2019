@@ -6,7 +6,13 @@ void consola() {
 
 	{
 
-		char* lectura = readline("--> "); //TODO: Rompe si no se ingresa nada
+		char* lectura = readline("--> ");
+
+		if (string_is_empty(lectura)) {
+			printf("No es una request valida, vuelva prontos \n");
+			free(lectura);
+			continue;
+		}
 
 		char** requestYParametros = string_n_split(lectura, 2, " ");
 
@@ -25,6 +31,12 @@ void consola() {
 
 			continue;
 		}
+
+		if (requestYParametros[1] == NULL) { //Para que no rompa en el string_duplicate de funcionesLFS.c
+			requestYParametros[1] = (char *) malloc(sizeof(" "));
+			strcpy(requestYParametros[1], " ");
+		}
+
 		mandarAEjecutarRequest(requestEnInt, requestYParametros[1]);
 
 		free(requestYParametros[1]);

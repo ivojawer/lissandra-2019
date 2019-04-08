@@ -2,7 +2,7 @@
 
 void mandarAEjecutarRequest(int request, char* parametrosOriginal) {
 
-	char * parametros = string_duplicate(parametrosOriginal); //Esto es para que se pueda hacer un free() en consola.c sin que rompa
+	char* parametros = string_duplicate(parametrosOriginal); //Esto es para que se pueda hacer un free() en consola.c sin que rompa
 
 	switch (request) {
 	case SELECT:
@@ -74,18 +74,54 @@ void mandarAEjecutarRequest(int request, char* parametrosOriginal) {
 
 void Select(char* parametros) {
 
+	char** parametrosEnVector = string_n_split(parametros, 2, " ");
+
+	char* tabla = parametrosEnVector[0];
+	int key = atoi(parametrosEnVector[1]);
+
+	free(parametrosEnVector[1]);
+	free(parametrosEnVector[0]);
+	free(parametrosEnVector);
+
 }
 
 void insert(char* parametros) {
+
+	char** parametrosEnVector = string_n_split(parametros, 4, " ");
+
+	char* tabla = parametrosEnVector[0];
+	int key = atoi(parametrosEnVector[1]);
+
+	char* value = parametrosEnVector[2]; //TODO: Sacarle las comillas
+
+	int timestamp = atoi(parametrosEnVector[3]);
 
 }
 
 void create(char* parametros) {
 
+	char** parametrosEnVector = string_n_split(parametros, 4, " ");
+
+	char* tabla = parametrosEnVector[0];
+	char* consistencia = parametrosEnVector[1];
+	int particiones = atoi(parametrosEnVector[2]);
+	int tiempoCompactacion = atoi(parametrosEnVector[3]);
+
+	free(parametrosEnVector[3]);
+	free(parametrosEnVector[2]);
+	free(parametrosEnVector[1]);
+	free(parametrosEnVector[0]);
+	free(parametrosEnVector);
 
 }
 
 void describe(char* parametro) {
+
+	if (strcmp(parametro, " ")) //Si hay un parametro
+			{
+
+		return;
+	}
 
 }
 

@@ -54,12 +54,12 @@ int esUnParametroValido(int request, char* parametro) {
 
 			int resultado = 1;
 
-			if (parametros[0] == 0 || parametros[1] == 0) //Hay 2 parametros no vacios?
+			if (parametros[0] == NULL || parametros[1] == NULL) //Hay 2 parametros no vacios?
 					{
 				resultado = 0;
 			}
 
-			else if (esUnNumero(parametros[1])) //El segundo parametro es un int?
+			else if (!esUnNumero(parametros[1])) //El segundo parametro es un int?
 					{
 				resultado = 0;
 			}
@@ -80,19 +80,20 @@ int esUnParametroValido(int request, char* parametro) {
 
 		;
 
-		//IMPORTANTE: el timestamp es opcional en el FS y ¿no se pone en el kernel y memoria? (preguntar esto)
+		//TODO: ver que el value puede tener espacios adentro y eso corta el split
+		//TODO: el timestamp es opcional en el FS y ¿no se pone en el kernel y memoria? (preguntar esto)
 		{
 
 			char**parametros = string_n_split(parametro, 4, " "); //Se separa en 4 parametros
 
 			int resultado = 1;
 
-			if (parametros[0] == 0 //Hay 3 parametros seguidos no vacios? (El cuarto es opcional, puede ser vacio)
-			|| parametros[1] == 0 || parametros[2] == 0) {
+			if (parametros[0] == NULL //Hay 3 parametros seguidos no vacios? (El cuarto es opcional, puede ser vacio)
+			|| parametros[1] == NULL || parametros[2] == NULL) {
 				resultado = 0;
 			}
 
-			else if (esUnNumero(parametros[1])) //El segundo parametro es un int?
+			else if (!esUnNumero(parametros[1])) //El segundo parametro es un int?
 					{
 				resultado = 0;
 			}
@@ -103,9 +104,9 @@ int esUnParametroValido(int request, char* parametro) {
 				resultado = 0;
 			}
 
-			else if (parametros[3] != 0) //Si el cuarto parametro existe...
+			else if (parametros[3] != NULL) //Si el cuarto parametro existe...
 					{
-				if (esUnNumero(parametros[3])) //Es un int?
+				if (!esUnNumero(parametros[3])) //Es un int?
 						{
 					return 0;
 				}
@@ -131,8 +132,8 @@ int esUnParametroValido(int request, char* parametro) {
 
 			int resultado = 1;
 
-			if (parametros[0] == 0 //Hay 4 parametros no vacios?
-			|| parametros[1] == 0 || parametros[2] == 0 || parametros[3] == 0) {
+			if (parametros[0] == NULL //Hay 4 parametros no vacios?
+			|| parametros[1] == NULL || parametros[2] == NULL || parametros[3] == NULL) {
 				resultado = 0;
 			}
 
@@ -141,12 +142,12 @@ int esUnParametroValido(int request, char* parametro) {
 				resultado = 0;
 			}
 
-			else if (esUnNumero(parametros[2])) //El tercer parametro es un int?
+			else if (!esUnNumero(parametros[2])) //El tercer parametro es un int?
 					{
 				resultado = 0;
 			}
 
-			else if (esUnNumero(parametros[3])) //El cuarto parametro es un int?
+			else if (!esUnNumero(parametros[3])) //El cuarto parametro es un int?
 					{
 				resultado = 0;
 			}
@@ -195,8 +196,8 @@ int esUnParametroValido(int request, char* parametro) {
 
 			int resultado = 1;
 
-			if (parametros[0] == 0 //Hay 4 parametros no vacios?
-			|| parametros[1] == 0 || parametros[2] == 0 || parametros[3] == 0) {
+			if (parametros[0] == NULL //Hay 4 parametros no vacios?
+			|| parametros[1] == NULL || parametros[2] == NULL || parametros[3] == NULL) {
 				resultado = 0;
 			}
 
@@ -205,7 +206,7 @@ int esUnParametroValido(int request, char* parametro) {
 				resultado = 0;
 			}
 
-			else if (esUnNumero(parametros[1])) //El segundo parametro es un int?
+			else if (!esUnNumero(parametros[1])) //El segundo parametro es un int?
 					{
 				resultado = 0;
 			} else if (strcmp(parametros[2], "TO")) //El tercer parametro es "TO"?
