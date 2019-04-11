@@ -10,6 +10,7 @@
 #include <pthread.h>
 #include "requests.h"
 #include <unistd.h>
+#include <commons/collections/list.h>
 
 void consola();
 void conexiones();

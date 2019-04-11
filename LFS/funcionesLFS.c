@@ -1,5 +1,8 @@
 #include "funcionesLFS.h"
 
+extern t_list* listaDeNombreDeTablas;
+extern t_log* logger;
+
 void mandarAEjecutarRequest(int request, char* parametrosOriginal) {
 
 	char* parametros = string_duplicate(parametrosOriginal); //Esto es para que se pueda hacer un free() en consola.c sin que rompa
@@ -72,6 +75,21 @@ void mandarAEjecutarRequest(int request, char* parametrosOriginal) {
 	}
 }
 
+int tablaYaExiste(char* nombreTabla)
+{
+	string_capitalized(nombreTabla); //El nombre tiene que estar en mayuscula
+
+	for (int i = 0; i < list_size(listaDeNombreDeTablas); i++ )
+	{
+		if (!strcmp(nombreTabla, list_get(listaDeNombreDeTablas,i)))
+		{
+			return 1;
+		}
+	}
+
+	return 0;
+}
+
 void Select(char* parametros) {
 
 	char** parametrosEnVector = string_n_split(parametros, 2, " ");
@@ -102,10 +120,21 @@ void create(char* parametros) {
 
 	char** parametrosEnVector = string_n_split(parametros, 4, " ");
 
-	char* tabla = parametrosEnVector[0];
+	char* tabla = string_duplicate(parametrosEnVector[0]);
 	char* consistencia = parametrosEnVector[1];
 	int particiones = atoi(parametrosEnVector[2]);
-	int tiempoCompactacion = atoi(parametrosEnVector[3]);
+	char* tiempoCompactacion = parametrosEnVector[3];
+
+	if(tablaYaExiste(tabla))
+	{
+		log_error(logger,"%s%s%s","La tabla ", tabla, " ya existe.");
+		return;
+	}
+
+	list_add(listaDeNombreDeTablas, tabla);
+
+
+
 
 	free(parametrosEnVector[3]);
 	free(parametrosEnVector[2]);

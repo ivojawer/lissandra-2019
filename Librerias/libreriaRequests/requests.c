@@ -137,7 +137,7 @@ int esUnParametroValido(int request, char* parametro) {
 				resultado = 0;
 			}
 
-			else if (!queConsistenciaEs(parametros[1]) + 1) //El segundo parametro una de las consistencias?
+			else if (queConsistenciaEs(parametros[1]) == -1) //El segundo parametro una de las consistencias?
 					{
 				resultado = 0;
 			}

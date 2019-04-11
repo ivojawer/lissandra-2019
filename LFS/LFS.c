@@ -2,6 +2,7 @@
 
 t_config*config;
 t_log* logger;
+t_list* listaDeNombreDeTablas;
 
 int main() {
 
