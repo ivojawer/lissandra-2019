@@ -77,7 +77,8 @@ void mandarAEjecutarRequest(int request, char* parametrosOriginal) {
 
 int tablaYaExiste(char* nombreTabla)
 {
-	string_capitalized(nombreTabla); //El nombre tiene que estar en mayuscula
+	string_to_upper(nombreTabla); //El nombre tiene que estar en mayuscula
+
 
 	for (int i = 0; i < list_size(listaDeNombreDeTablas); i++ )
 	{
@@ -100,6 +101,7 @@ void Select(char* parametros) {
 	free(parametrosEnVector[1]);
 	free(parametrosEnVector[0]);
 	free(parametrosEnVector);
+	free(parametros);
 
 }
 
@@ -141,6 +143,7 @@ void create(char* parametros) {
 	free(parametrosEnVector[1]);
 	free(parametrosEnVector[0]);
 	free(parametrosEnVector);
+	free(parametros);
 
 }
 
