@@ -12,6 +12,11 @@
 #include <unistd.h>
 #include <commons/collections/list.h>
 
+typedef struct {
+	char* nombreTabla;
+	t_list* datosAInsertar;
+} t_tablaEnMemTable;
+
 void consola();
 void conexiones();
 void mandarAEjecutarRequest(int request, char* parametros);

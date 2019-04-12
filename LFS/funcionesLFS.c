@@ -1,6 +1,7 @@
 #include "funcionesLFS.h"
 
 extern t_list* listaDeNombreDeTablas;
+extern t_list* memTable;
 extern t_log* logger;
 
 void mandarAEjecutarRequest(int request, char* parametrosOriginal) {
@@ -91,12 +92,35 @@ int tablaYaExiste(char* nombreTabla)
 	return 0;
 }
 
+void crearTablaEnMemTable(char* nombreTabla)
+{
+	t_tablaEnMemTable* nuevaTabla;
+
+	nuevaTabla = malloc(sizeof(t_tablaEnMemTable));
+
+	nuevaTabla->nombreTabla = malloc(sizeof(nombreTabla));
+
+	nuevaTabla->nombreTabla = string_duplicate(nombreTabla);
+
+	nuevaTabla->datosAInsertar = list_create();
+
+	list_add(memTable,nuevaTabla);
+}
+
 void Select(char* parametros) {
 
 	char** parametrosEnVector = string_n_split(parametros, 2, " ");
 
 	char* tabla = parametrosEnVector[0];
 	int key = atoi(parametrosEnVector[1]);
+
+	if (!tablaYaExiste (tabla))
+	{
+		log_error(logger,"%s%s%s","La tabla ", tabla, " no existe.");
+		return;
+	}
+
+
 
 	free(parametrosEnVector[1]);
 	free(parametrosEnVector[0]);
@@ -115,6 +139,17 @@ void insert(char* parametros) {
 	char* value = parametrosEnVector[2]; //TODO: Sacarle las comillas
 
 	int timestamp = atoi(parametrosEnVector[3]);
+
+
+	if (!tablaYaExiste (tabla))
+		{
+			log_error(logger,"%s%s%s","La tabla ", tabla, " no existe.");
+			return;
+		}
+
+
+
+
 
 }
 
