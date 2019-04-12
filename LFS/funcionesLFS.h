@@ -26,4 +26,4 @@ void create(char* parametros);
 void describe(char* parametro);
 void drop(char* parametro);
 
-#endif /* FUNCIONESFM9_H_ */
+#endif /* FUNCIONESLFS_H_ */

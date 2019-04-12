@@ -1,11 +1,11 @@
 #include "requests.h"
 
-char *palabrasReservadas[8] = { "SELECT", "INSERT", "CREATE", "DESCRIBE",
-		"DROP", "JOURNAL", "ADD", "RUN" }; //Las palabras estan ordenadas de forma tal que coincide su indice con su macro
+char *palabrasReservadas[9] = { "SELECT", "INSERT", "CREATE", "DESCRIBE",
+		"DROP", "JOURNAL", "ADD", "RUN", "METRICS" }; //Las palabras estan ordenadas de forma tal que coincide su indice con su macro
 
 int queRequestEs(char* palabra) {
 
-	for (int i = 0; i < 8; i++) {
+	for (int i = 0; i < 9; i++) {
 
 		if (!strcmp(palabra, palabrasReservadas[i])) {
 			return i;
@@ -55,7 +55,7 @@ int esUnParametroValido(int request, char* parametro) {
 			int resultado = 1;
 
 			if (parametros[0] == NULL || parametros[1] == NULL) //Hay 2 parametros no vacios?
-					{
+			{
 				resultado = 0;
 			}
 
@@ -105,7 +105,7 @@ int esUnParametroValido(int request, char* parametro) {
 			}
 
 			else if (parametros[3] != NULL) //Si el cuarto parametro existe...
-					{
+			{
 				if (!esUnNumero(parametros[3])) //Es un int?
 						{
 					return 0;
@@ -133,7 +133,8 @@ int esUnParametroValido(int request, char* parametro) {
 			int resultado = 1;
 
 			if (parametros[0] == NULL //Hay 4 parametros no vacios?
-			|| parametros[1] == NULL || parametros[2] == NULL || parametros[3] == NULL) {
+			|| parametros[1] == NULL || parametros[2] == NULL
+					|| parametros[3] == NULL) {
 				resultado = 0;
 			}
 
@@ -197,7 +198,8 @@ int esUnParametroValido(int request, char* parametro) {
 			int resultado = 1;
 
 			if (parametros[0] == NULL //Hay 4 parametros no vacios?
-			|| parametros[1] == NULL || parametros[2] == NULL || parametros[3] == NULL) {
+			|| parametros[1] == NULL || parametros[2] == NULL
+					|| parametros[3] == NULL) {
 				resultado = 0;
 			}
 
@@ -244,8 +246,20 @@ int esUnParametroValido(int request, char* parametro) {
 			return 1;
 		}
 
+	case METRICS: {
+
+		if (parametro == 0) { //Hay un parametro?
+
+			return 1; //No tiene que tener parametro
+
+		}
+
+		return 0;
+	}
+
 	}
 	return -1;
+
 }
 
 int esUnaRequestValida(char* request, char* parametro) {

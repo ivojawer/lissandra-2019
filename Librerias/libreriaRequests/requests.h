@@ -9,6 +9,7 @@
 #define JOURNAL 5
 #define ADD 6
 #define RUN 7
+#define METRICS 8
 
 #define SC 0
 #define SHC 1

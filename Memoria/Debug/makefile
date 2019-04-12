@@ -24,11 +24,14 @@ endif
 # All Target
 all: memoria
 
+dependents:
+	-cd /home/utnso/workspace/tp-2019-1c-U-TN-Tecno/Librerias/libreriaRequests/Debug && $(MAKE) clean all
+
 # Tool invocations
-memoria: $(OBJS) $(USER_OBJS)
+memoria: $(OBJS) $(USER_OBJS) /home/utnso/workspace/tp-2019-1c-U-TN-Tecno/Librerias/libreriaRequests/Debug/liblibreriaRequests.so
 	@echo 'Building target: $@'
 	@echo 'Invoking: GCC C Linker'
-	gcc -L"/home/utnso/workspace/tp-2019-1c-U-TN-Tecno/Librerias/libreriaRequests/Debug" -o "memoria" $(OBJS) $(USER_OBJS) $(LIBS)
+	gcc -L"/home/utnso/workspace/tp-2019-1c-U-TN-Tecno/Librerias/libreriaRequests/Debug" -pthread -o "memoria" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
@@ -38,5 +41,6 @@ clean:
 	-@echo ' '
 
 .PHONY: all clean dependents
+/home/utnso/workspace/tp-2019-1c-U-TN-Tecno/Librerias/libreriaRequests/Debug/liblibreriaRequests.so:
 
 -include ../makefile.targets

@@ -1,4 +1,5 @@
 #include "requests.h"
+#include "funcionesKernel.h"
 
 t_config*config;
 t_log* logger;
@@ -6,61 +7,18 @@ t_log* logger;
 int main() {
 
 	logger = log_create("kernel.log", "kernel", 0, 0);
-	config = config_create("/home/utnso/workspace/tp-2019-1c-U-TN-Tecno/CONFIG/kernel.config");
-
-	char* lectura;
-
-	lectura = readline("Dame una request: ");
-
-	char** requestYParametros = string_n_split(lectura, 2, " ");
-
-	char* requestEnString = requestYParametros[0];
-	char* parametros = requestYParametros[1];
-
-	int requestEnInt = queRequestEs(requestEnString);
-
-	if (!( requestEnInt + 1)) //El +1 es para que tome el -1 como 0 y el request 0 como 1
-	{
-		printf("No es una request valida \n");
-
-		//free(parametros);
-		//free(requestEnString);
-		free(requestYParametros[1]);
-		free(requestYParametros[0]);
-		free(requestYParametros);
-		free(lectura);
-		return -1;
-	}
-	printf("%s%s", "Me diste la request ", requestEnString);
-
-	printf("%s%s", " con el parametro ", parametros);
+	config = config_create(
+			"/home/utnso/workspace/tp-2019-1c-U-TN-Tecno/CONFIG/kernel.config");
 
 
+	pthread_t h_consola;
+	pthread_t h_conexiones;
 
-	if(esUnParametroValido(requestEnInt, parametros))
-	{
-		printf(", lo cual es valido\n");
-		//free(parametros);
-		//free(requestEnString);
-		free(requestYParametros[1]);
-		free(requestYParametros[0]);
-		free(requestYParametros);
-		free(lectura);
+	pthread_create(&h_consola, NULL, (void *) consola, NULL);
+	pthread_create(&h_conexiones, NULL, (void *) conexiones, NULL);
 
-		return 1;
-	}
-
-
-	printf(", lo cual es invalido\n");
-
-	//free(parametros);
-	//free(requestEnString);
-	free(requestYParametros[1]);
-	free(requestYParametros[0]);
-	free(requestYParametros);
-	free(lectura);
-
-
+	pthread_detach(h_conexiones);
+	pthread_join(h_consola, NULL);
 
 	return 1;
 }
