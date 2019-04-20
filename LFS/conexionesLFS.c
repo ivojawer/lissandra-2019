@@ -32,23 +32,63 @@ void conexiones()
 	//struct sockaddr_in direccionCliente;
 	//en el tutorial dice que le pase un puntero a estas cosas pero no funca
 	//unsigned int tamanioDireccion;
+
+
 	int cliente= accept(servidor,(void*) NULL,NULL);
 	printf("Recibi una conexion en %d\n",cliente);
-	//send(cliente, "hola",5,0);
 
-
-	char* buffer = malloc(1000);
+	char* buffer = malloc(100);
 
 	while(1){
-		int bytesRecibidos =recv(cliente,buffer,1000,0);
+		int bytesRecibidos =recv(cliente,buffer,100,0);
 		if(bytesRecibidos<=0){
 			perror("Desconeccion o error de cliente");
 			exit;
 		}
 		buffer[bytesRecibidos] ='\0';
-		printf("Me llegaron %d bytes con %s\n",bytesRecibidos,buffer);
+		messageHandler(buffer);
+		//printf("Me llegaron %d bytes con %s\n",bytesRecibidos,buffer);
+
 
 	}
 	free(buffer);
 
 }
+
+
+void messageHandler(char* lectura){
+	if (string_is_empty(lectura)) {
+				printf("No es una request valida, vuelva prontos \n");
+				free(lectura);
+
+			}
+
+			char** requestYParametros = string_n_split(lectura, 2, " ");
+
+			int requestEnInt = queRequestEs(requestYParametros[0]);
+
+			if (!esUnaRequestValida(requestYParametros[0],
+					requestYParametros[1]) || requestEnInt == JOURNAL
+					|| requestEnInt == ADD || requestEnInt == RUN) { //Si es invalida o es una request que no vale en el LFS
+
+				printf("No es una request valida, vuelva prontos \n");
+
+				free(requestYParametros[1]);
+				free(requestYParametros[0]);
+				free(requestYParametros);
+				free(lectura);
+				return;
+
+
+			}
+
+			if (requestYParametros[1] == NULL) { //Para que no rompa en el string_duplicate de funcionesLFS.c
+				requestYParametros[1] = (char *) malloc(sizeof(" "));
+				strcpy(requestYParametros[1], " ");
+			}
+			printf("mando a ejecutar una request");
+			//mandarAEjecutarRequest(requestEnInt, requestYParametros[1]);
+			}
+
+
+

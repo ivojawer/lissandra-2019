@@ -9,6 +9,7 @@
 #include<readline/readline.h>
 #include <pthread.h>
 #include "requests.h"
+#include "sockets.h"
 #include <unistd.h>
 #include <commons/collections/list.h>
 

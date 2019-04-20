@@ -11,8 +11,10 @@
 #include "requests.h"
 #include <unistd.h>
 #include <commons/collections/list.h>
+#include "sockets.h"
 
 void consola();
+void messageHandler();
 void conexiones();
 
 #endif /* FUNCIONESMEMORIA_H_ */

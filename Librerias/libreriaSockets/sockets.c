@@ -1,13 +1,10 @@
-#include <string.h>
-#include <stdio.h>
-#include <arpa/inet.h>//pasarlo a un .h
-#include <sys/socket.h>
+#include "sockets.h"
 
-int enviarMensaje(char mensaje[]){
+int enviarMensaje(char* mensaje,int puerto){
 struct sockaddr_in direccionServidor;
 	direccionServidor.sin_family =AF_INET;
 	direccionServidor.sin_addr.s_addr =inet_addr("127.0.0.1");
-	direccionServidor.sin_port =htons(4444);
+	direccionServidor.sin_port =htons(puerto);
 
 
 	int cliente =socket(AF_INET, SOCK_STREAM,0);
@@ -20,5 +17,4 @@ struct sockaddr_in direccionServidor;
 	scanf("%s",mensaje);
 	send(cliente,mensaje,strlen(mensaje),0);
 	return 1;
-
 }
