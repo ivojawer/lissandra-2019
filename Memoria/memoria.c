@@ -1,6 +1,7 @@
 #include "requests.h"
 #include "funcionesMemoria.h"
 
+
 t_config*config;
 t_log* logger;
 
