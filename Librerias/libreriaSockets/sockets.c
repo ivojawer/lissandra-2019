@@ -16,5 +16,9 @@ struct sockaddr_in direccionServidor;
 
 	scanf("%s",mensaje);
 	send(cliente,mensaje,strlen(mensaje),0);
+
+	close(cliente);
+
 	return 1;
+
 }

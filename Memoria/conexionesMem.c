@@ -43,6 +43,7 @@ void conexiones()
 			}
 			buffer[bytesRecibidos] ='\0';
 			printf("Me llegaron %d bytes con %s\n",bytesRecibidos,buffer);
+			messageHandler(buffer);
 
 		}
 		free(buffer);
@@ -52,7 +53,5 @@ void conexiones()
 
 
 void messageHandler(char* mensaje){
-
 		printf("Me mandaron algo!!!");
-		enviarMensaje("hola",4444);
 }

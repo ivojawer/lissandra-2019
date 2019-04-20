@@ -39,9 +39,11 @@
 							<tool id="cdt.managedbuild.tool.gnu.c.linker.exe.debug.364330658" name="GCC C Linker" superClass="cdt.managedbuild.tool.gnu.c.linker.exe.debug">
 								<option id="gnu.c.link.option.paths.74226600" name="Library search path (-L)" superClass="gnu.c.link.option.paths" useByScannerDiscovery="false" valueType="libPaths">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/libreriaRequests/Debug}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/libreriaSockets/Debug}&quot;"/>
 								</option>
 								<option id="gnu.c.link.option.libs.238878488" name="Libraries (-l)" superClass="gnu.c.link.option.libs" useByScannerDiscovery="false" valueType="libs">
-									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="libreriaRequests"/>
+									<listOptionValue builtIn="false" value="libreriaRequests"/>
+									<listOptionValue builtIn="false" value="libreriaSockets"/>
 									<listOptionValue builtIn="false" value="commons"/>
 									<listOptionValue builtIn="false" value="pthread"/>
 									<listOptionValue builtIn="false" value="readline"/>

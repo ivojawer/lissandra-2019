@@ -28,7 +28,6 @@ void consola() {
 			free(requestYParametros[0]);
 			free(requestYParametros);
 			free(lectura);
-
 			continue;
 		}
 

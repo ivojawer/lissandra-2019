@@ -19,10 +19,6 @@ void mandarAEjecutarRequest(int request, char* parametrosOriginal) {
 			pthread_detach(h_select);
 
 
-
-
-
-			int estado = enviarMensaje("hola",4445);
 			return;
 		}
 
