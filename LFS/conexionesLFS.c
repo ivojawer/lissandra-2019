@@ -3,10 +3,11 @@
 #include <arpa/inet.h>//pasarlo a un .h
 #include <sys/socket.h>
 
-
-
+extern t_log* logger;
+int socketLFSAMEM;
 void conexiones()
 {
+	socketLFSAMEM = crearConexion(4445);//conexion con memoria
 	//        Creo servidor
 	struct sockaddr_in direccionServidor;
 	direccionServidor.sin_family = AF_INET;
@@ -22,7 +23,7 @@ void conexiones()
 		perror("Fallo el bind");
 		exit; //se podria cambiar a un int si se necesta manejo de errores.
 	}
-	printf("Estoy escuchando\n");
+	log_info(logger,"Estoy escuchando\n");
 	listen(servidor,100);
 
 
@@ -35,7 +36,7 @@ void conexiones()
 
 
 	int cliente= accept(servidor,(void*) NULL,NULL);
-	printf("Recibi una conexion en %d\n",cliente);
+	log_info(logger,"Recibi una conexion en %d\n",cliente);
 
 	char* buffer = malloc(100);
 
@@ -58,7 +59,7 @@ void conexiones()
 
 void messageHandler(char* lectura){
 	if (string_is_empty(lectura)) {
-				printf("No es una request valida, vuelva prontos \n");
+				log_info(logger,"No es una request valida, vuelva prontos \n");
 				free(lectura);
 
 			}
@@ -71,7 +72,7 @@ void messageHandler(char* lectura){
 					requestYParametros[1]) || requestEnInt == JOURNAL
 					|| requestEnInt == ADD || requestEnInt == RUN) { //Si es invalida o es una request que no vale en el LFS
 
-				printf("No es una request valida, vuelva prontos \n");
+				log_info(logger,"No es una request valida, vuelva prontos \n");
 
 				free(requestYParametros[1]);
 				free(requestYParametros[0]);
@@ -86,7 +87,7 @@ void messageHandler(char* lectura){
 				requestYParametros[1] = (char *) malloc(sizeof(" "));
 				strcpy(requestYParametros[1], " ");
 			}
-			printf("mando a ejecutar una request");
+			log_info(logger,"mando a ejecutar una request");
 			//mandarAEjecutarRequest(requestEnInt, requestYParametros[1]);
 			}
 

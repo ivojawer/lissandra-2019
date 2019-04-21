@@ -4,6 +4,7 @@ extern t_list* listaDeNombreDeTablas;
 extern t_list* memTable;
 extern t_log* logger;
 
+extern int socketLFSAMEM;
 void mandarAEjecutarRequest(int request, char* parametrosOriginal) {
 
 	char* parametros = string_duplicate(parametrosOriginal); //Esto es para que se pueda hacer un free() en consola.c sin que rompa
@@ -18,6 +19,8 @@ void mandarAEjecutarRequest(int request, char* parametrosOriginal) {
 
 			pthread_detach(h_select);
 
+
+			enviarMensaje("Me llego un select, ocupate macho", socketLFSAMEM);
 
 			return;
 		}

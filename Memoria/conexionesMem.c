@@ -1,8 +1,12 @@
 #include "conexionesMem.h"
 
 
+extern t_log* logger;
+
 void conexiones()
 {
+
+
 	//        Creo servidor
 		struct sockaddr_in direccionServidor;
 		direccionServidor.sin_family = AF_INET;
@@ -18,7 +22,7 @@ void conexiones()
 			perror("Fallo el bind");
 			exit; //se podria cambiar a un int si se necesta manejo de errores.
 		}
-		printf("Estoy escuchando\n");
+		log_info(logger,"Estoy escuchando\n");
 		listen(servidor,100);
 
 
@@ -31,20 +35,21 @@ void conexiones()
 
 
 		int cliente= accept(servidor,(void*) NULL,NULL);
-		printf("Recibi una conexion en %d\n",cliente);
+		log_info(logger,"Recibi una conexion en %d\n",cliente);
 
 		char* buffer = malloc(1000);
 
 		while(1){
 			int bytesRecibidos =recv(cliente,buffer,1000,0);
 			if(bytesRecibidos<=0){
-				perror("Desconeccion o error de cliente");
-				exit;
+				perror("Desconexion o error de cliente");
+				return;
 			}
 			buffer[bytesRecibidos] ='\0';
-			printf("Me llegaron %d bytes con %s\n",bytesRecibidos,buffer);
-			messageHandler(buffer);
+			log_info(logger,"Me llegaron %d bytes con %s\n",bytesRecibidos,buffer);
 
+			//printf("Me llegaron %d bytes con %s\n",bytesRecibidos,buffer);
+			//messageHandler(buffer);
 		}
 		free(buffer);
 
@@ -53,5 +58,7 @@ void conexiones()
 
 
 void messageHandler(char* mensaje){
-		printf("Me mandaron algo!!!");
+	log_info(logger,"Me mandaron algo!!!\n");
+
+	//printf("Me mandaron algo!!!");
 }

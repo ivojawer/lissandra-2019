@@ -25,7 +25,7 @@ endif
 all: memoria
 
 dependents:
-	-cd /home/utnso/workspace/tp-2019-1c-U-TN-Tecno/Librerias/libreriaRequests/Debug && $(MAKE) clean all
+	-cd /home/utnso/workspace/tp-2019-1c-U-TN-Tecno/Librerias/libreriaRequests/Debug && $(MAKE) all
 
 # Tool invocations
 memoria: $(OBJS) $(USER_OBJS) /home/utnso/workspace/tp-2019-1c-U-TN-Tecno/Librerias/libreriaRequests/Debug/liblibreriaRequests.so
