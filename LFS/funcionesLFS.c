@@ -5,7 +5,12 @@ extern t_list* memTable;
 extern t_log* logger;
 
 extern int socketLFSAMEM;
+
+
+
 void mandarAEjecutarRequest(int request, char* parametrosOriginal) {
+
+	//Importante: Si el parametro es enteramente vacio, aca tiene que entrar aca como " ".
 
 	char* parametros = string_duplicate(parametrosOriginal); //Esto es para que se pueda hacer un free() en consola.c sin que rompa
 
@@ -18,7 +23,6 @@ void mandarAEjecutarRequest(int request, char* parametrosOriginal) {
 			pthread_create(&h_select, NULL, (void *) select, parametros);
 
 			pthread_detach(h_select);
-
 
 			enviarMensaje("Me llego un select, ocupate macho", socketLFSAMEM);
 
@@ -80,35 +84,26 @@ void mandarAEjecutarRequest(int request, char* parametrosOriginal) {
 	}
 }
 
-int tablaYaExiste(char* nombreTabla)
-{
+int tablaYaExiste(char* nombreTabla) {
+
 	string_to_upper(nombreTabla); //El nombre tiene que estar en mayuscula
 
-
-	for (int i = 0; i < list_size(listaDeNombreDeTablas); i++ )
-	{
-		if (!strcmp(nombreTabla, list_get(listaDeNombreDeTablas,i)))
-		{
-			return 1;
-		}
-	}
 
 	return 0;
 }
 
-void crearTablaEnMemTable(char* nombreTabla)
-{
+void crearTablaEnMemTable(char* nombreDeTabla) {
 	t_tablaEnMemTable* nuevaTabla;
 
 	nuevaTabla = malloc(sizeof(t_tablaEnMemTable));
 
-	nuevaTabla->nombreTabla = malloc(sizeof(nombreTabla));
+	nuevaTabla->nombreTabla = malloc(sizeof(nombreDeTabla));
 
-	nuevaTabla->nombreTabla = string_duplicate(nombreTabla);
+	nuevaTabla->nombreTabla = string_duplicate(nombreDeTabla);
 
 	nuevaTabla->datosAInsertar = list_create();
 
-	list_add(memTable,nuevaTabla);
+	list_add(memTable, nuevaTabla);
 }
 
 void Select(char* parametros) {
@@ -118,13 +113,10 @@ void Select(char* parametros) {
 	char* tabla = parametrosEnVector[0];
 	int key = atoi(parametrosEnVector[1]);
 
-	if (!tablaYaExiste (tabla))
-	{
-		log_error(logger,"%s%s%s","La tabla ", tabla, " no existe.");
+	if (!tablaYaExiste(tabla)) {
+		log_error(logger, "%s%s%s", "La tabla ", tabla, " no existe.");
 		return;
 	}
-
-
 
 	free(parametrosEnVector[1]);
 	free(parametrosEnVector[0]);
@@ -140,20 +132,24 @@ void insert(char* parametros) {
 	char* tabla = parametrosEnVector[0];
 	int key = atoi(parametrosEnVector[1]);
 
+
+
 	char* value = parametrosEnVector[2]; //TODO: Sacarle las comillas
 
-	int timestamp = atoi(parametrosEnVector[3]);
+	int timestamp;
 
+	if (parametrosEnVector[3] == NULL) {
+		timestamp = 123; //TODO: poner aca el tiempo actual
+	}
 
-	if (!tablaYaExiste (tabla))
-		{
-			log_error(logger,"%s%s%s","La tabla ", tabla, " no existe.");
-			return;
-		}
+	else {
+		timestamp = atoi(parametrosEnVector[3]);
+	}
 
-
-
-
+	if (!tablaYaExiste(tabla)) {
+		log_error(logger, "%s%s%s", "La tabla ", tabla, " no existe.");
+		return;
+	}
 
 }
 
@@ -166,15 +162,10 @@ void create(char* parametros) {
 	int particiones = atoi(parametrosEnVector[2]);
 	char* tiempoCompactacion = parametrosEnVector[3];
 
-	if(tablaYaExiste(tabla))
-	{
-		log_error(logger,"%s%s%s","La tabla ", tabla, " ya existe.");
+	if (tablaYaExiste(tabla)) {
+		log_error(logger, "%s%s%s", "La tabla ", tabla, " ya existe.");
 		return;
 	}
-
-	list_add(listaDeNombreDeTablas, tabla);
-
-
 
 
 	free(parametrosEnVector[3]);

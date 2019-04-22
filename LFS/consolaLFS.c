@@ -20,7 +20,7 @@ void consola() {
 
 		if (!esUnaRequestValida(requestYParametros[0],
 				requestYParametros[1]) || requestEnInt == JOURNAL
-				|| requestEnInt == ADD || requestEnInt == RUN) { //Si es invalida o es una request que no vale en el LFS
+				|| requestEnInt == ADD || requestEnInt == RUN || requestEnInt == METRICS) { //Si es invalida o es una request que no vale en el LFS
 
 			printf("No es una request valida, vuelva prontos \n");
 
