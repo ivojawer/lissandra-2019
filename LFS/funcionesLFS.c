@@ -20,7 +20,7 @@ void mandarAEjecutarRequest(int request, char* parametrosOriginal) {
 		{
 			pthread_t h_select;
 
-			pthread_create(&h_select, NULL, (void *) select, parametros);
+			pthread_create(&h_select, NULL, (void *) Select, parametros);
 
 			pthread_detach(h_select);
 
