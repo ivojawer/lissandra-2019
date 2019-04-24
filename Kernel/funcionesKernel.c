@@ -2,10 +2,10 @@
 
 extern t_list* colaNEW;
 extern t_list* colaREADY;
-extern t_list* listaEXEC;
-extern t_list* listaEXIT;
 extern int idInicial;
 extern int quantum;
+extern sem_t sem_cambioId;
+extern sem_t sem_disponibleColaREADY;
 
 int removerScriptDeLista(int id, t_list* lista) {
 	for (int i; i < list_size(lista); i++) {
@@ -26,22 +26,31 @@ int removerScriptDeLista(int id, t_list* lista) {
 	return 0;
 }
 
+
+
+int existeArchivo(char* direccion) //TODO
+{
+	return 0;
+}
+
 void crearScript(parametros_hiloScript* parametros) {
 	//Importante: Si el parametro es enteramente vacio, aca tiene que entrar aca como " ".
 
 	script* nuevoScript = malloc(sizeof(script));
+
+	sem_wait(&sem_cambioId);
 	nuevoScript->idScript = idInicial;
+	idInicial++;
+	sem_post(&sem_cambioId);
 
 	list_add(colaNEW, nuevoScript); //Esto es puramente por formalidad del TP
 
-	idInicial++; //TODO: Poner un semaforo por aca para evitar condicion de carrera
+
 
 	nuevoScript->lineasLeidas = 0;
 	nuevoScript->quantumRestante = quantum;
 
 	if (parametros->request == RUN) {
-
-		//TODO: Checkear si existe el archivo
 
 		nuevoScript->direccionScript = malloc(sizeof(parametros->parametros));
 		nuevoScript->direccionScript = string_duplicate(parametros->parametros);
@@ -55,6 +64,8 @@ void crearScript(parametros_hiloScript* parametros) {
 
 	removerScriptDeLista(nuevoScript->idScript, colaNEW);
 	list_add(colaREADY,nuevoScript);
+
+	sem_post(&sem_disponibleColaREADY);
 
 
 }

@@ -12,6 +12,7 @@
 #include <unistd.h>
 #include "sockets.h"
 #include <commons/collections/list.h>
+ #include <semaphore.h>
 
 typedef struct {
 	int idScript;
@@ -32,6 +33,6 @@ void planificador();
 
 void crearScript(parametros_hiloScript* parametros);
 int removerScriptDeLista(int id, t_list* lista);
-
+int existeArchivo(char* direccion);
 
 #endif /* FUNCIONESKERNEL_H_ */

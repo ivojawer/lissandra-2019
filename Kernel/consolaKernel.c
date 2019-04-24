@@ -30,24 +30,34 @@ void consola() {
 			continue;
 		}
 
+		if (requestEnInt == RUN && !existeArchivo(requestYParametros[1])) {
+			printf("%s%s%s", "El archivo ", requestYParametros[1],
+					" no pudo ser encontrado \n");
+
+			free(requestYParametros[1]);
+			free(requestYParametros[0]);
+			free(requestYParametros);
+			free(lectura);
+
+			continue;
+		}
+
 		if (requestYParametros[1] == NULL) { //Para que no rompa
 			requestYParametros[1] = (char *) malloc(sizeof(" "));
 			strcpy(requestYParametros[1], " ");
 		}
 
-
-
-
-
-
-		parametros_hiloScript* parametrosParaHilo = malloc(sizeof(parametros_hiloScript));
+		parametros_hiloScript* parametrosParaHilo = malloc(
+				sizeof(parametros_hiloScript));
 
 		parametrosParaHilo->request = requestEnInt;
-		parametrosParaHilo->parametros = string_duplicate (requestYParametros[1]);
+		parametrosParaHilo->parametros = string_duplicate(
+				requestYParametros[1]);
 
 		pthread_t h_script;
 
-		pthread_create(&h_script, NULL, (void *) crearScript, parametrosParaHilo);
+		pthread_create(&h_script, NULL, (void *) crearScript,
+				parametrosParaHilo);
 
 		pthread_detach(h_script);
 
