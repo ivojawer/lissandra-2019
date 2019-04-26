@@ -24,9 +24,7 @@ void consola() {
 
 			printf("No es una request valida, vuelva prontos \n");
 
-			free(requestYParametros[1]);
-			free(requestYParametros[0]);
-			free(requestYParametros);
+			liberarArrayDeStrings(requestYParametros);
 			free(lectura);
 			continue;
 		}
@@ -38,9 +36,7 @@ void consola() {
 
 		mandarAEjecutarRequest(requestEnInt, requestYParametros[1]);
 
-		free(requestYParametros[1]);
-		free(requestYParametros[0]);
-		free(requestYParametros);
+		liberarArrayDeStrings(requestYParametros);
 		free(lectura);
 
 	}

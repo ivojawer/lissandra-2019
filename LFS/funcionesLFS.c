@@ -168,11 +168,7 @@ void create(char* parametros) {
 	}
 
 
-	free(parametrosEnVector[3]);
-	free(parametrosEnVector[2]);
-	free(parametrosEnVector[1]);
-	free(parametrosEnVector[0]);
-	free(parametrosEnVector);
+	liberarArrayDeStrings(parametrosEnVector);
 	free(parametros);
 
 }

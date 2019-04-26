@@ -14,6 +14,27 @@ int queRequestEs(char* palabra) {
 	return -1;
 }
 
+void liberarArrayDeStrings(char** array)
+{
+	for(int i = 0; array[i] == NULL; i++)
+	{
+		free(array[i]);
+	}
+	free(array);
+}
+
+int devolverSoloRequest(char* request)
+{
+	char** requestYParametros = string_split(request, " ");
+	int requestEnInt = queRequestEs(requestYParametros[0]);
+
+	liberarArrayDeStrings(requestYParametros);
+
+	return requestEnInt;
+
+
+}
+
 int esUnNumero(char* string) {
 	if ((!atoi(string) && strcmp(string, "0"))
 			|| string_contains(string, " ")) { //Si contiene espacios lo considera un numero
@@ -66,10 +87,7 @@ int esUnParametroValido(int request, char* parametro) {
 				resultado = 0;
 			}
 
-			for (int i = 0; parametros[i] == NULL; i++) {
-				free(parametros[i]);
-			}
-			free(parametros);
+			liberarArrayDeStrings(parametros);
 
 			return resultado;
 		}
@@ -150,14 +168,7 @@ int esUnParametroValido(int request, char* parametro) {
 
 			}
 
-			for (int i = 0; i < 3; i++) {
-				free(parametros[i]);
-
-				if (parametros[i + 1] == NULL) {
-					break;
-				}
-			}
-			free(parametros);
+			liberarArrayDeStrings(parametros);
 			return resultado;
 		}
 
@@ -191,11 +202,7 @@ int esUnParametroValido(int request, char* parametro) {
 				resultado = 0;
 			}
 
-			for (int i = 0; parametros[i] == NULL; i++) {
-				free(parametros[i]);
-			}
-
-			free(parametros);
+			liberarArrayDeStrings(parametros);
 
 			return resultado;
 		}
@@ -256,11 +263,7 @@ int esUnParametroValido(int request, char* parametro) {
 				resultado = 0;
 			}
 
-			for (int i = 0; parametros[i] == NULL; i++) {
-				free(parametros[i]);
-			}
-
-			free(parametros);
+			liberarArrayDeStrings(parametros);
 
 			return resultado;
 		}

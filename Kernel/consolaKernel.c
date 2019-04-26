@@ -22,9 +22,7 @@ void consola() {
 
 			printf("No es una request valida, vuelva prontos \n");
 
-			free(requestYParametros[1]);
-			free(requestYParametros[0]);
-			free(requestYParametros);
+			liberarArrayDeStrings(requestYParametros);
 			free(lectura);
 
 			continue;
@@ -34,9 +32,7 @@ void consola() {
 			printf("%s%s%s", "El archivo ", requestYParametros[1],
 					" no pudo ser encontrado \n");
 
-			free(requestYParametros[1]);
-			free(requestYParametros[0]);
-			free(requestYParametros);
+			liberarArrayDeStrings(requestYParametros);
 			free(lectura);
 
 			continue;
@@ -61,9 +57,7 @@ void consola() {
 
 		pthread_detach(h_script);
 
-		free(requestYParametros[1]);
-		free(requestYParametros[0]);
-		free(requestYParametros);
+		liberarArrayDeStrings(requestYParametros);
 		free(lectura);
 
 	}

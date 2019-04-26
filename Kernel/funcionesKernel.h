@@ -17,7 +17,6 @@
 typedef struct {
 	int idScript;
 	int lineasLeidas;
-	int quantumRestante;
 	char* direccionScript;
 } script;
 
@@ -26,13 +25,22 @@ typedef struct {
 	char* parametros;
 } parametros_hiloScript;
 
+typedef struct {
+	char* nombreTabla;
+	int consistencia;
+} tablaEnLista;
+
 
 void consola();
 void conexiones();
-void planificador();
+void planificadorREADYAEXEC();
+void planificadorEXEC(int IdScript);
 
 void crearScript(parametros_hiloScript* parametros);
 int removerScriptDeLista(int id, t_list* lista);
 int existeArchivo(char* direccion);
+int encontrarScriptEnLista(int id, t_list* lista);
+int ejecutarRequest(char* request);
+char* leerLinea(char* direccion,int lineaALeer);
 
 #endif /* FUNCIONESKERNEL_H_ */

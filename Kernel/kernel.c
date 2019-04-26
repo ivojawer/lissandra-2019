@@ -7,12 +7,14 @@ t_list* colaNEW;
 t_list* colaREADY;
 t_list* listaEXEC;
 t_list* listaEXIT;
+t_list* listaTablas;
 int idInicial;
 int quantum;
 int multiprocesamiento;
 sem_t sem_multiprocesamiento;
 sem_t sem_cambioId;
 sem_t sem_disponibleColaREADY;
+
 
 int main() {
 
@@ -27,6 +29,7 @@ int main() {
 	colaREADY = list_create();
 	listaEXEC = list_create();
 	listaEXIT = list_create();
+	listaTablas = list_create();
 
 	idInicial = 0;
 
@@ -40,7 +43,7 @@ int main() {
 
 	pthread_create(&h_consola, NULL, (void *) consola, NULL);
 	pthread_create(&h_conexiones, NULL, (void *) conexiones, NULL);
-	pthread_create(&h_planificador, NULL, (void *) planificador, NULL);
+	pthread_create(&h_planificador, NULL, (void *) planificadorREADYAEXEC, NULL);
 
 	pthread_detach(h_planificador);
 	pthread_detach(h_conexiones);
