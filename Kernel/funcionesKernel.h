@@ -1,6 +1,8 @@
 #ifndef FUNCIONESKERNEL_H_
 #define FUNCIONESKERNEL_H_
 
+#define MAXBUFFER 100
+
 #include<stdio.h>
 #include<stdlib.h>
 #include<commons/log.h>
@@ -42,5 +44,6 @@ int existeArchivo(char* direccion);
 int encontrarScriptEnLista(int id, t_list* lista);
 int ejecutarRequest(char* request);
 char* leerLinea(char* direccion,int lineaALeer);
+void metrics();
 
 #endif /* FUNCIONESKERNEL_H_ */

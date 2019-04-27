@@ -12,9 +12,11 @@ void planificadorREADYAEXEC() {
 
 	while (1) {
 
-		//Si el multiprocesamiento no puede variar mientras hay procesos ejecutandose entonces esto esta bien
-		sem_wait(&sem_multiprocesamiento);
+		//Si no puede pasar de READY a EXIT entonces esto va bien
+
 		sem_wait(&sem_disponibleColaREADY);
+		sem_wait(&sem_multiprocesamiento);
+
 
 		script* scriptAExec = list_get(colaREADY, 0); //El 0 siempre va a ser el mas viejo en la lista
 

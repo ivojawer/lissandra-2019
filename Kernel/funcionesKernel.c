@@ -6,6 +6,7 @@ extern t_list* listaTablas;
 extern int idInicial;
 extern sem_t sem_cambioId;
 extern sem_t sem_disponibleColaREADY;
+sem_t sem_multiprocesamiento;
 
 int removerScriptDeLista(int id, t_list* lista) {
 	for (int i; i < list_size(lista); i++) {
@@ -78,9 +79,18 @@ int esDescribeGlobal(char* request) {
 	return resultado;
 }
 
-int existeArchivo(char* direccion) //TODO
-{
-	return 0;
+int existeArchivo(char* direccion) {
+	FILE* archivo;
+	archivo = fopen(direccion, "r");
+
+	if (archivo == NULL) {
+		fclose(archivo);
+		return 0;
+	}
+
+	fclose(archivo);
+
+	return 1;
 }
 
 void crearScript(parametros_hiloScript* parametros) {
@@ -115,10 +125,46 @@ void crearScript(parametros_hiloScript* parametros) {
 
 }
 
-char* leerLinea(char* direccion,int lineaALeer) //TODO
-{
+void limpiarBuffer(char* buffer) {
+	for (int i = 0; i < MAXBUFFER; i++) {
+		buffer[i] = '\n';
+	}
+}
 
-	return "Hola";
+int charsDeBuffer(char* buffer) {
+	int lineas = 0;
+	for (; lineas < MAXBUFFER; lineas++) {
+		if (buffer[lineas] == '\n') {
+			break;
+		}
+	}
+
+	return lineas;
+}
+
+char* leerLinea(char* direccion, int lineaALeer) {
+	FILE* archivo;
+	archivo = fopen(direccion, "r");
+	char buffer[MAXBUFFER];
+
+	if (archivo == NULL) {
+		return " ";
+	}
+
+	for (int i = 0; i <= lineaALeer; i++) {
+		limpiarBuffer(buffer);
+		fgets(buffer, MAXBUFFER, archivo);
+	}
+
+	int caracteres = charsDeBuffer(buffer);
+
+	char* linea = malloc(sizeof(char) * caracteres);
+
+	memcpy(linea, buffer, caracteres * sizeof(char));
+
+	fclose(archivo);
+
+	return linea;
 }
 
 int ejecutarRequest(char* request) {
@@ -138,6 +184,7 @@ int ejecutarRequest(char* request) {
 		char** requestYParametros = string_split(request, " ");
 
 		if (!existeArchivo(requestYParametros[1])) {
+
 			liberarArrayDeStrings(requestYParametros);
 			return -1;
 		}
@@ -155,8 +202,8 @@ int ejecutarRequest(char* request) {
 
 	case METRICS: {
 		;
-		//Hacer el metrics
-		return -1;
+		metrics();
+		return 1;
 	}
 
 	case ADD: {
@@ -179,3 +226,11 @@ int ejecutarRequest(char* request) {
 	return -1;
 }
 
+void matarTodo() //TODO
+{
+}
+
+void metrics() //TODO
+{
+
+}

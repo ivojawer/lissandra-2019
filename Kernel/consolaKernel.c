@@ -18,6 +18,21 @@ void consola() {
 
 		int requestEnInt = queRequestEs(requestYParametros[0]);
 
+		if (!strcmp(requestYParametros[0], "EXIT")) {
+			//Aca hay que matar a los hijos
+
+			liberarArrayDeStrings(requestYParametros);
+			free(lectura);
+			return;
+		}
+
+		if (!strcmp(requestYParametros[0], "METRICS")) {
+
+			metrics();
+			liberarArrayDeStrings(requestYParametros);
+			free(lectura);
+		}
+
 		if (!esUnaRequestValida(requestYParametros[0], requestYParametros[1])) {
 
 			printf("No es una request valida, vuelva prontos \n");
@@ -56,6 +71,8 @@ void consola() {
 				parametrosParaHilo);
 
 		pthread_detach(h_script);
+
+		//Agregar lista de hilos?
 
 		liberarArrayDeStrings(requestYParametros);
 		free(lectura);

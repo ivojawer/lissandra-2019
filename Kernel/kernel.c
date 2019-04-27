@@ -49,5 +49,7 @@ int main() {
 	pthread_detach(h_conexiones);
 	pthread_join(h_consola, NULL);
 
-	return 1;
+	matarTodo();
+
+	return 0; //Gracias tux tkm
 }
