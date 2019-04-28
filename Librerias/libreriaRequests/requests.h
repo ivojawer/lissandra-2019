@@ -29,6 +29,7 @@ int esUnParametroValido(int request, char* parametro);
 int queConsistenciaEs(char* string);
 int devolverSoloRequest(char* request);
 void liberarArrayDeStrings(char** array);
+char* devolverSoloParametros(char* request);
 
 
 #include "requests.h"

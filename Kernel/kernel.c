@@ -1,4 +1,3 @@
-#include "requests.h"
 #include "funcionesKernel.h"
 
 t_config*config;
@@ -18,7 +17,7 @@ sem_t sem_disponibleColaREADY;
 
 int main() {
 
-	logger = log_create("kernel.log", "kernel", 0, 0);
+	logger = log_create("kernel.log", "kernel", 1, 0);
 	config = config_create(
 			"/home/utnso/workspace/tp-2019-1c-U-TN-Tecno/CONFIG/kernel.config");
 
@@ -31,7 +30,7 @@ int main() {
 	listaEXIT = list_create();
 	listaTablas = list_create();
 
-	idInicial = 0;
+	idInicial = 1000;
 
 	pthread_t h_consola;
 	pthread_t h_conexiones;
@@ -50,6 +49,12 @@ int main() {
 	pthread_join(h_consola, NULL);
 
 	matarTodo();
+
+	config_destroy(config);
+	log_destroy(logger);
+	sem_destroy(&sem_multiprocesamiento);
+	sem_destroy(&sem_cambioId);
+	sem_destroy(&sem_disponibleColaREADY);
 
 	return 0; //Gracias tux tkm
 }

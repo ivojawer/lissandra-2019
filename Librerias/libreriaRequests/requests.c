@@ -14,17 +14,14 @@ int queRequestEs(char* palabra) {
 	return -1;
 }
 
-void liberarArrayDeStrings(char** array)
-{
-	for(int i = 0; array[i] == NULL; i++)
-	{
+void liberarArrayDeStrings(char** array) {
+	for (int i = 0; array[i] != NULL; i++) {
 		free(array[i]);
 	}
 	free(array);
 }
 
-int devolverSoloRequest(char* request)
-{
+int devolverSoloRequest(char* request) {
 	char** requestYParametros = string_split(request, " ");
 	int requestEnInt = queRequestEs(requestYParametros[0]);
 
@@ -32,7 +29,15 @@ int devolverSoloRequest(char* request)
 
 	return requestEnInt;
 
+}
 
+char* devolverSoloParametros(char* request) {
+	char** requestYParametros = string_n_split(request,2, " ");
+	char* parametros = string_duplicate(requestYParametros[1]);
+
+	liberarArrayDeStrings(requestYParametros);
+
+	return parametros;
 }
 
 int esUnNumero(char* string) {

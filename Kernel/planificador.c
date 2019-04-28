@@ -17,14 +17,13 @@ void planificadorREADYAEXEC() {
 		sem_wait(&sem_disponibleColaREADY);
 		sem_wait(&sem_multiprocesamiento);
 
-
 		script* scriptAExec = list_get(colaREADY, 0); //El 0 siempre va a ser el mas viejo en la lista
 
-		removerScriptDeLista(scriptAExec->idScript, colaREADY);
-		list_add(listaEXEC, scriptAExec); //Pensar sobre semaforos porque un status justo puede hacer que aparezca en ambas listas (muy improbable pero por si acaso)
+		moverScript(scriptAExec->idScript, colaREADY, listaEXEC);
 
 		pthread_t h_EXEC;
-		pthread_create(&h_EXEC, NULL, (void *) planificadorEXEC, &scriptAExec->idScript);
+		pthread_create(&h_EXEC, NULL, (void *) planificadorEXEC,
+				scriptAExec->idScript);
 		pthread_detach(h_EXEC);
 
 	}
@@ -33,24 +32,53 @@ void planificadorREADYAEXEC() {
 
 void planificadorEXEC(int IdScript) {
 
-	script* scriptEXEC = list_get(listaEXEC, encontrarScriptEnLista(IdScript,listaEXEC));
+	int index = encontrarScriptEnLista(IdScript, listaEXEC);
 
-	for(int i; i<quantum; i++)
-	{
-		char* linea = leerLinea(scriptEXEC->direccionScript,scriptEXEC->lineasLeidas);
+	script* scriptEXEC = list_get(listaEXEC, index);
+	for (int i = 0; i < quantum; i++) {
 
-		scriptEXEC->lineasLeidas++;
+		char* linea = leerLinea(scriptEXEC->direccionScript,
+				scriptEXEC->lineasLeidas);
+
+		if (!strcmp(linea, "error")) {
+			log_error(logger, "%s%i",
+					"Hubo un error abriendo el archivo del script ",
+					scriptEXEC->idScript);
+			moverScript(scriptEXEC->idScript, listaEXEC, listaEXIT);
+			free(linea);
+			break;
+		}
 
 		int resultado = ejecutarRequest(linea);
 
-		if (resultado == -1)
-		{
-			log_error(logger,"%s%i","Hubo un error en la ejecucion del script ",scriptEXEC->idScript);
+		if (resultado == -1) {
+			log_error(logger, "%s%i",
+					"Hubo un error en la ejecucion del script ",
+					scriptEXEC->idScript);
+			moverScript(scriptEXEC->idScript, listaEXEC, listaEXIT);
+			free(linea);
 			break;
 		}
+
+
+		scriptEXEC->lineasLeidas++;
+
+		char* proximaLinea = leerLinea(scriptEXEC->direccionScript,
+				scriptEXEC->lineasLeidas+1);
+
+		if (!strcmp(proximaLinea,"fin"))
+		{
+			log_info(logger,"%s%i","Termino de ejecutar exitosamente el script ",IdScript);
+			moverScript(scriptEXEC->idScript, listaEXEC, listaEXIT);
+			break;
+		}
+
+		free(proximaLinea);
+		free(linea);
+
 		//Semaforo por si cambia el quantum?
 	}
 
-	log_info (logger,"%s%i","Termino de ejecutar el script",scriptEXEC->idScript);
+	sem_post(&sem_multiprocesamiento);
 
 }

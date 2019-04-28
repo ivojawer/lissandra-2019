@@ -8,6 +8,10 @@ void consola() {
 
 		char* lectura = readline("--> ");
 
+		if (lectura) {
+			add_history(lectura);
+		}
+
 		if (string_is_empty(lectura)) {
 			printf("No es una request valida, vuelva prontos \n");
 			free(lectura);
@@ -26,14 +30,25 @@ void consola() {
 			return;
 		}
 
-		if (!strcmp(requestYParametros[0], "METRICS")) {
+		else if (!strcmp(requestYParametros[0], "STATUS")) {
+
+			status();
+
+			liberarArrayDeStrings(requestYParametros);
+			free(lectura);
+			continue;
+		}
+
+		else if (!strcmp(requestYParametros[0], "METRICS")) {
 
 			metrics();
 			liberarArrayDeStrings(requestYParametros);
 			free(lectura);
+			continue;
 		}
 
-		if (!esUnaRequestValida(requestYParametros[0], requestYParametros[1])) {
+		else if (!esUnaRequestValida(requestYParametros[0],
+				requestYParametros[1])) {
 
 			printf("No es una request valida, vuelva prontos \n");
 
@@ -43,7 +58,7 @@ void consola() {
 			continue;
 		}
 
-		if (requestEnInt == RUN && !existeArchivo(requestYParametros[1])) {
+		else if (requestEnInt == RUN && !existeArchivo(requestYParametros[1])) {
 			printf("%s%s%s", "El archivo ", requestYParametros[1],
 					" no pudo ser encontrado \n");
 
@@ -58,17 +73,18 @@ void consola() {
 			strcpy(requestYParametros[1], " ");
 		}
 
-		parametros_hiloScript* parametrosParaHilo = malloc(
-				sizeof(parametros_hiloScript));
+		/*parametros_hiloScript* parametrosParaHilo = malloc(
+		 sizeof(parametros_hiloScript));
 
-		parametrosParaHilo->request = requestEnInt;
-		parametrosParaHilo->parametros = string_duplicate(
-				requestYParametros[1]);
+		 parametrosParaHilo->request = requestEnInt;
+		 parametrosParaHilo->parametros = string_duplicate(
+		 requestYParametros[1]);
+		 */
 
+		char* requestParaHilo = string_duplicate(lectura);
 		pthread_t h_script;
 
-		pthread_create(&h_script, NULL, (void *) crearScript,
-				parametrosParaHilo);
+		pthread_create(&h_script, NULL, (void *) crearScript, requestParaHilo);
 
 		pthread_detach(h_script);
 

@@ -3,97 +3,17 @@
 extern t_list* colaNEW;
 extern t_list* colaREADY;
 extern t_list* listaTablas;
+extern t_list* listaEXEC;
+extern t_list* listaEXIT;
 extern int idInicial;
 extern sem_t sem_cambioId;
 extern sem_t sem_disponibleColaREADY;
 sem_t sem_multiprocesamiento;
+extern t_log* logger;
 
-int removerScriptDeLista(int id, t_list* lista) {
-	for (int i; i < list_size(lista); i++) {
-		script* script = list_get(lista, i);
 
-		if (script->idScript == id) {
-			if (script->direccionScript != NULL) {
-				free(script->direccionScript);
-			}
 
-			free(script);
-
-			list_remove(lista, i);
-
-			return 1;
-		}
-	}
-	return 0;
-}
-
-int encontrarScriptEnLista(int id, t_list* lista) {
-	for (int i; i < list_size(lista); i++) {
-
-		script* script = list_get(lista, i);
-		if (script->idScript == id) {
-			return i;
-		}
-
-	}
-	return -1;
-}
-
-int criterioDeTabla(char* nombreTabla) {
-	for (int i; i < list_size(listaTablas); i++) {
-		tablaEnLista* tabla = list_get(listaTablas, i);
-
-		if (!strcmp(tabla->nombreTabla, nombreTabla)) {
-			return tabla->consistencia;
-		}
-	}
-
-	return -1;
-}
-
-char* devolverTablaDeRequest(char* request) {
-
-	char** requestYParametros = string_split(request, " ");
-
-	char* tabla = string_duplicate(requestYParametros[1]);
-
-	liberarArrayDeStrings(requestYParametros);
-
-	return tabla;
-
-}
-
-int esDescribeGlobal(char* request) {
-	int resultado = 0;
-
-	char** requestYParametros = string_split(request, " ");
-
-	int requestEnInt = queRequestEs(requestYParametros[0]);
-
-	if (requestEnInt == DESCRIBE && (requestYParametros[1] == NULL)) {
-		resultado = 1;
-	}
-
-	liberarArrayDeStrings(requestYParametros);
-
-	return resultado;
-}
-
-int existeArchivo(char* direccion) {
-	FILE* archivo;
-	archivo = fopen(direccion, "r");
-
-	if (archivo == NULL) {
-		fclose(archivo);
-		return 0;
-	}
-
-	fclose(archivo);
-
-	return 1;
-}
-
-void crearScript(parametros_hiloScript* parametros) {
+void crearScript(char* request) {
 	//Importante: Si el parametro es enteramente vacio, aca tiene que entrar aca como " ".
 
 	script* nuevoScript = malloc(sizeof(script));
@@ -107,65 +27,38 @@ void crearScript(parametros_hiloScript* parametros) {
 
 	nuevoScript->lineasLeidas = 0;
 
-	if (parametros->request == RUN) {
+	if (devolverSoloRequest(request) == RUN) {
 
-		nuevoScript->direccionScript = malloc(sizeof(parametros->parametros));
-		nuevoScript->direccionScript = string_duplicate(parametros->parametros);
+		char* direccion = scriptConRaiz(devolverSoloParametros(request));
+
+		nuevoScript->direccionScript = malloc(sizeof(direccion));
+
+		nuevoScript->direccionScript = direccion;
+		nuevoScript->esPorConsola = 0;
 	}
 
-	else {	//TODO:
-			//Crear archivo script de una linea
-			//Poner direccion en el script
-	}
+	else {
 
-	removerScriptDeLista(nuevoScript->idScript, colaNEW);
-	list_add(colaREADY, nuevoScript);
+		nuevoScript->esPorConsola = 1;
+
+		if ( (crearArchivoParaRequest(nuevoScript,request)) == -1)
+		{
+			log_error(logger,"Hubo un error en la creacion del request");
+
+			moverScript(nuevoScript->idScript,colaNEW,listaEXIT);
+			return;
+
+		}
+
+	}
+	moverScript(nuevoScript->idScript,colaNEW,colaREADY);
+
+	free(request);
 
 	sem_post(&sem_disponibleColaREADY);
 
 }
 
-void limpiarBuffer(char* buffer) {
-	for (int i = 0; i < MAXBUFFER; i++) {
-		buffer[i] = '\n';
-	}
-}
-
-int charsDeBuffer(char* buffer) {
-	int lineas = 0;
-	for (; lineas < MAXBUFFER; lineas++) {
-		if (buffer[lineas] == '\n') {
-			break;
-		}
-	}
-
-	return lineas;
-}
-
-char* leerLinea(char* direccion, int lineaALeer) {
-	FILE* archivo;
-	archivo = fopen(direccion, "r");
-	char buffer[MAXBUFFER];
-
-	if (archivo == NULL) {
-		return " ";
-	}
-
-	for (int i = 0; i <= lineaALeer; i++) {
-		limpiarBuffer(buffer);
-		fgets(buffer, MAXBUFFER, archivo);
-	}
-
-	int caracteres = charsDeBuffer(buffer);
-
-	char* linea = malloc(sizeof(char) * caracteres);
-
-	memcpy(linea, buffer, caracteres * sizeof(char));
-
-	fclose(archivo);
-
-	return linea;
-}
 
 int ejecutarRequest(char* request) {
 
@@ -188,13 +81,7 @@ int ejecutarRequest(char* request) {
 			liberarArrayDeStrings(requestYParametros);
 			return -1;
 		}
-		parametros_hiloScript* parametros = malloc(
-				sizeof(parametros_hiloScript));
-
-		parametros->request = RUN;
-		parametros->parametros = string_duplicate(requestYParametros[1]);
-
-		crearScript(parametros);
+		crearScript(request);
 
 		liberarArrayDeStrings(requestYParametros);
 		return 1;
@@ -219,11 +106,13 @@ int ejecutarRequest(char* request) {
 		return -1;
 	}
 
-	int criterio = criterioDeTabla(devolverTablaDeRequest(request));
+	sleep(2); //No olvidar sacar esto jesus NO OLVIDAR
+
+	//int criterio = criterioDeTabla(devolverTablaDeRequest(request));
 
 	//por aca enviar :)
 
-	return -1;
+	return 1;
 }
 
 void matarTodo() //TODO
@@ -232,5 +121,19 @@ void matarTodo() //TODO
 
 void metrics() //TODO
 {
+
+}
+
+void status() //TODO
+{
+	printf("\n\n----NEW----\n\n");
+	mostrarListaScripts(colaNEW);
+	printf("\n\n----READY----\n\n");
+	mostrarListaScripts(colaREADY);
+	printf("\n\n----EXEC----\n\n");
+	mostrarListaScripts(listaEXEC);
+	printf("\n\n----EXIT----\n\n");
+	mostrarListaScripts(listaEXIT);
+	printf("\n\n");
 
 }
