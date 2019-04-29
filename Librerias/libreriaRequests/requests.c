@@ -32,7 +32,7 @@ int devolverSoloRequest(char* request) {
 }
 
 char* devolverSoloParametros(char* request) {
-	char** requestYParametros = string_n_split(request,2, " ");
+	char** requestYParametros = string_n_split(request, 2, " ");
 	char* parametros = string_duplicate(requestYParametros[1]);
 
 	liberarArrayDeStrings(requestYParametros);
@@ -310,5 +310,159 @@ int esUnaRequestValida(char* request, char* parametro) {
 	}
 
 	return esUnParametroValido(requestEnInt, parametro);
+
+}
+
+void* empaquetarRequest(char* request) {
+	void* paquete;
+
+	int requestEnInt = devolverSoloRequest(request);
+
+	char* parametrosJuntos = devolverSoloParametros(request);
+
+	char ** parametros = string_split(parametrosJuntos, " ");
+
+	if (requestEnInt == SELECT) {
+
+		char * nombreTabla = parametros[0];
+
+		int tamanioNombreTabla = strlen(nombreTabla) + 1;
+
+		int key = atoi(parametros[1]);
+
+		paquete = malloc(
+				sizeof(int) + sizeof(int) + tamanioNombreTabla + sizeof(int));
+
+		memcpy(paquete, &requestEnInt, sizeof(int));
+		memcpy(paquete + sizeof(int), &tamanioNombreTabla, sizeof(int));
+		memcpy(paquete + sizeof(int) + sizeof(int), nombreTabla,
+				tamanioNombreTabla);
+		memcpy(paquete + sizeof(int) + sizeof(int) + tamanioNombreTabla, &key,
+				sizeof(int));
+
+	}
+
+	else if (requestEnInt == INSERT) {
+
+		char * nombreTabla = parametros[0];
+
+		int tamanioNombreTabla = strlen(nombreTabla) + 1;
+
+		int key = atoi(parametros[1]);
+
+		char * value = parametros[2];
+
+		int tamanioValue = strlen(value) + 1;
+
+		int timestamp = atoi(parametros[3]); //Ver si esto tiene que ser otra cosa que no sea int
+
+		paquete = malloc(
+				sizeof(int) + sizeof(int) + tamanioNombreTabla + sizeof(int)
+						+ sizeof(int) + tamanioValue + sizeof(int));
+
+		memcpy(paquete, &requestEnInt, sizeof(int));
+		memcpy(paquete + sizeof(int), &tamanioNombreTabla, sizeof(int));
+		memcpy(paquete + sizeof(int) + sizeof(int), nombreTabla,
+				tamanioNombreTabla);
+		memcpy(paquete + sizeof(int) + sizeof(int) + tamanioNombreTabla, &key,
+				sizeof(int));
+		memcpy(
+				paquete + sizeof(int) + sizeof(int) + tamanioNombreTabla
+						+ sizeof(int), &tamanioValue, sizeof(int));
+		memcpy(
+				paquete + sizeof(int) + sizeof(int) + tamanioNombreTabla
+						+ sizeof(int) + sizeof(int), value, tamanioValue);
+		memcpy(
+				paquete + sizeof(int) + sizeof(int) + tamanioNombreTabla
+						+ sizeof(int) + sizeof(int) + tamanioValue, &timestamp,
+				sizeof(int));
+
+	}
+
+	else if (requestEnInt == CREATE) {
+
+		char * nombreTabla = parametros[0];
+
+		int tamanioNombreTabla = strlen(nombreTabla) + 1;
+
+		int consistencia = queConsistenciaEs(parametros[1]);
+
+		int particiones = atoi(parametros[2]);
+
+		int compactTime = atoi(parametros[3]);
+
+		paquete = malloc(
+				sizeof(int) + sizeof(int) + tamanioNombreTabla + sizeof(int)
+						+ sizeof(int) + sizeof(int));
+
+		memcpy(paquete, &requestEnInt, sizeof(int));
+		memcpy(paquete + sizeof(int), &tamanioNombreTabla, sizeof(int));
+		memcpy(paquete + sizeof(int) + sizeof(int), nombreTabla,
+				tamanioNombreTabla);
+		memcpy(paquete + sizeof(int) + sizeof(int) + tamanioNombreTabla,
+				&consistencia, sizeof(int));
+
+		memcpy(
+				paquete + sizeof(int) + sizeof(int) + tamanioNombreTabla
+						+ sizeof(int), &particiones, sizeof(int));
+
+		memcpy(
+				paquete + sizeof(int) + sizeof(int) + tamanioNombreTabla
+						+ sizeof(int) + sizeof(int), &compactTime, sizeof(int));
+	}
+
+	else if (requestEnInt == DESCRIBE) {
+		char ** requestYParametro = string_split(request, " ");
+
+		if (requestYParametro[1] == NULL) {
+			int cero = 0;
+			paquete = malloc(sizeof(int) + sizeof(int));
+
+			memcpy(paquete, &requestEnInt, sizeof(int));
+			memcpy(paquete + sizeof(int), &cero, sizeof(int));
+		}
+
+		else {
+
+			char * nombreTabla = parametros[0];
+
+			int tamanioNombreTabla = strlen(nombreTabla) + 1;
+
+			paquete = malloc(sizeof(int) + sizeof(int) + tamanioNombreTabla);
+
+			memcpy(paquete, &requestEnInt, sizeof(int));
+			memcpy(paquete + sizeof(int), &tamanioNombreTabla, sizeof(int));
+			memcpy(paquete + sizeof(int) + sizeof(int), nombreTabla,
+					tamanioNombreTabla);
+
+		}
+
+		liberarArrayDeStrings(requestYParametro);
+
+	}
+
+	else if (requestEnInt == DROP) {
+
+		char * nombreTabla = parametros[0];
+
+		int tamanioNombreTabla = strlen(nombreTabla) + 1;
+
+		paquete = malloc(sizeof(int) + sizeof(int) + tamanioNombreTabla);
+
+		memcpy(paquete, &requestEnInt, sizeof(int));
+		memcpy(paquete + sizeof(int), &tamanioNombreTabla, sizeof(int));
+		memcpy(paquete + sizeof(int) + sizeof(int), nombreTabla,
+				tamanioNombreTabla);
+
+	}
+
+	else if (requestEnInt == JOURNAL) {
+		paquete = malloc(sizeof(int));
+		memcpy(paquete, &requestEnInt, sizeof(int));
+	}
+
+	liberarArrayDeStrings(parametros);
+	free(parametrosJuntos);
+	return paquete;
 
 }

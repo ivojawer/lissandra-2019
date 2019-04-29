@@ -102,17 +102,19 @@ void limpiarBuffer(char* buffer) {
 }
 
 int charsDeBuffer(char* buffer) {
-	int lineas = 0;
-	for (; lineas < MAXBUFFER; lineas++) {
-		if (buffer[lineas] == '\n') {
+	int caracteres = 0;
+	for (; caracteres < MAXBUFFER; caracteres++) {
+		if (buffer[caracteres] == '\n') {
 			break;
 		}
 	}
 
-	return lineas;
+	return caracteres+1;
 }
 
 char* leerLinea(char* direccion, int lineaALeer) {
+
+	//TODO: Arreglar esto
 
 	//TODO: Semaforo con crearArchivo?
 
@@ -135,6 +137,9 @@ char* leerLinea(char* direccion, int lineaALeer) {
 			free(resultado);
 			return "fin";
 		}
+
+
+
 	}
 
 	int caracteres = charsDeBuffer(buffer);

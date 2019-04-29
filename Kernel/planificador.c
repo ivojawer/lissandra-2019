@@ -44,9 +44,11 @@ void planificadorEXEC(int IdScript) {
 			log_error(logger, "%s%i",
 					"Hubo un error abriendo el archivo del script ",
 					scriptEXEC->idScript);
-			moverScript(scriptEXEC->idScript, listaEXEC, listaEXIT);
+
 			free(linea);
-			break;
+			moverScript(scriptEXEC->idScript, listaEXEC, listaEXIT);
+			sem_post(&sem_multiprocesamiento);
+			return;
 		}
 
 		int resultado = ejecutarRequest(linea);
@@ -55,22 +57,30 @@ void planificadorEXEC(int IdScript) {
 			log_error(logger, "%s%i",
 					"Hubo un error en la ejecucion del script ",
 					scriptEXEC->idScript);
-			moverScript(scriptEXEC->idScript, listaEXEC, listaEXIT);
-			free(linea);
-			break;
-		}
 
+			free(linea);
+
+			moverScript(scriptEXEC->idScript, listaEXEC, listaEXIT);
+			sem_post(&sem_multiprocesamiento);
+			return;
+		}
 
 		scriptEXEC->lineasLeidas++;
 
 		char* proximaLinea = leerLinea(scriptEXEC->direccionScript,
-				scriptEXEC->lineasLeidas+1);
+				scriptEXEC->lineasLeidas + 1);
 
-		if (!strcmp(proximaLinea,"fin"))
-		{
-			log_info(logger,"%s%i","Termino de ejecutar exitosamente el script ",IdScript);
+		if (!strcmp(proximaLinea, "fin")) {
+			log_info(logger, "%s%i",
+					"Termino de ejecutar exitosamente el script ", IdScript);
+
+			free(proximaLinea);
+			free(linea);
+
 			moverScript(scriptEXEC->idScript, listaEXEC, listaEXIT);
-			break;
+			sem_post(&sem_multiprocesamiento);
+			return;
+
 		}
 
 		free(proximaLinea);
@@ -79,6 +89,7 @@ void planificadorEXEC(int IdScript) {
 		//Semaforo por si cambia el quantum?
 	}
 
+	moverScript(scriptEXEC->idScript, listaEXEC, colaREADY);
 	sem_post(&sem_multiprocesamiento);
 
 }
