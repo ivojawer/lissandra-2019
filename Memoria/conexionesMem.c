@@ -8,10 +8,11 @@ void conexiones()
 
 
 	//        Creo servidor
+		int puerto = 35666;//sale de config
 		struct sockaddr_in direccionServidor;
 		direccionServidor.sin_family = AF_INET;
 		direccionServidor.sin_addr.s_addr = INADDR_ANY;
-		direccionServidor.sin_port = htons(4445);
+		direccionServidor.sin_port = htons(puerto);
 
 		int servidor = socket(AF_INET,SOCK_STREAM,0);
 
@@ -20,9 +21,9 @@ void conexiones()
 
 		if(bind(servidor,(void*)&direccionServidor,sizeof(direccionServidor)) != 0){
 			perror("Fallo el bind");
-			exit; //se podria cambiar a un int si se necesta manejo de errores.
+			return; //se podria cambiar a un int si se necesta manejo de errores.
 		}
-		log_info(logger,"Estoy escuchando\n");
+		log_info(logger,"Estoy escuchando en puerto: %d\n",puerto);
 		listen(servidor,100);
 
 
@@ -46,10 +47,9 @@ void conexiones()
 				return;
 			}
 			buffer[bytesRecibidos] ='\0';
-			log_info(logger,"Me llegaron %d bytes con %s\n",bytesRecibidos,buffer);
+			//log_info(logger,"Me llegaron %d bytes con %s\n",bytesRecibidos,buffer);
 
-			//printf("Me llegaron %d bytes con %s\n",bytesRecibidos,buffer);
-			//messageHandler(buffer);
+			messageHandler(buffer,bytesRecibidos); //deberia ser del kernel, no?
 		}
 		free(buffer);
 
@@ -57,8 +57,8 @@ void conexiones()
 }
 
 
-void messageHandler(char* mensaje){
-	log_info(logger,"Me mandaron algo!!!\n");
+void messageHandler(char* mensaje,int tamanioMensaje){
+	log_info(logger,"Me mandaron algo: %s\n",mensaje);
 
 	//printf("Me mandaron algo!!!");
 }

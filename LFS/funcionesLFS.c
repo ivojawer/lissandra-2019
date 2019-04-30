@@ -162,10 +162,17 @@ void create(char* parametros) {
 	int particiones = atoi(parametrosEnVector[2]);
 	char* tiempoCompactacion = parametrosEnVector[3];
 
+
 	if (tablaYaExiste(tabla)) {
 		log_error(logger, "%s%s%s", "La tabla ", tabla, " ya existe.");
 		return;
 	}
+
+
+
+
+
+
 
 
 	liberarArrayDeStrings(parametrosEnVector);

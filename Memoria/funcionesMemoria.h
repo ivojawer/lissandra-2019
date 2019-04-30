@@ -9,12 +9,22 @@
 #include<readline/readline.h>
 #include <pthread.h>
 #include "requests.h"
+#include "sockets.h"
 #include <unistd.h>
 #include <commons/collections/list.h>
-#include "sockets.h"
+
+typedef struct {
+	char* nombreTabla;
+	t_list* datosAInsertar;
+} t_tablaEnMemTable;
 
 void consola();
-void messageHandler();
 void conexiones();
+void mandarAEjecutarRequest(int request, char* parametros);
+void Select(char* parametros);
+void insert(char* parametros);
+void create(char* parametros);
+void describe(char* parametro);
+void drop(char* parametro);
 
 #endif /* FUNCIONESMEMORIA_H_ */

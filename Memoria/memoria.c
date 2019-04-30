@@ -18,6 +18,9 @@ int main() {
 	pthread_create(&h_consola, NULL, (void *) consola, NULL);
 	pthread_create(&h_conexiones, NULL, (void *) conexiones, NULL);
 
+
+
+
 	pthread_detach(h_conexiones);
 	pthread_join(h_consola, NULL);
 

@@ -1,7 +1,6 @@
 #ifndef SOCKETS_H_
 #define SOCKETS_H_
 
-
 #include <string.h>
 #include <stdio.h>
 #include <arpa/inet.h>
