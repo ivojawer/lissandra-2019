@@ -9,11 +9,11 @@ extern int socketLFSAMEM;
 
 
 void mandarAEjecutarRequest(int request, char* parametrosOriginal) {
+	printf("me mandaron un request nro:%d\n", request);
 
 	//Importante: Si el parametro es enteramente vacio, aca tiene que entrar aca como " ".
 
 	char* parametros = string_duplicate(parametrosOriginal); //Esto es para que se pueda hacer un free() en consola.c sin que rompa
-
 	switch (request) {
 	case SELECT:
 		;
@@ -154,7 +154,6 @@ void insert(char* parametros) {
 }
 
 void create(char* parametros) {
-
 	char** parametrosEnVector = string_n_split(parametros, 4, " ");
 
 	char* tabla = string_duplicate(parametrosEnVector[0]);
@@ -163,13 +162,22 @@ void create(char* parametros) {
 	char* tiempoCompactacion = parametrosEnVector[3];
 
 
+	//chequea si existe
 	if (tablaYaExiste(tabla)) {
 		log_error(logger, "%s%s%s", "La tabla ", tabla, " ya existe.");
 		return;
 	}
 
+	//crea directorio
 
+	int result = mkdir(tabla, S_IRUSR | S_IWUSR | S_IXUSR);
+	if (-1 == result)
+	{
+	    printf("Error creating directory!n");
+	    exit(1);
+	}
 
+	//crea metadata
 
 
 

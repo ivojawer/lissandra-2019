@@ -12,6 +12,10 @@
 #include "sockets.h"
 #include <unistd.h>
 #include <commons/collections/list.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+
+
 
 typedef struct {
 	char* nombreTabla;

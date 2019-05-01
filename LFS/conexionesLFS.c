@@ -88,7 +88,7 @@ void messageHandler(char* lectura){
 		strcpy(requestYParametros[1], " ");
 	}
 	log_info(logger,"mando a ejecutar una request");
-	//mandarAEjecutarRequest(requestEnInt, requestYParametros[1]);
+	mandarAEjecutarRequest(requestEnInt, requestYParametros[1]);
 }
 
 
