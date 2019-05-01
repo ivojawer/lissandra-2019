@@ -1,5 +1,6 @@
 #include "funcionesLFS.h"
 
+
 extern t_list* listaDeNombreDeTablas;
 extern t_list* memTable;
 extern t_log* logger;
@@ -169,11 +170,19 @@ void create(char* parametros) {
 	}
 
 	//crea directorio
+	char* pathCompleto = NULL;
+	int tablaLen = strlen( tabla );
+	pathCompleto = malloc( 7 + tablaLen  + 1 ); // Add 1 for null terminator.
+	strcpy( pathCompleto, "Tablas/" );
+	strcat( pathCompleto, tabla );
 
-	int result = mkdir(tabla, S_IRUSR | S_IWUSR | S_IXUSR);
+	printf("Path entero:%s\n", pathCompleto);
+	int result = mkdir(pathCompleto, 0700);
+
 	if (-1 == result)
 	{
-	    printf("Error creating directory!n");
+
+		printf("Error creating directory!\n");
 	    exit(1);
 	}
 
@@ -184,6 +193,7 @@ void create(char* parametros) {
 
 
 	liberarArrayDeStrings(parametrosEnVector);
+	free(pathCompleto);//?
 	free(parametros);
 
 }
