@@ -313,156 +313,89 @@ int esUnaRequestValida(char* request, char* parametro) {
 
 }
 
-void* empaquetarRequest(char* request) {
+
+int seRecibioBien(int respuesta, t_log* logger) {
+	if (respuesta < 0) {
+
+		log_error(logger, "Hubo un error recibiendo algo en algun lado");
+
+		return 0;
+	}
+	return 1;
+}
+
+int recibirInt(int deQuien, t_log* logger) {
+	void* bufferNombreRequest = malloc(sizeof(int));
+	int respuesta = recv(deQuien, bufferNombreRequest, sizeof(int),
+	MSG_WAITALL);
+
+	if (!seRecibioBien(respuesta, logger)) {
+
+		free(bufferNombreRequest);
+		return -1;
+	}
+
+	int intRecibido;
+	memcpy(&intRecibido, bufferNombreRequest, sizeof(int));
+
+	free(bufferNombreRequest);
+	return intRecibido;
+}
+
+char* recibirString(int deQuien, t_log* logger) {
+
+	int tamanioString = recibirInt(deQuien, logger);
+
+	if (tamanioString == -1) {
+		return " ";
+	}
+
+	void* bufferString = malloc(tamanioString);
+
+	int respuesta = recv(deQuien, bufferString, tamanioString,
+	MSG_WAITALL);
+
+	if (!seRecibioBien(respuesta, logger)) {
+		return " ";
+	}
+
+	char* stringRecibido = malloc(tamanioString);
+
+	memcpy(stringRecibido, bufferString, tamanioString);
+
+	free(bufferString);
+
+	return stringRecibido;
+}
+
+void enviarString(char* string, int aQuien)
+{
 	void* paquete;
 
-	int requestEnInt = devolverSoloRequest(request);
+	int tamanioRequest = strlen(string) + 1;
 
-	char* parametrosJuntos = devolverSoloParametros(request);
+	int tamanioEnvio = sizeof(int) + tamanioRequest;
 
-	char ** parametros = string_split(parametrosJuntos, " ");
+	paquete = malloc(tamanioEnvio);
 
-	if (requestEnInt == SELECT) {
+	memcpy(paquete, &tamanioRequest, sizeof(int));
 
-		char * nombreTabla = parametros[0];
+	memcpy(paquete+sizeof(int), string, tamanioRequest);
 
-		int tamanioNombreTabla = strlen(nombreTabla) + 1;
+	send(aQuien, paquete, tamanioEnvio, 0);
+}
 
-		int key = atoi(parametros[1]);
+int crearConexion(int puerto){
+	struct sockaddr_in direccionServidor;
+	direccionServidor.sin_family =AF_INET;
+	direccionServidor.sin_addr.s_addr =inet_addr("127.0.0.1");//el ip tiene que salir del config
+	direccionServidor.sin_port =htons(puerto);
 
-		paquete = malloc(
-				sizeof(int) + sizeof(int) + tamanioNombreTabla + sizeof(int));
 
-		memcpy(paquete, &requestEnInt, sizeof(int));
-		memcpy(paquete + sizeof(int), &tamanioNombreTabla, sizeof(int));
-		memcpy(paquete + sizeof(int) + sizeof(int), nombreTabla,
-				tamanioNombreTabla);
-		memcpy(paquete + sizeof(int) + sizeof(int) + tamanioNombreTabla, &key,
-				sizeof(int));
-
+	int conexion =socket(AF_INET, SOCK_STREAM,0);
+	if(connect(conexion,(void*) &direccionServidor,sizeof(direccionServidor)) != 0){
+		perror("No me pude conectar");
+		return -1;
 	}
-
-	else if (requestEnInt == INSERT) {
-
-		char * nombreTabla = parametros[0];
-
-		int tamanioNombreTabla = strlen(nombreTabla) + 1;
-
-		int key = atoi(parametros[1]);
-
-		char * value = parametros[2];
-
-		int tamanioValue = strlen(value) + 1;
-
-		int timestamp = atoi(parametros[3]); //Ver si esto tiene que ser otra cosa que no sea int
-
-		paquete = malloc(
-				sizeof(int) + sizeof(int) + tamanioNombreTabla + sizeof(int)
-						+ sizeof(int) + tamanioValue + sizeof(int));
-
-		memcpy(paquete, &requestEnInt, sizeof(int));
-		memcpy(paquete + sizeof(int), &tamanioNombreTabla, sizeof(int));
-		memcpy(paquete + sizeof(int) + sizeof(int), nombreTabla,
-				tamanioNombreTabla);
-		memcpy(paquete + sizeof(int) + sizeof(int) + tamanioNombreTabla, &key,
-				sizeof(int));
-		memcpy(
-				paquete + sizeof(int) + sizeof(int) + tamanioNombreTabla
-						+ sizeof(int), &tamanioValue, sizeof(int));
-		memcpy(
-				paquete + sizeof(int) + sizeof(int) + tamanioNombreTabla
-						+ sizeof(int) + sizeof(int), value, tamanioValue);
-		memcpy(
-				paquete + sizeof(int) + sizeof(int) + tamanioNombreTabla
-						+ sizeof(int) + sizeof(int) + tamanioValue, &timestamp,
-				sizeof(int));
-
-	}
-
-	else if (requestEnInt == CREATE) {
-
-		char * nombreTabla = parametros[0];
-
-		int tamanioNombreTabla = strlen(nombreTabla) + 1;
-
-		int consistencia = queConsistenciaEs(parametros[1]);
-
-		int particiones = atoi(parametros[2]);
-
-		int compactTime = atoi(parametros[3]);
-
-		paquete = malloc(
-				sizeof(int) + sizeof(int) + tamanioNombreTabla + sizeof(int)
-						+ sizeof(int) + sizeof(int));
-
-		memcpy(paquete, &requestEnInt, sizeof(int));
-		memcpy(paquete + sizeof(int), &tamanioNombreTabla, sizeof(int));
-		memcpy(paquete + sizeof(int) + sizeof(int), nombreTabla,
-				tamanioNombreTabla);
-		memcpy(paquete + sizeof(int) + sizeof(int) + tamanioNombreTabla,
-				&consistencia, sizeof(int));
-
-		memcpy(
-				paquete + sizeof(int) + sizeof(int) + tamanioNombreTabla
-						+ sizeof(int), &particiones, sizeof(int));
-
-		memcpy(
-				paquete + sizeof(int) + sizeof(int) + tamanioNombreTabla
-						+ sizeof(int) + sizeof(int), &compactTime, sizeof(int));
-	}
-
-	else if (requestEnInt == DESCRIBE) {
-		char ** requestYParametro = string_split(request, " ");
-
-		if (requestYParametro[1] == NULL) {
-			int cero = 0;
-			paquete = malloc(sizeof(int) + sizeof(int));
-
-			memcpy(paquete, &requestEnInt, sizeof(int));
-			memcpy(paquete + sizeof(int), &cero, sizeof(int));
-		}
-
-		else {
-
-			char * nombreTabla = parametros[0];
-
-			int tamanioNombreTabla = strlen(nombreTabla) + 1;
-
-			paquete = malloc(sizeof(int) + sizeof(int) + tamanioNombreTabla);
-
-			memcpy(paquete, &requestEnInt, sizeof(int));
-			memcpy(paquete + sizeof(int), &tamanioNombreTabla, sizeof(int));
-			memcpy(paquete + sizeof(int) + sizeof(int), nombreTabla,
-					tamanioNombreTabla);
-
-		}
-
-		liberarArrayDeStrings(requestYParametro);
-
-	}
-
-	else if (requestEnInt == DROP) {
-
-		char * nombreTabla = parametros[0];
-
-		int tamanioNombreTabla = strlen(nombreTabla) + 1;
-
-		paquete = malloc(sizeof(int) + sizeof(int) + tamanioNombreTabla);
-
-		memcpy(paquete, &requestEnInt, sizeof(int));
-		memcpy(paquete + sizeof(int), &tamanioNombreTabla, sizeof(int));
-		memcpy(paquete + sizeof(int) + sizeof(int), nombreTabla,
-				tamanioNombreTabla);
-
-	}
-
-	else if (requestEnInt == JOURNAL) {
-		paquete = malloc(sizeof(int));
-		memcpy(paquete, &requestEnInt, sizeof(int));
-	}
-
-	liberarArrayDeStrings(parametros);
-	free(parametrosJuntos);
-	return paquete;
-
+	return conexion;
 }

@@ -7,7 +7,7 @@ extern t_log* logger;
 int socketLFSAMEM;
 void conexiones()
 {
-	socketLFSAMEM = crearConexion(4445);//conexion con memoria
+	socketLFSAMEM = crearConexion(35666);//conexion con memoria
 	//        Creo servidor
 	struct sockaddr_in direccionServidor;
 	direccionServidor.sin_family = AF_INET;

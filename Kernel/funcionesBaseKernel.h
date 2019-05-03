@@ -32,7 +32,6 @@ typedef struct {
 #include <pthread.h>
 #include "requests.h"
 #include <unistd.h>
-#include "sockets.h"
 #include <commons/collections/list.h>
  #include <semaphore.h>
 

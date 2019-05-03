@@ -25,13 +25,13 @@ endif
 all: memoria
 
 dependents:
-	-cd /home/ivan/eclipse-workspace/tp-2019-1c-U-TN-Tecno/Librerias/libreriaRequests/Debug && $(MAKE) all
+	-cd /home/utnso/workspace/tp-2019-1c-U-TN-Tecno/Librerias/libreriaRequests/Debug && $(MAKE) clean all
 
 # Tool invocations
-memoria: $(OBJS) $(USER_OBJS) /home/ivan/eclipse-workspace/tp-2019-1c-U-TN-Tecno/Librerias/libreriaRequests/Debug/liblibreriaRequests.so
+memoria: $(OBJS) $(USER_OBJS) /home/utnso/workspace/tp-2019-1c-U-TN-Tecno/Librerias/libreriaRequests/Debug/liblibreriaRequests.so
 	@echo 'Building target: $@'
 	@echo 'Invoking: GCC C Linker'
-	gcc -L"/home/ivan/eclipse-workspace/tp-2019-1c-U-TN-Tecno/Librerias/libreriaRequests/Debug" -L"/home/ivan/eclipse-workspace/tp-2019-1c-U-TN-Tecno/Librerias/libreriaSockets/Debug" -pthread -o "memoria" $(OBJS) $(USER_OBJS) $(LIBS)
+	gcc -L"/home/utnso/workspace/tp-2019-1c-U-TN-Tecno/Librerias/libreriaRequests/Debug" -pthread -o "memoria" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
@@ -41,6 +41,6 @@ clean:
 	-@echo ' '
 
 .PHONY: all clean dependents
-/home/ivan/eclipse-workspace/tp-2019-1c-U-TN-Tecno/Librerias/libreriaRequests/Debug/liblibreriaRequests.so:
+/home/utnso/workspace/tp-2019-1c-U-TN-Tecno/Librerias/libreriaRequests/Debug/liblibreriaRequests.so:
 
 -include ../makefile.targets

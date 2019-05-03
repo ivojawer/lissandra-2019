@@ -1,4 +1,5 @@
 #include "funcionesLFS.h"
+extern int socketLFSAMEM;
 
 void consola() {
 
@@ -7,6 +8,10 @@ void consola() {
 	{
 
 		char* lectura = readline("--> ");
+
+		if (lectura) {
+					add_history(lectura);
+				}
 
 		if (string_is_empty(lectura)) {
 			printf("No es una request valida, vuelva prontos \n");
@@ -33,7 +38,6 @@ void consola() {
 			requestYParametros[1] = (char *) malloc(sizeof(" "));
 			strcpy(requestYParametros[1], " ");
 		}
-
 		mandarAEjecutarRequest(requestEnInt, requestYParametros[1]);
 
 		liberarArrayDeStrings(requestYParametros);

@@ -4,5 +4,5 @@
 
 USER_OBJS :=
 
-LIBS := -llibreriaRequests -llibreriaSockets -lreadline -lcommons
+LIBS := -llibreriaRequests -lreadline -lcommons
 

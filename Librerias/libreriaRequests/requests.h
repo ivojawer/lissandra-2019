@@ -21,6 +21,13 @@
 #include<commons/string.h>
 #include<commons/config.h>
 #include<readline/readline.h>
+#include <arpa/inet.h>
+#include <sys/socket.h>
+
+typedef struct{
+	int requestEnInt;
+	char* parametros;
+}request;
 
 
 int esUnaRequestValida(char* request, char* parametro);
@@ -30,6 +37,8 @@ int queConsistenciaEs(char* string);
 int devolverSoloRequest(char* request);
 void liberarArrayDeStrings(char** array);
 char* devolverSoloParametros(char* request);
+void empaquetarYEnviarRequest(char* request, int aQuien);
+char* recibirRequest(int deQuien, t_log* logger);
 
 
 #include "requests.h"

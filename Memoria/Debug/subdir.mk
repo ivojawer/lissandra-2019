@@ -26,7 +26,7 @@ C_DEPS += \
 %.o: ../%.c
 	@echo 'Building file: $<'
 	@echo 'Invoking: GCC C Compiler'
-	gcc -Icommons -Ireadline -I"/home/ivan/eclipse-workspace/tp-2019-1c-U-TN-Tecno/Librerias/libreriaRequests" -I"/home/ivan/eclipse-workspace/tp-2019-1c-U-TN-Tecno/Librerias/libreriaSockets" -O0 -g3 -Wall -c -fmessage-length=0 -pthread -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@)" -o "$@" "$<"
+	gcc -Icommons -Ireadline -I"/home/utnso/workspace/tp-2019-1c-U-TN-Tecno/Librerias/libreriaRequests" -O0 -g3 -Wall -c -fmessage-length=0 -pthread -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@)" -o "$@" "$<"
 	@echo 'Finished building: $<'
 	@echo ' '
 

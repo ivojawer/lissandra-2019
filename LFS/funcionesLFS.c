@@ -25,7 +25,7 @@ void mandarAEjecutarRequest(int request, char* parametrosOriginal) {
 
 			pthread_detach(h_select);
 
-			enviarMensaje("Me llego un select, ocupate macho", socketLFSAMEM);
+			enviarString("Me llego un select, ocupate macho", socketLFSAMEM);
 
 			return;
 		}

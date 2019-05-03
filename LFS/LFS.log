@@ -18,3 +18,8 @@
 
 [INFO] 13:08:38:307 LFS/(4787:4799): Estoy escuchando
 
+[INFO] 22:23:55:407 LFS/(9154:9171): Estoy escuchando
+
+[ERROR] 22:24:06:984 LFS/(9154:9182): La tabla HOLA no existe.
+[INFO] 14:19:52:313 LFS/(5924:5937): Estoy escuchando
+
