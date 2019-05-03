@@ -1,6 +1,5 @@
 #include "funcionesLFS.h"
 
-
 extern t_list* listaDeNombreDeTablas;
 extern t_list* memTable;
 extern t_log* logger;
@@ -25,7 +24,7 @@ void mandarAEjecutarRequest(int request, char* parametrosOriginal) {
 
 			pthread_detach(h_select);
 
-			enviarString("Me llego un select, ocupate macho", socketLFSAMEM);
+			//enviarString("Me llego un select, ocupate macho", socketLFSAMEM);
 
 			return;
 		}

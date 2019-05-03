@@ -1,8 +1,11 @@
 #include "conexionesMem.h"
 
 extern t_log* logger;
+int socketLFSAMem;
 
 void conexiones() {
+
+	socketLFSAMem = crearConexion(4444);//conexion con LFS
 
 	//        Creo servidor
 	int puerto = 35666; //sale de config
