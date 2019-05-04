@@ -6,13 +6,13 @@ extern t_log* logger;
 
 
 
-void mandarAEjecutarRequest(int request, char* parametrosOriginal) {
+void mandarAEjecutarRequest(request* requestAEjecutar) {
 
 	//Importante: Si el parametro es enteramente vacio, aca tiene que entrar aca como " ".
 
-	char* parametros = string_duplicate(parametrosOriginal); //Esto es para que se pueda hacer un free() en consola.c sin que rompa
+	char* parametros = string_duplicate(requestAEjecutar->parametros); //Esto es para que se pueda hacer un free() en consola.c sin que rompa
 
-	switch (request) {
+	switch (requestAEjecutar->requestEnInt) {
 	case SELECT:
 		;
 		{
@@ -24,7 +24,7 @@ void mandarAEjecutarRequest(int request, char* parametrosOriginal) {
 
 
 
-			return;
+			break;
 		}
 
 	case INSERT:
@@ -36,7 +36,7 @@ void mandarAEjecutarRequest(int request, char* parametrosOriginal) {
 
 			pthread_detach(h_insert);
 
-			return;
+			break;
 		}
 
 	case CREATE:
@@ -49,7 +49,7 @@ void mandarAEjecutarRequest(int request, char* parametrosOriginal) {
 
 			pthread_detach(h_create);
 
-			return;
+			break;
 		}
 
 	case DESCRIBE:
@@ -62,7 +62,7 @@ void mandarAEjecutarRequest(int request, char* parametrosOriginal) {
 
 			pthread_detach(h_describe);
 
-			return;
+			break;
 		}
 
 	case DROP:
@@ -75,11 +75,13 @@ void mandarAEjecutarRequest(int request, char* parametrosOriginal) {
 
 			pthread_detach(h_drop);
 
-			return;
+			break;
 
 		}
 
 	}
+
+	liberarRequest(requestAEjecutar);
 }
 
 

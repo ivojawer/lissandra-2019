@@ -23,8 +23,7 @@ void consola() {
 
 		int requestEnInt = queRequestEs(requestYParametros[0]);
 
-		if (!esUnaRequestValida(requestYParametros[0],
-				requestYParametros[1]) || requestEnInt == JOURNAL
+		if (!esUnaRequestValida(lectura) || requestEnInt == JOURNAL
 				|| requestEnInt == ADD || requestEnInt == RUN || requestEnInt == METRICS) { //Si es invalida o es una request que no vale en el LFS
 
 			printf("No es una request valida, vuelva prontos \n");
@@ -38,7 +37,10 @@ void consola() {
 			requestYParametros[1] = (char *) malloc(sizeof(" "));
 			strcpy(requestYParametros[1], " ");
 		}
-		mandarAEjecutarRequest(requestEnInt, requestYParametros[1]);
+
+		request* requestParaHilo = crearStructRequest(lectura);
+
+		mandarAEjecutarRequest(requestParaHilo); //Esto podria ser un hilo?
 
 		liberarArrayDeStrings(requestYParametros);
 		free(lectura);

@@ -30,7 +30,7 @@ typedef struct{
 }request;
 
 
-int esUnaRequestValida(char* request, char* parametro);
+int esUnaRequestValida(char* requestEnString);
 int queRequestEs(char* palabra);
 int esUnParametroValido(int request, char* parametro);
 int queConsistenciaEs(char* string);
@@ -39,6 +39,9 @@ void liberarArrayDeStrings(char** array);
 char* devolverSoloParametros(char* request);
 void empaquetarYEnviarRequest(char* request, int aQuien);
 char* recibirRequest(int deQuien, t_log* logger);
+request* crearStructRequest(char* requestEnString);
+char* requestStructAString(request* request);
+void liberarRequest(request* request);
 
 
 #include "requests.h"

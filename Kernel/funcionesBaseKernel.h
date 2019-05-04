@@ -39,13 +39,13 @@ char* leerLinea(char* direccion,int lineaALeer);
 int removerScriptDeLista(int id, t_list* lista);
 int encontrarScriptEnLista(int id, t_list* lista);
 int criterioDeTabla(char* nombreTabla);
-char* devolverTablaDeRequest(char* request);
-int esDescribeGlobal(char* request);
+char* devolverTablaDeRequest(request* request);
+int esDescribeGlobal(request* request);
 int existeArchivo(char* direccion);
 void limpiarBuffer(char* buffer);
 int charsDeBuffer(char* buffer);
 char* scriptConRaiz(char* script);
-int crearArchivoParaRequest(script* script, char* request);
+int crearArchivoParaRequest(script* script, request* requestAArchivo);
 int moverScript(int scriptID, t_list* listaOrigen, t_list* listaDestino);
 void mostrarListaScripts(t_list* lista);
 

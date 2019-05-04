@@ -13,7 +13,7 @@ extern t_log* logger;
 
 
 
-void crearScript(char* request) {
+void crearScript(request* nuevaRequest) {
 	//Importante: Si el parametro es enteramente vacio, aca tiene que entrar aca como " ".
 
 	script* nuevoScript = malloc(sizeof(script));
@@ -27,9 +27,9 @@ void crearScript(char* request) {
 
 	nuevoScript->lineasLeidas = 0;
 
-	if (devolverSoloRequest(request) == RUN) {
+	if (nuevaRequest->requestEnInt == RUN) {
 
-		char* direccion = scriptConRaiz(devolverSoloParametros(request));
+		char* direccion = scriptConRaiz(nuevaRequest->parametros);
 
 		nuevoScript->direccionScript = malloc(sizeof(direccion));
 
@@ -41,7 +41,7 @@ void crearScript(char* request) {
 
 		nuevoScript->esPorConsola = 1;
 
-		if ( (crearArchivoParaRequest(nuevoScript,request)) == -1)
+		if ( (crearArchivoParaRequest(nuevoScript,nuevaRequest)) == -1)
 		{
 			log_error(logger,"Hubo un error en la creacion del request");
 
@@ -53,18 +53,16 @@ void crearScript(char* request) {
 	}
 	moverScript(nuevoScript->idScript,colaNEW,colaREADY);
 
-	free(request);
+	liberarRequest(nuevaRequest);
 
 	sem_post(&sem_disponibleColaREADY);
 
 }
 
 
-int ejecutarRequest(char* request) {
+int ejecutarRequest(request* requestAEjecutar) {
 
-	int requestEnInt = devolverSoloRequest(request);
-
-	switch (requestEnInt) {
+	switch (requestAEjecutar->requestEnInt) {
 
 	case JOURNAL: {
 		;
@@ -74,16 +72,13 @@ int ejecutarRequest(char* request) {
 
 	case RUN: {
 		;
-		char** requestYParametros = string_split(request, " ");
 
-		if (!existeArchivo(requestYParametros[1])) {
+		if (!existeArchivo(requestAEjecutar->parametros)) {
 
-			liberarArrayDeStrings(requestYParametros);
 			return -1;
 		}
-		crearScript(request);
+		crearScript(requestAEjecutar);
 
-		liberarArrayDeStrings(requestYParametros);
 		return 1;
 	}
 
@@ -101,12 +96,12 @@ int ejecutarRequest(char* request) {
 
 	}
 
-	if (esDescribeGlobal(request)) {
+	if (esDescribeGlobal(requestAEjecutar)) {
 		//Hacer el describe global
 		return -1;
 	}
 
-	sleep(2); //No olvidar sacar esto jesus NO OLVIDAR
+	//sleep(2); //No olvidar sacar esto jesus NO OLVIDAR
 
 	//int criterio = criterioDeTabla(devolverTablaDeRequest(request));
 

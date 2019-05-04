@@ -16,14 +16,13 @@ int encontrarScriptEnLista(int id, t_list* lista) {
 
 int removerScriptDeLista(int id, t_list* lista) {
 
-	int index = encontrarScriptEnLista(id,lista);
+	int index = encontrarScriptEnLista(id, lista);
 
-	if(index == -1)
-	{
+	if (index == -1) {
 		return -1;
 	}
 
-	list_remove(lista,index);
+	list_remove(lista, index);
 
 	return 1;
 }
@@ -40,30 +39,25 @@ int criterioDeTabla(char* nombreTabla) {
 	return -1;
 }
 
-char* devolverTablaDeRequest(char* request) {
+char* devolverTablaDeRequest(request* request) {
 
-	char** requestYParametros = string_split(request, " ");
+	char** parametros = string_split(request->parametros, " ");
 
-	char* tabla = string_duplicate(requestYParametros[1]);
+	char* tabla = string_duplicate(parametros[0]);
 
-	liberarArrayDeStrings(requestYParametros);
+	liberarArrayDeStrings(parametros);
 
 	return tabla;
 
 }
 
-int esDescribeGlobal(char* request) {
+int esDescribeGlobal(request* request) {
 	int resultado = 0;
 
-	char** requestYParametros = string_split(request, " ");
-
-	int requestEnInt = queRequestEs(requestYParametros[0]);
-
-	if (requestEnInt == DESCRIBE && (requestYParametros[1] == NULL)) {
+	if (request->requestEnInt == DESCRIBE
+			&& (!strcmp(" ", request->parametros))) {
 		resultado = 1;
 	}
-
-	liberarArrayDeStrings(requestYParametros);
 
 	return resultado;
 }
@@ -109,7 +103,7 @@ int charsDeBuffer(char* buffer) {
 		}
 	}
 
-	return caracteres+1;
+	return caracteres + 1;
 }
 
 char* leerLinea(char* direccion, int lineaALeer) {
@@ -124,21 +118,24 @@ char* leerLinea(char* direccion, int lineaALeer) {
 
 	if (archivo == NULL) {
 		fclose(archivo);
-		return "error";
+
+		char* error = "error";
+
+		return error;
 	}
 
 	for (int i = 0; i <= lineaALeer; i++) {
 		limpiarBuffer(buffer);
 		char* resultado = fgets(buffer, MAXBUFFER, archivo);
 
-		if (resultado == NULL)
-		{
+		if (resultado == NULL) {
 			fclose(archivo);
 			free(resultado);
-			return "fin";
+
+			char* fin = "fin";
+
+			return fin;
 		}
-
-
 
 	}
 
@@ -153,7 +150,9 @@ char* leerLinea(char* direccion, int lineaALeer) {
 	return linea;
 }
 
-int crearArchivoParaRequest(script* script, char* request) {
+
+
+int crearArchivoParaRequest(script* script, request* requestAArchivo) {
 
 	FILE* archivo;
 	char* direccion = scriptConRaiz(string_itoa(script->idScript));
@@ -165,7 +164,7 @@ int crearArchivoParaRequest(script* script, char* request) {
 		return -1;
 	}
 
-	if (fputs(request, archivo) == EOF) {
+	if (fputs(requestStructAString(requestAArchivo), archivo) == EOF) {
 		fclose(archivo);
 		return -1;
 	}
@@ -179,47 +178,41 @@ int crearArchivoParaRequest(script* script, char* request) {
 
 }
 
-char* nombreScript(script* script)
-{
-	if (script->esPorConsola)
-	{
-		return leerLinea(script->direccionScript,0);
+char* nombreScript(script* script) {
+	if (script->esPorConsola) {
+		return leerLinea(script->direccionScript, 0);
 	}
 
-	return string_substring_from(script->direccionScript,sizeof(RAIZSCRIPTS)-1);
+	return string_substring_from(script->direccionScript,
+			sizeof(RAIZSCRIPTS) - 1);
 }
 
-void mostrarListaScripts(t_list* lista)
-{
-	for(int i = 0; i<list_size(lista);i++)
-	{
-		script* script = list_get(lista,i);
-		printf("%s%i%s%i%s%s%s","Script ",script->idScript,": Lineas ejecutadas: ",script->lineasLeidas,". Script: ",nombreScript(script),"\n");
+void mostrarListaScripts(t_list* lista) {
+	for (int i = 0; i < list_size(lista); i++) {
+		script* script = list_get(lista, i);
+		printf("%s%i%s%i%s%s%s", "Script ", script->idScript,
+				": Lineas ejecutadas: ", script->lineasLeidas, ". Script: ",
+				nombreScript(script), "\n");
 	}
 }
 
-
-
-int moverScript(int scriptID, t_list* listaOrigen, t_list* listaDestino)
-{
+int moverScript(int scriptID, t_list* listaOrigen, t_list* listaDestino) {
 
 	//TODO: Poner semaforos?
 
-	int index = encontrarScriptEnLista(scriptID,listaOrigen);
+	int index = encontrarScriptEnLista(scriptID, listaOrigen);
 
-	if (index == -1)
-	{
+	if (index == -1) {
 		return -1;
 	}
 
-	script* script = list_get(listaOrigen,index);
+	script* script = list_get(listaOrigen, index);
 
-	if ((removerScriptDeLista(scriptID,listaOrigen)) == 0)
-	{
+	if ((removerScriptDeLista(scriptID, listaOrigen)) == 0) {
 		return 0;
 	}
 
-	list_add(listaDestino,script);
+	list_add(listaDestino, script);
 	return 1;
 }
 

@@ -51,13 +51,16 @@ void planificadorEXEC(int IdScript) {
 			return;
 		}
 
-		int resultado = ejecutarRequest(linea);
+		request* requestAEjecutar = crearStructRequest(linea);
+
+		int resultado = ejecutarRequest(requestAEjecutar);
 
 		if (resultado == -1) {
 			log_error(logger, "%s%i",
 					"Hubo un error en la ejecucion del script ",
 					scriptEXEC->idScript);
 
+			liberarRequest(requestAEjecutar);
 			free(linea);
 
 			moverScript(scriptEXEC->idScript, listaEXEC, listaEXIT);
@@ -74,8 +77,9 @@ void planificadorEXEC(int IdScript) {
 			log_info(logger, "%s%i",
 					"Termino de ejecutar exitosamente el script ", IdScript);
 
-			free(proximaLinea);
+			//free(proximaLinea); TODO: VER ESTA LINEA HIJO DE PUTAAAAAAAAAAAAAAAAAAAAAAAAAAA
 			free(linea);
+			liberarRequest(requestAEjecutar);
 
 			moverScript(scriptEXEC->idScript, listaEXEC, listaEXIT);
 			sem_post(&sem_multiprocesamiento);
@@ -83,8 +87,9 @@ void planificadorEXEC(int IdScript) {
 
 		}
 
-		free(proximaLinea);
+		//free(proximaLinea); //TODO: ver esta linea tambien :)
 		free(linea);
+		liberarRequest(requestAEjecutar);
 
 		//Semaforo por si cambia el quantum?
 	}

@@ -8,13 +8,11 @@ extern int socketLFSAMEM;
 
 
 
-void mandarAEjecutarRequest(int request, char* parametrosOriginal) {
-	printf("me mandaron un request nro:%d\n", request);
+void mandarAEjecutarRequest(request* requestAEjecutar) {
 
-	//Importante: Si el parametro es enteramente vacio, aca tiene que entrar aca como " ".
 
-	char* parametros = string_duplicate(parametrosOriginal); //Esto es para que se pueda hacer un free() en consola.c sin que rompa
-	switch (request) {
+	char* parametros = string_duplicate(requestAEjecutar->parametros); //Esto es para que se pueda hacer un free() en consola.c sin que rompa
+	switch (requestAEjecutar->requestEnInt) {
 	case SELECT:
 		;
 		{
@@ -26,7 +24,7 @@ void mandarAEjecutarRequest(int request, char* parametrosOriginal) {
 
 			//enviarString("Me llego un select, ocupate macho", socketLFSAMEM);
 
-			return;
+			break;
 		}
 
 	case INSERT:
@@ -38,7 +36,7 @@ void mandarAEjecutarRequest(int request, char* parametrosOriginal) {
 
 			pthread_detach(h_insert);
 
-			return;
+			break;
 		}
 
 	case CREATE:
@@ -51,7 +49,7 @@ void mandarAEjecutarRequest(int request, char* parametrosOriginal) {
 
 			pthread_detach(h_create);
 
-			return;
+			break;
 		}
 
 	case DESCRIBE:
@@ -64,7 +62,7 @@ void mandarAEjecutarRequest(int request, char* parametrosOriginal) {
 
 			pthread_detach(h_describe);
 
-			return;
+			break;
 		}
 
 	case DROP:
@@ -77,18 +75,20 @@ void mandarAEjecutarRequest(int request, char* parametrosOriginal) {
 
 			pthread_detach(h_drop);
 
-			return;
+			break;
 
 		}
 
 	}
+
+	liberarRequest(requestAEjecutar);
 }
 
 int tablaYaExiste(char* nombreTabla) {
 
 	string_to_upper(nombreTabla); //El nombre tiene que estar en mayuscula
 
-
+	//TODO: Hacer esto
 	return 0;
 }
 

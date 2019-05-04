@@ -18,8 +18,7 @@ void consola() {
 
 		int requestEnInt = queRequestEs(requestYParametros[0]);
 
-		if (!esUnaRequestValida(requestYParametros[0],
-				requestYParametros[1]) || requestEnInt == ADD || requestEnInt == RUN || requestEnInt == METRICS) { //Si es invalida o es una request que no vale en la memoria
+		if (!esUnaRequestValida(lectura) || requestEnInt == ADD || requestEnInt == RUN || requestEnInt == METRICS) { //Si es invalida o es una request que no vale en la memoria
 
 			printf("No es una request valida, vuelva prontos \n");
 

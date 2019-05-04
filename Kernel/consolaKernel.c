@@ -47,8 +47,7 @@ void consola() {
 			continue;
 		}
 
-		else if (!esUnaRequestValida(requestYParametros[0],
-				requestYParametros[1])) {
+		else if (!esUnaRequestValida(lectura)) {
 
 			printf("No es una request valida, vuelva prontos \n");
 
@@ -73,18 +72,11 @@ void consola() {
 			strcpy(requestYParametros[1], " ");
 		}
 
-		/*parametros_hiloScript* parametrosParaHilo = malloc(
-		 sizeof(parametros_hiloScript));
+		request* requestParaHilo = crearStructRequest(lectura);
 
-		 parametrosParaHilo->request = requestEnInt;
-		 parametrosParaHilo->parametros = string_duplicate(
-		 requestYParametros[1]);
-		 */
-
-		char* requestParaHilo = string_duplicate(lectura);
 		pthread_t h_script;
 
-		pthread_create(&h_script, NULL, (void *) crearScript, requestParaHilo);
+		pthread_create(&h_script, NULL, (void *) crearScript, requestParaHilo); //El hilo se encarga de liberarlo
 
 		pthread_detach(h_script);
 

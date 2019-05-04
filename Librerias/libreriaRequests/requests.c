@@ -21,25 +21,6 @@ void liberarArrayDeStrings(char** array) {
 	free(array);
 }
 
-int devolverSoloRequest(char* request) {
-	char** requestYParametros = string_split(request, " ");
-	int requestEnInt = queRequestEs(requestYParametros[0]);
-
-	liberarArrayDeStrings(requestYParametros);
-
-	return requestEnInt;
-
-}
-
-char* devolverSoloParametros(char* request) {
-	char** requestYParametros = string_n_split(request, 2, " ");
-	char* parametros = string_duplicate(requestYParametros[1]);
-
-	liberarArrayDeStrings(requestYParametros);
-
-	return parametros;
-}
-
 int esUnNumero(char* string) {
 	if ((!atoi(string) && strcmp(string, "0"))
 			|| string_contains(string, " ")) { //Si contiene espacios lo considera un numero
@@ -301,18 +282,54 @@ int esUnParametroValido(int request, char* parametro) {
 
 }
 
-int esUnaRequestValida(char* request, char* parametro) {
+int esUnaRequestValida(char* requestEnString) {
 
-	int requestEnInt = queRequestEs(request);
+	char** requestYParametros = string_n_split(requestEnString, 2, " ");
+
+	int requestEnInt = queRequestEs(requestYParametros[0]);
 
 	if (requestEnInt == -1) { //No es una request
 		return 0;
 	}
 
-	return esUnParametroValido(requestEnInt, parametro);
+	if(esUnParametroValido(requestEnInt, requestYParametros[1]))
+	{
+		liberarArrayDeStrings(requestYParametros);
+		return 1;
+	}
+
+	else
+	{
+		liberarArrayDeStrings(requestYParametros);
+		return 0;
+	}
 
 }
 
+request* crearStructRequest(char* requestEnString) {
+	char** requestYParametros = string_n_split(requestEnString, 2, " ");
+
+	int requestInt = queRequestEs(requestYParametros[0]);
+
+	request* requestNuevo = malloc(sizeof(request));
+	requestNuevo->requestEnInt = requestInt;
+
+	if (requestYParametros[1] == NULL) {
+		char* parametrosRequest = " ";
+		requestNuevo->parametros = parametrosRequest;
+	}
+
+	else {
+		char* parametrosRequest = string_duplicate(requestYParametros[1]);
+		requestNuevo->parametros = parametrosRequest;
+	}
+
+	liberarArrayDeStrings(requestYParametros);
+
+	return requestNuevo;
+
+
+}
 
 int seRecibioBien(int respuesta, t_log* logger) {
 	if (respuesta < 0) {
@@ -325,20 +342,20 @@ int seRecibioBien(int respuesta, t_log* logger) {
 }
 
 int recibirInt(int deQuien, t_log* logger) {
-	void* bufferNombreRequest = malloc(sizeof(int));
-	int respuesta = recv(deQuien, bufferNombreRequest, sizeof(int),
+	void* bufferInt = malloc(sizeof(int));
+	int respuesta = recv(deQuien, bufferInt, sizeof(int),
 	MSG_WAITALL);
 
 	if (!seRecibioBien(respuesta, logger)) {
 
-		free(bufferNombreRequest);
+		free(bufferInt);
 		return -1;
 	}
 
 	int intRecibido;
-	memcpy(&intRecibido, bufferNombreRequest, sizeof(int));
+	memcpy(&intRecibido, bufferInt, sizeof(int));
 
-	free(bufferNombreRequest);
+	free(bufferInt);
 	return intRecibido;
 }
 
@@ -368,8 +385,7 @@ char* recibirString(int deQuien, t_log* logger) {
 	return stringRecibido;
 }
 
-void enviarString(char* string, int aQuien)
-{
+void enviarString(char* string, int aQuien) {
 	void* paquete;
 
 	int tamanioRequest = strlen(string) + 1;
@@ -380,22 +396,106 @@ void enviarString(char* string, int aQuien)
 
 	memcpy(paquete, &tamanioRequest, sizeof(int));
 
-	memcpy(paquete+sizeof(int), string, tamanioRequest);
+	memcpy(paquete + sizeof(int), string, tamanioRequest);
 
 	send(aQuien, paquete, tamanioEnvio, 0);
 }
 
-int crearConexion(int puerto){
+void enviarStringConHeader(char* string, int aQuien, int header) {
+	void* paquete;
+
+	int tamanioRequest = strlen(string);
+
+	int tamanioEnvio = sizeof(int) + sizeof(int) + tamanioRequest;
+
+	paquete = malloc(tamanioEnvio);
+
+	memcpy(paquete, &header, sizeof(int));
+
+	memcpy(paquete + sizeof(int), &tamanioRequest, sizeof(int));
+
+	memcpy(paquete + sizeof(int) + sizeof(int), string, tamanioRequest);
+
+	send(aQuien, paquete, tamanioEnvio, 0);
+}
+
+int crearConexion(int puerto) {
 	struct sockaddr_in direccionServidor;
-	direccionServidor.sin_family =AF_INET;
-	direccionServidor.sin_addr.s_addr =inet_addr("127.0.0.1");//el ip tiene que salir del config
-	direccionServidor.sin_port =htons(puerto);
+	direccionServidor.sin_family = AF_INET;
+	direccionServidor.sin_addr.s_addr = inet_addr("127.0.0.1"); //el ip tiene que salir del config
+	direccionServidor.sin_port = htons(puerto);
 
-
-	int conexion =socket(AF_INET, SOCK_STREAM,0);
-	if(connect(conexion,(void*) &direccionServidor,sizeof(direccionServidor)) != 0){
+	int conexion = socket(AF_INET, SOCK_STREAM, 0);
+	if (connect(conexion, (void*) &direccionServidor, sizeof(direccionServidor))
+			!= 0) {
 		perror("No me pude conectar");
 		return -1;
 	}
 	return conexion;
+}
+
+char* requestStructAString(request* request) {
+	char* requestEnString = string_new();
+
+	switch (request->requestEnInt) {
+	case SELECT: {
+		string_append(&requestEnString, "SELECT ");
+		string_append(&requestEnString, request->parametros);
+		break;
+	}
+	case INSERT: {
+		string_append(&requestEnString, "INSERT ");
+		string_append(&requestEnString, request->parametros);
+		break;
+	}
+	case CREATE: {
+		string_append(&requestEnString, "CREATE ");
+		string_append(&requestEnString, request->parametros);
+		break;
+	}
+	case DESCRIBE: {
+
+		if (!strcmp(" ", request->parametros)) {
+			string_append(&requestEnString, "DESCRIBE");
+
+		} else {
+
+			string_append(&requestEnString, "DESCRIBE ");
+			string_append(&requestEnString, request->parametros);
+		}
+		break;
+	}
+
+	case DROP: {
+		string_append(&requestEnString, "DROP ");
+		string_append(&requestEnString, request->parametros);
+		break;
+	}
+	case JOURNAL: {
+		string_append(&requestEnString, "JOURNAL");
+		break;
+	}
+	case ADD: {
+		string_append(&requestEnString, "ADD ");
+		string_append(&requestEnString, request->parametros);
+		break;
+	}
+	case RUN: {
+		string_append(&requestEnString, "RUN ");
+		string_append(&requestEnString, request->parametros);
+		break;
+	}
+	case METRICS: {
+		string_append(&requestEnString, "METRICS");
+		break;
+	}
+	}
+
+	return requestEnString;
+}
+
+void liberarRequest(request* request)
+{
+	free(request->parametros);
+	free(request);
 }

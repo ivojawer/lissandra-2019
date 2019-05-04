@@ -19,7 +19,7 @@ typedef struct {
 
 void consola();
 void conexiones();
-void mandarAEjecutarRequest(int request, char* parametros);
+void mandarAEjecutarRequest(request* requestAEjecutar);
 void Select(char* parametros);
 void insert(char* parametros);
 void create(char* parametros);

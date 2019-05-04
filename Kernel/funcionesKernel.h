@@ -8,9 +8,9 @@ void conexiones();
 void planificadorREADYAEXEC();
 void planificadorEXEC(int IdScript);
 
-int ejecutarRequest(char* request);
+int ejecutarRequest(request* requestAEjecutar);
 void metrics();
-void crearScript(char* request);
+void crearScript(request* nuevaRequest);
 void status();
 
 #endif /* FUNCIONESKERNEL_H_ */
