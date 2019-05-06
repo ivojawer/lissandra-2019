@@ -17,6 +17,17 @@ typedef struct {
 	t_list* datosAInsertar;
 } t_tablaEnMemTable;
 
+struct Segmento {
+	char* nombreDeTabla;
+	t_list* TablaDePaginas;
+};
+struct Pagina{
+	int timestamp;
+	int key;
+	char* value;
+	int flagModificado;
+};
+
 void consola();
 void conexiones();
 void mandarAEjecutarRequest(request* requestAEjecutar);
