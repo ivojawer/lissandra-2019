@@ -86,10 +86,31 @@ void mandarAEjecutarRequest(request* requestAEjecutar) {
 
 int tablaYaExiste(char* nombreTabla) {
 
-	string_to_upper(nombreTabla); //El nombre tiene que estar en mayuscula
+	//log_info(logger,"path completo: %s", nombreTabla);
 
-	//TODO: Hacer esto
-	return 0;
+	//string_to_upper(nombreTabla); TODO: explota subir todo a mayusculas why
+
+	log_info(logger,"nombre en mayus: %s", nombreTabla);
+
+	// 1. encontrar el path
+	char* pathAbsoluto = string_new();
+
+	// char* rutaPrincipal = (????); TODO: poner la primera parte (ruta principal) sino esta wea no funciona
+	// string_append(&pathAbsoluto,rutaPrincipal);  y bueno aca se agregaria la primera parte mentienden
+
+	// Aca va lo feo hardcodeado que NO TIENE QUE IR pero quiero ver si funciona chiks:
+	string_append(&pathAbsoluto,"/home/utnso/workspace/tp-2019-1c-U-TN-Tecno/LFS/Debug/");
+
+	string_append(&pathAbsoluto,"Tablas/");
+	string_append(&pathAbsoluto,nombreTabla); //El nombre tiene que estar en mayuscula
+
+	log_info(logger,"path completo: %s", pathAbsoluto);
+
+	// 2. fijarse si el archivo existe
+	if (access(pathAbsoluto, F_OK) == -1){
+	        return 0;
+	}
+	    return 1; // devuelve 1 si existe la tabla, sino devuelve 0.
 }
 
 void crearTablaEnMemTable(char* nombreDeTabla) {
@@ -155,12 +176,10 @@ void insert(char* parametros) {
 
 void create(char* parametros) {
 	char** parametrosEnVector = string_n_split(parametros, 4, " ");
-
 	char* tabla = string_duplicate(parametrosEnVector[0]);
 	char* consistencia = parametrosEnVector[1];
 	int particiones = atoi(parametrosEnVector[2]);
 	char* tiempoCompactacion = parametrosEnVector[3];
-
 
 	//chequea si existe
 	if (tablaYaExiste(tabla)) {

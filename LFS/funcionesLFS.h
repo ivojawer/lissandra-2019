@@ -29,5 +29,5 @@ void insert(char* parametros);
 void create(char* parametros);
 void describe(char* parametro);
 void drop(char* parametro);
-
+int tablaYaExiste(char* nombreTabla);
 #endif /* FUNCIONESLFS_H_ */

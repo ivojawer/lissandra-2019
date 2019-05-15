@@ -10,6 +10,9 @@ int main() {
 	config = config_create("/home/utnso/workspace/tp-2019-1c-U-TN-Tecno/CONFIG/LFS.config");
 	memTable = list_create();
 
+//	int a = tablaYaExiste("Tabla1");
+//	printf("%i",a );
+
 	pthread_t h_consola;
 	pthread_t h_conexiones;
 
