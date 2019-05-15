@@ -12,25 +12,22 @@
 #include <unistd.h>
 #include <commons/collections/list.h>
 
-typedef struct {
-	char* nombreTabla;
-	t_list* datosAInsertar;
-} t_tablaEnMemTable;
-
-struct Segmento {
+typedef struct{
 	char* nombreDeTabla;
-	t_list* TablaDePaginas;
-};
-struct Pagina{
+	t_list* tablaDePaginas;
+}segmento;
+
+struct {
 	int timestamp;
 	int key;
 	char* value;
 	int flagModificado;
-};
+}pagina;
 
 void consola();
 void conexiones();
 void mandarAEjecutarRequest(request* requestAEjecutar);
+void mandarCreateALFS(char*,char*,int,char*);
 void Select(char* parametros);
 void insert(char* parametros);
 void create(char* parametros);
