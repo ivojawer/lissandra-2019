@@ -19,11 +19,18 @@ int main() {
 	pthread_create(&h_conexiones, NULL, (void *) conexiones, NULL);
 
 
+	int tamanioMemoria = 2048; //todo config
 
+	void* comienzoMemoria = malloc(2048);
+
+	crearSegmento(comienzoMemoria,0,"TABLA1");
+
+	segmento* primerSegmento = comienzoMemoria;
+	log_info(logger,"Mi primer tabla es: %s\n",primerSegmento->nombreDeTabla);
 
 	pthread_detach(h_conexiones);
 	pthread_join(h_consola, NULL);
 
-
+	free(comienzoMemoria);
 	return 1;
 }

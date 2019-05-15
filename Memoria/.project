@@ -4,7 +4,6 @@
 	<comment></comment>
 	<projects>
 		<project>libreriaRequests</project>
-		<project>libreriaSockets</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

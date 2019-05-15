@@ -6,6 +6,28 @@ extern t_log* logger;
 
 
 
+
+
+
+
+void crearSegmento(void* comienzoMemoria, int nroSegmento,char* nombreTabla){
+	void* posMemoria = comienzoMemoria + sizeof(segmento)*nroSegmento;
+	segmento nuevoSegmento;
+	nuevoSegmento.nombreDeTabla=nombreTabla;
+	nuevoSegmento.tablaDePaginas = list_create();
+	log_info(logger,"lo voy a copiar en memoria es: %s\n", nuevoSegmento.nombreDeTabla);
+	memcpy(posMemoria,&nuevoSegmento,sizeof(segmento));
+}
+
+
+
+
+
+
+
+
+//Esto es copy del LFS (cambie lo que hacia explotar la memoria porque no lo usabamos en nada)
+
 void mandarAEjecutarRequest(request* requestAEjecutar) {
 
 	//Importante: Si el parametro es enteramente vacio, aca tiene que entrar aca como " ".
@@ -94,6 +116,8 @@ void Select(char* parametros) {
 
 
 
+
+
 	free(parametrosEnVector[1]);
 	free(parametrosEnVector[0]);
 	free(parametrosEnVector);
@@ -138,15 +162,15 @@ void create(char* parametros) {
 	int particiones = atoi(parametrosEnVector[2]);
 	char* tiempoCompactacion = parametrosEnVector[3];
 
-//	if (tablaYaExiste(tabla)) {
-//		log_error(logger, "%s%s%s", "La tabla ", tabla, " ya existe.");
-//		return;
-//	}
-
+	mandarCreateALFS(tabla,consistencia,particiones,tiempoCompactacion);
 
 	liberarArrayDeStrings(parametrosEnVector);
 	free(parametros);
 
+}
+
+void mandarCreateALFS(char* tabla ,char* consistencia,int particiones  ,char* tiempoCompactacion){
+	//todo
 }
 
 void describe(char* parametro) {
