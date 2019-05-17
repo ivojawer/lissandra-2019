@@ -169,17 +169,26 @@ void mandarAEjecutarRequest(request* requestAEjecutar) {
 	liberarRequest(requestAEjecutar);
 }
 
-
-void Select(char* parametros) {
+void Select(char* parametros,t_list* memoria) {
 
 	char** parametrosEnVector = string_n_split(parametros, 2, " ");
 
 	char* tabla = parametrosEnVector[0];
 	int key = atoi(parametrosEnVector[1]);
 
-
-
-
+	if(existeKeyEnMemoria(memoria,tabla,key)){
+		segmento* segmentoEncontrado = segmento_find(memoria,tabla);
+		pagina* paginaEncontrada = pagina_find(segmentoEncontrado->tablaDePaginas,key);
+		imprimirValue(paginaEncontrada->dato);
+		free(segmentoEncontrado);
+		free(paginaEncontrada);
+	}
+	else{
+		char* value = mandarSelectALSF(parametros);
+		imprimirValue(value);
+		cachearEnMemoria(tabla,key,value,memoria);
+		free(value);
+	}
 
 	free(parametrosEnVector[1]);
 	free(parametrosEnVector[0]);
@@ -188,33 +197,29 @@ void Select(char* parametros) {
 
 }
 
-void insert(char* parametros) {
+void insert(char* parametros, void* memoria) {
 
-	char** parametrosEnVector = string_n_split(parametros, 4, " ");
+	char** parametrosEnVector = string_n_split(parametros, 3, " ");
 
 	char* tabla = parametrosEnVector[0];
 	int key = atoi(parametrosEnVector[1]);
-
-
-
 	char* value = parametrosEnVector[2]; //TODO: Sacarle las comillas
 
-	int timestamp;
-
-	if (parametrosEnVector[3] == NULL) {
-		timestamp = 123; //TODO: poner aca el tiempo actual
+	if(existeSegmento(memoria,tabla)){
+		segmento* segmentoEncontrado = segmento_find(memoria,tabla);
+		if(existePagina(segmentoEncontrado->tablaDePaginas,key)){
+			actualizarValue(memoria,tabla,key,value);
+		}
+		else{
+			cargarNuevaPagina(memoria,tabla,key,value);
+		}
+		free(segmentoEncontrado);
 	}
-
-	else {
-		timestamp = atoi(parametrosEnVector[3]);
+	else{
+		cargarNuevoSegmento(memoria,tabla,key,value);
 	}
-
-//	if (!tablaYaExiste(tabla)) {
-//		log_error(logger, "%s%s%s", "La tabla ", tabla, " no existe.");
-//		return;
-//	}
-
 }
+
 
 void create(char* parametros) {
 
