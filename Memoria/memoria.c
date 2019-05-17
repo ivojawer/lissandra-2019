@@ -21,12 +21,15 @@ int main() {
 
 	int tamanioMemoria = 2048; //todo config
 
-	void* comienzoMemoria = malloc(2048);
+	void* comienzoMemoria = malloc(tamanioMemoria);
 
-	crearSegmento(comienzoMemoria,0,"TABLA1");
+	t_list* tablaSegmentos = crearTablaSegmentos();
 
-	segmento* primerSegmento = comienzoMemoria;
-	log_info(logger,"Mi primer tabla es: %s\n",primerSegmento->nombreDeTabla);
+	nuevaTabla(tablaSegmentos,"TABLA1");
+
+	segmento* miSegmento = tablaSegmentos->head->data;
+	log_info(logger,"Nombre de mi nueva tabla es: %s",miSegmento->nombreDeTabla);
+
 
 	pthread_detach(h_conexiones);
 	pthread_join(h_consola, NULL);

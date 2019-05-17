@@ -217,13 +217,10 @@ void create(char* parametros) {
 }
 
 void describe(char* parametro) {
-
 	if (strcmp(parametro, " ")) //Si hay un parametro
-			{
-
+	{
 		return;
 	}
-
 }
 
 void drop(char* parametro) {

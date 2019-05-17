@@ -8,16 +8,79 @@ extern t_log* logger;
 
 
 
+//TABLA DE SEGMENTOS
 
-
-void crearSegmento(void* comienzoMemoria, int nroSegmento,char* nombreTabla){
-	void* posMemoria = comienzoMemoria + sizeof(segmento)*nroSegmento;
-	segmento nuevoSegmento;
-	nuevoSegmento.nombreDeTabla=nombreTabla;
-	nuevoSegmento.tablaDePaginas = list_create();
-	log_info(logger,"lo voy a copiar en memoria es: %s\n", nuevoSegmento.nombreDeTabla);
-	memcpy(posMemoria,&nuevoSegmento,sizeof(segmento));
+t_list* crearTablaSegmentos(){
+	return list_create();
 }
+
+
+
+segmento* ultimoSegmento(t_list* tablaSegmentos){
+	return list_get(tablaSegmentos,tablaSegmentos->elements_count - 1);
+}
+
+void nuevaTabla(t_list* tablaSegmentos,char* nombreTabla){ //todo: destroy de esto
+	segmento* nuevoSegmento = malloc(sizeof(segmento));
+	nuevoSegmento->nombreDeTabla = malloc(strlen(nombreTabla)*sizeof(char));
+	strcpy(nuevoSegmento->nombreDeTabla,nombreTabla);
+	nuevoSegmento->tablaDePaginas = crearTablaPaginas();
+
+
+	log_info(logger,"tabla por agregar: %s",nuevoSegmento->nombreDeTabla);
+
+	list_add(tablaSegmentos,nuevoSegmento);
+
+	log_info(logger,"tabla agregada: %s",(ultimoSegmento(tablaSegmentos))->nombreDeTabla);
+}
+
+
+
+
+
+//TABLA DE PAGINAS
+
+t_list* crearTablaPaginas(){
+	return list_create();
+}
+
+pagina* ultimaPagina(t_list* tablaPaginas){
+	return list_get(tablaPaginas,tablaPaginas->elements_count - 1);
+}
+
+
+void* asignoPaginaEnMarco(int key, int timestamp,char* value){
+	return value; //todo esta funcion deberia meterle a un marco los datos que llegan
+}
+
+pagina* nuevoDato(t_list* tablaPaginas,int flagModificado,int key, int timestamp, char* value){
+	pagina* nuevaPagina = malloc(sizeof(pagina));
+
+	nuevaPagina->flagModificado= flagModificado;
+	nuevaPagina->dato = asignoPaginaEnMarco(key,timestamp,value);
+
+
+	list_add(tablaPaginas,nuevaPagina);
+
+	pagina* paginaAgregada = ultimaPagina(tablaPaginas);
+
+	return nuevaPagina;
+}
+
+
+
+
+
+
+//------------esto esta mal pero quiero acordarme como lo hice-----------------
+//void crearSegmento(void* comienzoMemoria, int nroSegmento,char* nombreTabla){
+//	void* posMemoria = comienzoMemoria + sizeof(segmento)*nroSegmento;
+//	segmento nuevoSegmento;
+//	nuevoSegmento.nombreDeTabla=nombreTabla;
+//	nuevoSegmento.tablaDePaginas = list_create();
+//	log_info(logger,"lo voy a copiar en memoria es: %s\n", nuevoSegmento.nombreDeTabla);
+//	memcpy(posMemoria,&nuevoSegmento,sizeof(segmento));
+//}
 
 
 

@@ -11,19 +11,24 @@
 #include "requests.h"
 #include <unistd.h>
 #include <commons/collections/list.h>
+#include "segmentos.h"
 
-typedef struct{
-	char* nombreDeTabla;
-	t_list* tablaDePaginas;
-}segmento;
 
-struct {
+
+typedef struct {
 	int timestamp;
 	int key;
 	char* value;
+}marco;
+
+typedef struct{
+	void* dato;
 	int flagModificado;
 }pagina;
 
+
+t_list* crearTablaSegmentos();
+t_list* crearTablaPaginas();
 void consola();
 void conexiones();
 void mandarAEjecutarRequest(request* requestAEjecutar);
