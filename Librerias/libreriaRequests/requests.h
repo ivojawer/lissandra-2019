@@ -42,7 +42,7 @@ char* recibirRequest(int deQuien, t_log* logger);
 request* crearStructRequest(char* requestEnString);
 char* requestStructAString(request* request);
 void liberarRequest(request* request);
-
+int esDescribeGlobal (request* request);
 
 #include "requests.h"
 

@@ -11,3 +11,18 @@
 [INFO] 20:20:10:742 kernel/(6801:6815): Termino de ejecutar exitosamente el script 1000
 [INFO] 20:21:53:47 kernel/(6902:6916): Termino de ejecutar exitosamente el script 1000
 [INFO] 20:29:41:785 kernel/(7308:7320): Termino de ejecutar exitosamente el script 1000
+[INFO] 14:54:12:713 kernel/(8285:8310): Termino de ejecutar exitosamente el script 1000
+[INFO] 14:54:34:141 kernel/(8343:8359): Termino de ejecutar exitosamente el script 1000
+[INFO] 14:59:23:35 kernel/(8549:8565): Termino de ejecutar exitosamente el script 1000
+[INFO] 14:59:45:852 kernel/(8608:8624): Termino de ejecutar exitosamente el script 1000
+[INFO] 15:00:13:35 kernel/(8667:8686): Termino de ejecutar exitosamente el script 1000
+[INFO] 15:02:01:491 kernel/(8815:8830): Termino de ejecutar exitosamente el script 1000
+[INFO] 15:03:55:66 kernel/(8982:8998): Termino de ejecutar exitosamente el script 1000
+[INFO] 15:08:53:392 kernel/(9126:9144): Termino de ejecutar exitosamente el script 1000
+[INFO] 15:17:37:396 kernel/(9312:9329): Termino de ejecutar exitosamente el script 1000
+[INFO] 15:24:39:569 kernel/(9419:9435): Termino de ejecutar exitosamente el script 1000
+[INFO] 15:28:13:879 kernel/(9596:9613): Termino de ejecutar exitosamente el script 1000
+[ERROR] 15:58:33:490 kernel/(11178:11194): Hubo un error en la ejecucion del script 1000
+[ERROR] 15:59:29:644 kernel/(11331:11346): Hubo un error en la ejecucion del script 1000
+[INFO] 16:54:58:822 kernel/(4806:4817): Termino de ejecutar exitosamente el script 1000
+[INFO] 16:55:02:124 kernel/(4806:4820): Termino de ejecutar exitosamente el script 1001

@@ -315,7 +315,7 @@ request* crearStructRequest(char* requestEnString) {
 	requestNuevo->requestEnInt = requestInt;
 
 	if (requestYParametros[1] == NULL) {
-		char* parametrosRequest = " ";
+		char* parametrosRequest = string_duplicate(" ");
 		requestNuevo->parametros = parametrosRequest;
 	}
 
@@ -492,6 +492,15 @@ char* requestStructAString(request* request) {
 	}
 
 	return requestEnString;
+}
+
+int esDescribeGlobal (request* request)
+{
+	if (request->requestEnInt == DESCRIBE && !strcmp(request->parametros," "))
+	{
+		return 1;
+	}
+	return 0;
 }
 
 void liberarRequest(request* request)
