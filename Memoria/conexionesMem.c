@@ -1,6 +1,7 @@
 #include "conexionesMem.h"
 
 extern t_log* logger;
+extern t_config* config;
 int socketLFSAMem;
 
 void conexiones() {
@@ -8,7 +9,7 @@ void conexiones() {
 	socketLFSAMem = crearConexion(4444);//conexion con LFS
 
 	//        Creo servidor
-	int puerto = 35666; //sale de config
+	int puerto = config_get_int_value(config,"PUERTO");
 	struct sockaddr_in direccionServidor;
 	direccionServidor.sin_family = AF_INET;
 	direccionServidor.sin_addr.s_addr = INADDR_ANY;

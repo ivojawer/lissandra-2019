@@ -7,10 +7,10 @@ t_log* logger;
 
 int main() {
 
+
 	logger = log_create("memoria.log", "memoria", 1, 0);
-	config =
-			config_create(
-					"/home/utnso/workspace/tp-2019-1c-U-TN-Tecno/CONFIG/memoria.config");
+
+	config =config_create("/home/ivan/eclipse-workspace/tp-2019-1c-U-TN-Tecno/Memoria/Debug/memoria.config"); //DUDA: Si es un config por memoria esto va en la carpeta CONFIG tmb  lo hago una por proyecto como aca
 
 	pthread_t h_consola;
 	pthread_t h_conexiones;
@@ -18,9 +18,10 @@ int main() {
 	pthread_create(&h_consola, NULL, (void *) consola, NULL);
 	pthread_create(&h_conexiones, NULL, (void *) conexiones, NULL);
 
+	int tamanioMemoria =config_get_int_value(config,"TAM_MEM");
+	log_info(logger,"hola");
 
-	int tamanioMemoria = 2048; //todo config
-
+	//int tamanioMemoria=2048;
 	void* comienzoMemoria = malloc(tamanioMemoria);
 
 	t_list* tablaSegmentos = crearTablaSegmentos();

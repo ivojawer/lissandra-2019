@@ -29,6 +29,7 @@ typedef struct{
 
 t_list* crearTablaSegmentos();
 t_list* crearTablaPaginas();
+void nuevaTabla(t_list*,char*);
 void consola();
 void conexiones();
 void mandarAEjecutarRequest(request* requestAEjecutar);

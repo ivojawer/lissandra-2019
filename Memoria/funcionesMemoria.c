@@ -62,7 +62,7 @@ pagina* nuevoDato(t_list* tablaPaginas,int flagModificado,int key, int timestamp
 
 	list_add(tablaPaginas,nuevaPagina);
 
-	pagina* paginaAgregada = ultimaPagina(tablaPaginas);
+	pagina* paginaAgregada = ultimaPagina(tablaPaginas);//para testear
 
 	return nuevaPagina;
 }
