@@ -4,7 +4,7 @@
 
 t_config*config;
 t_log* logger;
-
+t_list* tablaSegmentos;
 int main() {
 
 
@@ -34,7 +34,7 @@ int main() {
 
 
 	//creo tabla de segmentos
-	t_list* tablaSegmentos = crearTablaSegmentos();
+	tablaSegmentos = crearTablaSegmentos();
 
 	//pruebas
 	nuevaTabla(tablaSegmentos,"TABLA1");

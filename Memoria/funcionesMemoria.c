@@ -3,7 +3,7 @@
 
 extern t_log* logger;
 
-
+extern t_list* tablaSegmentos;
 
 
 
@@ -108,8 +108,6 @@ void mandarAEjecutarRequest(request* requestAEjecutar) {
 
 			pthread_detach(h_select);
 
-
-
 			break;
 		}
 
@@ -170,26 +168,51 @@ void mandarAEjecutarRequest(request* requestAEjecutar) {
 	liberarRequest(requestAEjecutar);
 }
 
-void Select(char* parametros,t_list* memoria) {
+bool filtroNombreTabla(char* nombreTabla,segmento* segmentoAComparar){
+	return strcmp(nombreTabla,segmentoAComparar->nombreDeTabla)-1;
+}
+
+segmento* encuentroTablaPorNombre(char* nombreTabla, t_list* tablaDeSegmentos){
+	t_link_element* element = tablaDeSegmentos->head;
+	int position = 0;
+	while (element != NULL && !filtroNombreTabla(nombreTabla,element->data)) {
+		element = element->next;
+		position++;
+	}
+	return element->data;
+}
+
+pagina* encuentroDatoPorKey(segmento* tabla, int key){
+	bool filtroKey(pagina* pag){
+		return pag->dato->key == key;
+	}
+	list_find(tabla->tablaDePaginas,(void*)filtroKey);
+
+}
+
+pagina* getPagina(t_list* tablaDeSegmentos, int key, char* nombreTabla){
+	segmento* tabla = encuentroTablaPorNombre(nombreTabla, tablaDeSegmentos);
+	log_info(logger, "Encontre una tabla con el nombre: %s", tabla->nombreDeTabla);
+	pagina* dato = encuentroDatoPorKey(tabla,key);
+	log_info(logger, "Encontre un dato con el value: %s", &dato->dato->value);
+	return dato;
+}
+
+void Select(char* parametros) {
 
 	char** parametrosEnVector = string_n_split(parametros, 2, " ");
-
-	char* tabla = parametrosEnVector[0];
+	char* tabla =  parametrosEnVector[0];
+	string_to_upper(tabla);
 	int key = atoi(parametrosEnVector[1]);
 
-	if(existeKeyEnMemoria(memoria,tabla,key)){
-		segmento* segmentoEncontrado = segmento_find(memoria,tabla);
-		pagina* paginaEncontrada = pagina_find(segmentoEncontrado->tablaDePaginas,key);
-		imprimirValue(paginaEncontrada->dato);
-		free(segmentoEncontrado);
-		free(paginaEncontrada);
-	}
-	else{
-		char* value = mandarSelectALSF(parametros);
-		imprimirValue(value);
-		cachearEnMemoria(tabla,key,value,memoria);
-		free(value);
-	}
+
+
+	log_info(logger,"Select de tabla: %s - key: %d",tabla,key);
+
+
+	pagina* paginaPedida=getPagina(tablaSegmentos,key,tabla);
+
+	printf("Registro pedido: %s\n",&paginaPedida->dato->value);
 
 	free(parametrosEnVector[1]);
 	free(parametrosEnVector[0]);
@@ -206,19 +229,19 @@ void insert(char* parametros, void* memoria) {
 	int key = atoi(parametrosEnVector[1]);
 	char* value = parametrosEnVector[2]; //TODO: Sacarle las comillas
 
-	if(existeSegmento(memoria,tabla)){
-		segmento* segmentoEncontrado = segmento_find(memoria,tabla);
-		if(existePagina(segmentoEncontrado->tablaDePaginas,key)){
-			actualizarValue(memoria,tabla,key,value);
-		}
-		else{
-			cargarNuevaPagina(memoria,tabla,key,value);
-		}
-		free(segmentoEncontrado);
-	}
-	else{
-		cargarNuevoSegmento(memoria,tabla,key,value);
-	}
+//	if(existeSegmento(memoria,tabla)){
+//		segmento* segmentoEncontrado = segmento_find(memoria,tabla);
+//		if(existePagina(segmentoEncontrado->tablaDePaginas,key)){
+//			actualizarValue(memoria,tabla,key,value);
+//		}
+//		else{
+//			cargarNuevaPagina(memoria,tabla,key,value);
+//		}
+//		free(segmentoEncontrado);
+//	}
+//	else{
+//		cargarNuevoSegmento(memoria,tabla,key,value);
+//	}
 }
 
 

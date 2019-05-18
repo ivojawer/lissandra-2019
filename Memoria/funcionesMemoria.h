@@ -14,8 +14,7 @@
 #include <commons/collections/list.h>
 #include "segmentos.h"
 #include "conexionesMem.h"
-
-
+#include <stdbool.h>
 
 typedef struct {
 	int timestamp;
@@ -29,14 +28,17 @@ typedef struct{
 }pagina;
 
 
+segmento* encuentroTablaPorNombre(char* nombreTabla, t_list* tablaDeSegmentos);
+bool filtroNombreTabla( char*,segmento*);
 t_list* crearTablaSegmentos();
 t_list* crearTablaPaginas();
 void nuevaTabla(t_list*,char*);
 pagina* nuevoDato(t_list* tablaPaginas,int flagModificado,int key, int timestamp, char* value,void*);
+pagina* getPagina(t_list* tablaSegmentos,int key, char* nombreTabla);
 void consola();
 void mandarAEjecutarRequest(request* requestAEjecutar);
 void mandarCreateALFS(char*,char*,int,char*);
-void Select(char* parametros,t_list*);
+void Select(char* parametros);
 void insert(char* parametros,void*);
 void create(char* parametros);
 void describe(char* parametro);

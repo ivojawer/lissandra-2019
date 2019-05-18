@@ -1,14 +1,8 @@
-/*
- * segmentos.h
- *
- *  Created on: May 16, 2019
- *      Author: ivan
- */
+#include "funcionesMemoria.h"
 
 #ifndef SEGMENTOS_H_
 #define SEGMENTOS_H_
 
-#include "funcionesMemoria.h"
 
 typedef struct{
 	char* nombreDeTabla;

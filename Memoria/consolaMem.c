@@ -27,6 +27,7 @@ void consola() {
 
 			continue;
 		}
+		mandarAEjecutarRequest(crearStructRequest(lectura));
 
 		liberarArrayDeStrings(requestYParametros);
 		free(lectura);

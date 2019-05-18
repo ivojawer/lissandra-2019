@@ -1,4 +1,4 @@
-#include "segmentos.h";
+#include "segmentos.h"
 
 
 void agregarDato(segmento* miSegmento,int key, int timestamp,char* value,int flagModificado,void* comienzoMarco){
