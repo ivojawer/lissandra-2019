@@ -22,8 +22,11 @@ segmento* ultimoSegmento(t_list* tablaSegmentos){
 
 void nuevaTabla(t_list* tablaSegmentos,char* nombreTabla){ //todo: destroy de esto
 	segmento* nuevoSegmento = malloc(sizeof(segmento));
-	nuevoSegmento->nombreDeTabla = malloc(strlen(nombreTabla)*sizeof(char));
-	strcpy(nuevoSegmento->nombreDeTabla,nombreTabla);
+//	nuevoSegmento->nombreDeTabla = malloc(strlen(nombreTabla)*sizeof(char));
+//	strcpy(nuevoSegmento->nombreDeTabla,nombreTabla);
+
+	nuevoSegmento->nombreDeTabla = string_duplicate(nombreTabla);
+
 	nuevoSegmento->tablaDePaginas = crearTablaPaginas();
 
 
@@ -45,44 +48,42 @@ t_list* crearTablaPaginas(){
 }
 
 pagina* ultimaPagina(t_list* tablaPaginas){
-	return list_get(tablaPaginas,tablaPaginas->elements_count - 1);
+	pagina* lastPagina = list_get(tablaPaginas,tablaPaginas->elements_count - 1);
+	return lastPagina ;
 }
 
 
-void* asignoPaginaEnMarco(int key, int timestamp,char* value){
-	return value; //todo esta funcion deberia meterle a un marco los datos que llegan
+marco* asignoPaginaEnMarco(int key, int timestamp,char* value, void* comienzoMarco){
+	//timestamp->key->value
+
+	void* marcoParaKey=mempcpy(comienzoMarco,&timestamp,sizeof(int));
+
+	void* marcoParaValue = mempcpy(marcoParaKey,&key,sizeof(int));
+
+	memcpy(marcoParaValue,value,20);//maximo carac string
+	log_info(logger,"Marco para value: %d",marcoParaValue);
+	log_info(logger,"Value: %s", marcoParaValue);
+
+	return comienzoMarco; //no tiene mucho sentido recibir y devolver comienzoMarco pero todavia no me decidi como hacer esto
 }
 
-pagina* nuevoDato(t_list* tablaPaginas,int flagModificado,int key, int timestamp, char* value){
+pagina* nuevoDato(t_list* tablaPaginas,int flagModificado,int key, int timestamp, char* value,void* comienzoMemoria){
 	pagina* nuevaPagina = malloc(sizeof(pagina));
-
 	nuevaPagina->flagModificado= flagModificado;
-	nuevaPagina->dato = asignoPaginaEnMarco(key,timestamp,value);
+	nuevaPagina->dato = asignoPaginaEnMarco(key,timestamp,value,comienzoMemoria);
+
+	log_info(logger,"value pagina a agregar: %s", &nuevaPagina->dato->value);
+
 
 
 	list_add(tablaPaginas,nuevaPagina);
 
 	pagina* paginaAgregada = ultimaPagina(tablaPaginas);//para testear
 
+	log_info(logger,"value de mi pagina agregada: %s",&paginaAgregada->dato->value);
+
 	return nuevaPagina;
 }
-
-
-
-
-
-
-//------------esto esta mal pero quiero acordarme como lo hice-----------------
-//void crearSegmento(void* comienzoMemoria, int nroSegmento,char* nombreTabla){
-//	void* posMemoria = comienzoMemoria + sizeof(segmento)*nroSegmento;
-//	segmento nuevoSegmento;
-//	nuevoSegmento.nombreDeTabla=nombreTabla;
-//	nuevoSegmento.tablaDePaginas = list_create();
-//	log_info(logger,"lo voy a copiar en memoria es: %s\n", nuevoSegmento.nombreDeTabla);
-//	memcpy(posMemoria,&nuevoSegmento,sizeof(segmento));
-//}
-
-
 
 
 

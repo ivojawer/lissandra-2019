@@ -9,7 +9,7 @@ void conexiones() {
 	socketLFSAMem = crearConexion(4444);//conexion con LFS
 
 	//        Creo servidor
-	int puerto = config_get_int_value(config,"PUERTO");
+	int puerto = config_get_int_value(config,"PUERTO_ESCUCHA");
 	struct sockaddr_in direccionServidor;
 	direccionServidor.sin_family = AF_INET;
 	direccionServidor.sin_addr.s_addr = INADDR_ANY;

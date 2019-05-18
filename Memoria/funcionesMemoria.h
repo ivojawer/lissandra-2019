@@ -9,20 +9,22 @@
 #include<readline/readline.h>
 #include <pthread.h>
 #include "requests.h"
+#include <string.h>
 #include <unistd.h>
 #include <commons/collections/list.h>
 #include "segmentos.h"
+#include "conexionesMem.h"
 
 
 
 typedef struct {
 	int timestamp;
 	int key;
-	char* value;
+	char value;
 }marco;
 
 typedef struct{
-	void* dato;
+	marco* dato;
 	int flagModificado;
 }pagina;
 
@@ -30,8 +32,8 @@ typedef struct{
 t_list* crearTablaSegmentos();
 t_list* crearTablaPaginas();
 void nuevaTabla(t_list*,char*);
+pagina* nuevoDato(t_list* tablaPaginas,int flagModificado,int key, int timestamp, char* value,void*);
 void consola();
-void conexiones();
 void mandarAEjecutarRequest(request* requestAEjecutar);
 void mandarCreateALFS(char*,char*,int,char*);
 void Select(char* parametros);

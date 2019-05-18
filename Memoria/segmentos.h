@@ -8,7 +8,7 @@
 #ifndef SEGMENTOS_H_
 #define SEGMENTOS_H_
 
-#include "funcionesMemoria.h";
+#include "funcionesMemoria.h"
 
 typedef struct{
 	char* nombreDeTabla;
@@ -17,7 +17,7 @@ typedef struct{
 
 
 
-void agregarDato(segmento*,int key, int timestamp,char* value,int flagModificado);
+void agregarDato(segmento* miSegmento,int key, int timestamp,char* value,int flagModificado,void* comienzoMarco);
 
 
 
