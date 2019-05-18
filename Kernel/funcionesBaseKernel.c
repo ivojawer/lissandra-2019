@@ -51,17 +51,6 @@ char* devolverTablaDeRequest(request* request) {
 
 }
 
-int esDescribeGlobal(request* request) {
-	int resultado = 0;
-
-	if (request->requestEnInt == DESCRIBE
-			&& (!strcmp(" ", request->parametros))) {
-		resultado = 1;
-	}
-
-	return resultado;
-}
-
 char* scriptConRaiz(char* script) {
 	char * dirScript = string_new();
 	string_append(&dirScript, RAIZSCRIPTS);
@@ -108,13 +97,14 @@ int charsDeBuffer(char* buffer) {
 
 char* leerLinea(char* direccion, int lineaALeer) {
 
-	//TODO: Arreglar esto
 
 	//TODO: Semaforo con crearArchivo?
 
 	FILE* archivo;
 	archivo = fopen(direccion, "r");
 	char buffer[MAXBUFFER];
+	char* resultado = string_new();
+
 
 	if (archivo == NULL) {
 		fclose(archivo);
@@ -124,30 +114,57 @@ char* leerLinea(char* direccion, int lineaALeer) {
 		return error;
 	}
 
+
+
+
 	for (int i = 0; i <= lineaALeer; i++) {
+
+
 		limpiarBuffer(buffer);
-		char* resultado = fgets(buffer, MAXBUFFER, archivo);
+		char* resultadoDeLeer = fgets(buffer, MAXBUFFER, archivo);
 
-		if (resultado == NULL) {
+		if (resultadoDeLeer == NULL) {
+
 			fclose(archivo);
-			free(resultado);
 
-			char* fin = "fin";
+			string_append(&resultado,"fin");
 
-			return fin;
+			free(resultadoDeLeer);
+
+			break;
+
 		}
+
+		if (i == lineaALeer)
+		{
+			string_append(&resultado,resultadoDeLeer);
+
+			resultadoDeLeer = fgets(buffer, MAXBUFFER, archivo);
+
+			if (resultadoDeLeer == NULL) //Si es el ultimo string, no viene con \n
+			{
+				string_append(&resultado,"\n");
+			}
+		}
+
+		//free(resultadoDeLeer); Seg fault en esta linea wowowo (Y no por el free del if resultadoLeer == NULL)
 
 	}
 
-	int caracteres = charsDeBuffer(buffer);
+	return resultado;
 
-	char* linea = malloc(sizeof(char) * caracteres);
+//	int caracteres = charsDeBuffer(buffer);
+//
+//	char* linea = malloc(sizeof(char) * caracteres);
+//
+//	memcpy(linea, buffer, caracteres * sizeof(char));
+//
+//	fclose(archivo);
+//
+//
+//
+//	return linea;
 
-	memcpy(linea, buffer, caracteres * sizeof(char));
-
-	fclose(archivo);
-
-	return linea;
 }
 
 

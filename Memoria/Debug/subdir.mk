@@ -7,19 +7,22 @@ C_SRCS += \
 ../conexionesMem.c \
 ../consolaMem.c \
 ../funcionesMemoria.c \
-../memoria.c 
+../memoria.c \
+../segmentos.c 
 
 OBJS += \
 ./conexionesMem.o \
 ./consolaMem.o \
 ./funcionesMemoria.o \
-./memoria.o 
+./memoria.o \
+./segmentos.o 
 
 C_DEPS += \
 ./conexionesMem.d \
 ./consolaMem.d \
 ./funcionesMemoria.d \
-./memoria.d 
+./memoria.d \
+./segmentos.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes

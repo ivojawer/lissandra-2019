@@ -68,10 +68,11 @@ void planificadorEXEC(int IdScript) {
 			return;
 		}
 
-		scriptEXEC->lineasLeidas++;
 
 		char* proximaLinea = leerLinea(scriptEXEC->direccionScript,
 				scriptEXEC->lineasLeidas + 1);
+
+		scriptEXEC->lineasLeidas++;
 
 		if (!strcmp(proximaLinea, "fin")) {
 			log_info(logger, "%s%i",
@@ -95,6 +96,8 @@ void planificadorEXEC(int IdScript) {
 	}
 
 	moverScript(scriptEXEC->idScript, listaEXEC, colaREADY);
+
+	sem_post(&sem_disponibleColaREADY);
 	sem_post(&sem_multiprocesamiento);
 
 }
