@@ -1,10 +1,11 @@
-#include "requests.h"
 #include "funcionesMemoria.h"
 
 
 t_config*config;
 t_log* logger;
 t_list* tablaSegmentos;
+
+
 int main() {
 
 
@@ -21,8 +22,8 @@ int main() {
 	//reservo toda la memoria
 	int tamanioMemoria =config_get_int_value(config,"TAM_MEM");
 	log_info(logger,"cree mi memoria tamanio: %d",tamanioMemoria);
-	void* comienzoMemoria = malloc(tamanioMemoria);
-
+	comienzoMemoria = malloc(tamanioMemoria);
+	printf("comienzo memoria:%p", comienzoMemoria);
 	//divido en marcos
 	int caracMaxDeValue = config_get_int_value(config,"CANT_MAX_CARAC");
 	int tamanioMarco = caracMaxDeValue * sizeof(char) + sizeof(int) + sizeof(int); //value + key + timestamp
@@ -37,16 +38,20 @@ int main() {
 	tablaSegmentos = crearTablaSegmentos();
 
 	//pruebas
-	nuevaTabla(tablaSegmentos,"TABLA1");
 
-	segmento* miSegmento = tablaSegmentos->head->data;
-	log_info(logger,"Nombre de mi nueva tabla es: %s",miSegmento->nombreDeTabla);
+	//segmento* miSegmento=nuevaTabla(tablaSegmentos,"TABLA1");
+	//agregarDato(miSegmento,123,0,"hola",1);
+	//insert("TABLA1 123 hola");
 
-
-	agregarDato(miSegmento,123,0,"hola",1,comienzoMemoria);
-
-	pagina* datoAgregado= miSegmento->tablaDePaginas->head->data;
-	log_info(logger,"dato agregado: key=%d - timestamp=%d - value=%s" , datoAgregado->dato->key,datoAgregado->dato->timestamp,&datoAgregado->dato->value);
+//
+//	segmento* miSegmento = tablaSegmentos->head->data;
+//	log_info(logger,"Nombre de mi nueva tabla es: %s",miSegmento->nombreDeTabla);
+//
+//
+//	agregarDato(miSegmento,123,0,"hola",1);
+//
+//	pagina* datoAgregado= miSegmento->tablaDePaginas->head->data;
+//	log_info(logger,"dato agregado: key=%d - timestamp=%d - value=%s" , datoAgregado->dato->key,datoAgregado->dato->timestamp,&datoAgregado->dato->value);
 
 	pthread_detach(h_conexiones);
 	pthread_join(h_consola, NULL);

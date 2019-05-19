@@ -16,6 +16,9 @@
 #include "conexionesMem.h"
 #include <stdbool.h>
 
+void* comienzoMemoria;
+
+
 typedef struct {
 	int timestamp;
 	int key;
@@ -32,14 +35,15 @@ segmento* encuentroTablaPorNombre(char* nombreTabla, t_list* tablaDeSegmentos);
 bool filtroNombreTabla( char*,segmento*);
 t_list* crearTablaSegmentos();
 t_list* crearTablaPaginas();
-void nuevaTabla(t_list*,char*);
-pagina* nuevoDato(t_list* tablaPaginas,int flagModificado,int key, int timestamp, char* value,void*);
+segmento* nuevaTabla(t_list*,char*);
+pagina* nuevoDato(t_list* tablaPaginas,int flagModificado,int key, int timestamp, char* value);
 pagina* getPagina(t_list* tablaSegmentos,int key, char* nombreTabla);
 void consola();
 void mandarAEjecutarRequest(request* requestAEjecutar);
+void mandarSelectALFS(char*,int);
 void mandarCreateALFS(char*,char*,int,char*);
 void Select(char* parametros);
-void insert(char* parametros,void*);
+void insert(char* parametros);
 void create(char* parametros);
 void describe(char* parametro);
 void drop(char* parametro);
