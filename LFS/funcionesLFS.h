@@ -3,6 +3,7 @@
 
 #include<stdio.h>
 #include<stdlib.h>
+#include<stdbool.h>
 #include<commons/log.h>
 #include<commons/string.h>
 #include<commons/config.h>
@@ -21,6 +22,12 @@ typedef struct {
 	t_list* datosAInsertar;
 } t_tablaEnMemTable;
 
+typedef struct {
+	int timestamp;
+	int key;
+	char* value;
+} dato;
+
 void consola();
 void conexiones();
 void mandarAEjecutarRequest(request* requestAEjecutar);
@@ -30,4 +37,9 @@ void create(char* parametros);
 void describe(char* parametro);
 void drop(char* parametro);
 int tablaYaExiste(char* nombreTabla);
+void crearTablaEnMemTable(char* nombreDeTabla);
+int tablaExisteEnMemTable(char* nombreDeLaTabla);
+t_tablaEnMemTable* getTablaPorNombre(t_list* memoriaTemp, char* nombreDeTabla);
+//t_tablaEnMemTable* ultimaTabla(t_list* memTemp);
+//t_tablaEnMemTable* ultimoDato(t_list* memTemp);
 #endif /* FUNCIONESLFS_H_ */

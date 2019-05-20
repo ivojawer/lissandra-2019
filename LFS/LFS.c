@@ -10,8 +10,10 @@ int main() {
 	config = config_create("/home/utnso/workspace/tp-2019-1c-U-TN-Tecno/CONFIG/LFS.config");
 	memTable = list_create();
 
-//	int a = tablaYaExiste("Tabla1");
-//	printf("%i",a );
+//	insert("Tabla1 12 VAYNE 43");
+//	t_tablaEnMemTable* tabla = ultimaTabla(memTable);
+//	dato* holis =ultimoDato(tabla->datosAInsertar); //funciona pero me tira un warning que no entiendo
+//	printf("holis es ts: \n   Key: \n y value: \n %i %i %s",holis->timestamp,holis->key,holis->value);
 
 	pthread_t h_consola;
 	pthread_t h_conexiones;

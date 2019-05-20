@@ -86,13 +86,9 @@ void mandarAEjecutarRequest(request* requestAEjecutar) {
 
 int tablaYaExiste(char* nombreTabla) {
 
-	//log_info(logger,"path completo: %s", nombreTabla);
+	char* nombreTablaGuardado = string_duplicate(nombreTabla);
+	string_to_upper(nombreTablaGuardado);
 
-	//string_to_upper(nombreTabla); TODO: explota subir todo a mayusculas why
-
-	log_info(logger,"nombre en mayus: %s", nombreTabla);
-
-	// 1. encontrar el path
 	char* pathAbsoluto = string_new();
 
 	// char* rutaPrincipal = (????); TODO: poner la primera parte (ruta principal) sino esta wea no funciona
@@ -100,20 +96,35 @@ int tablaYaExiste(char* nombreTabla) {
 
 	// Aca va lo feo hardcodeado que NO TIENE QUE IR pero quiero ver si funciona chiks:
 	string_append(&pathAbsoluto,"/home/utnso/workspace/tp-2019-1c-U-TN-Tecno/LFS/Debug/");
-
 	string_append(&pathAbsoluto,"Tablas/");
-	string_append(&pathAbsoluto,nombreTabla); //El nombre tiene que estar en mayuscula
+	string_append(&pathAbsoluto,nombreTablaGuardado);
 
-	log_info(logger,"path completo: %s", pathAbsoluto);
-
-	// 2. fijarse si el archivo existe
 	if (access(pathAbsoluto, F_OK) == -1){
-	        return 0;
+       return 0;
 	}
-	    return 1; // devuelve 1 si existe la tabla, sino devuelve 0.
+	return 1; // devuelve 1 si existe la tabla, sino devuelve 0.
+
 }
 
+int tablaExisteEnMemTable(char* nombreDeTabla){
+
+	char* nombreTablaGuardado = string_duplicate(nombreDeTabla);
+	string_to_upper(nombreTablaGuardado);
+
+	bool coincideNombreTabla(t_tablaEnMemTable* unaTabla){
+		return string_equals_ignore_case(unaTabla->nombreTabla,nombreTablaGuardado);
+	}
+
+	if(list_any_satisfy(memTable,(void*) coincideNombreTabla)){
+		return 1;
+	}
+	return 0; // devuelve 1 si existe la tabla, sino devuelve 0.
+
+}
+
+
 void crearTablaEnMemTable(char* nombreDeTabla) {
+
 	t_tablaEnMemTable* nuevaTabla;
 
 	nuevaTabla = malloc(sizeof(t_tablaEnMemTable));
@@ -125,7 +136,18 @@ void crearTablaEnMemTable(char* nombreDeTabla) {
 	nuevaTabla->datosAInsertar = list_create();
 
 	list_add(memTable, nuevaTabla);
+
 }
+
+t_tablaEnMemTable* getTablaPorNombre(t_list* memoriaTemp, char* nombreDeTabla){
+
+	bool filtroNombreTabla(t_tablaEnMemTable* unaTabla){
+		return string_equals_ignore_case(unaTabla->nombreTabla,nombreDeTabla);
+	}
+
+	return list_find(memoriaTemp,(void*)filtroNombreTabla);
+}
+
 
 void Select(char* parametros) {
 
@@ -150,29 +172,46 @@ void insert(char* parametros) {
 
 	char** parametrosEnVector = string_n_split(parametros, 4, " ");
 
-	char* tabla = parametrosEnVector[0];
-	int key = atoi(parametrosEnVector[1]);
-
-
-
-	char* value = parametrosEnVector[2]; //TODO: Sacarle las comillas
-
-	int timestamp;
+	char* nomTabla = parametrosEnVector[0];
+	int unaKey = atoi(parametrosEnVector[1]);
+	char* unValue = parametrosEnVector[2]; //TODO: Sacarle las comillas
+	int unTimestamp;
 
 	if (parametrosEnVector[3] == NULL) {
-		timestamp = 123; //TODO: poner aca el tiempo actual
+		unTimestamp = 123; //TODO: poner aca el tiempo actual
+	} else {
+		unTimestamp = atoi(parametrosEnVector[3]);
 	}
 
-	else {
-		timestamp = atoi(parametrosEnVector[3]);
-	}
-
-	if (!tablaYaExiste(tabla)) {
-		log_error(logger, "%s%s%s", "La tabla ", tabla, " no existe.");
+	if (!tablaYaExiste(nomTabla)) {
+		log_error(logger, "%s%s%s", "La tabla ", nomTabla, " no existe.");
 		return;
 	}
 
+	//TODO: Dice obtener la metadata asociada a dicha tabla. ?? dafuq - preguntar
+
+	dato* nuevoDato;
+	nuevoDato = malloc(sizeof(dato));
+	nuevoDato->timestamp = unTimestamp;
+	nuevoDato->key = unaKey;
+	nuevoDato->value = malloc(sizeof(unValue));
+	nuevoDato->value = unValue;
+
+	if (!tablaExisteEnMemTable(nomTabla)){
+		crearTablaEnMemTable(nomTabla);
+	}
+
+	t_tablaEnMemTable* tabla = getTablaPorNombre(memTable,nomTabla);
+	list_add(tabla->datosAInsertar,nuevoDato);
 }
+
+//t_tablaEnMemTable* ultimaTabla(t_list* memTemp){
+//	return list_get(memTemp,memTemp->elements_count - 1);
+//}
+//
+//t_tablaEnMemTable* ultimoDato(t_list* datos){
+//	return list_get(datos,datos->elements_count - 1);
+//}
 
 void create(char* parametros) {
 	char** parametrosEnVector = string_n_split(parametros, 4, " ");
@@ -197,16 +236,12 @@ void create(char* parametros) {
 	printf("Path entero:%s\n", pathCompleto);
 	int result = mkdir(pathCompleto, 0700);
 
-	if (-1 == result)
-	{
-
+	if (-1 == result){
 		printf("Error creating directory!\n");
-	    exit(1);
+		exit(1);
 	}
 
 	//crea metadata
-
-
 
 
 
@@ -226,3 +261,5 @@ void describe(char* parametro) {
 void drop(char* parametro) {
 
 }
+
+//TODO: faltan todos los frees
