@@ -4,7 +4,8 @@
 t_config*config;
 t_log* logger;
 t_list* tablaSegmentos;
-
+int cantMarcos;
+int tamanioMarco;
 
 int main() {
 
@@ -23,16 +24,16 @@ int main() {
 	int tamanioMemoria =config_get_int_value(config,"TAM_MEM");
 	log_info(logger,"cree mi memoria tamanio: %d",tamanioMemoria);
 	comienzoMemoria = malloc(tamanioMemoria);
-	printf("comienzo memoria:%p", comienzoMemoria);
+	printf("comienzo memoria:%p\n", comienzoMemoria);
 	//divido en marcos
 	int caracMaxDeValue = config_get_int_value(config,"CANT_MAX_CARAC");
-	int tamanioMarco = caracMaxDeValue * sizeof(char) + sizeof(int) + sizeof(int); //value + key + timestamp
+	tamanioMarco = caracMaxDeValue * sizeof(char) + sizeof(int) + sizeof(int); //value + key + timestamp
 	log_info(logger,"el tamanio de mi marco es: %d", tamanioMarco);
-	int cantMarcos = tamanioMemoria/tamanioMarco; //tamanio marco siempre es mult de 2 asi que da redondo
+	cantMarcos = tamanioMemoria/tamanioMarco; //tamanio marco siempre es mult de 2 asi que da redondo
 	log_info(logger,"cantidad de marcos: %d",cantMarcos);
-
-
-
+	for(int i = 0; i<cantMarcos;i++){
+		marcos[i].vacio=true;
+	}
 
 	//creo tabla de segmentos
 	tablaSegmentos = crearTablaSegmentos();
@@ -41,7 +42,7 @@ int main() {
 
 	//segmento* miSegmento=nuevaTabla(tablaSegmentos,"TABLA1");
 	//agregarDato(miSegmento,123,0,"hola",1);
-	//insert("TABLA1 123 hola");
+	insert("TABLA1 123 hola");
 
 //
 //	segmento* miSegmento = tablaSegmentos->head->data;
