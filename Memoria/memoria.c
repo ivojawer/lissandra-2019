@@ -9,7 +9,7 @@ t_list* tablaSegmentos;
 int main() {
 
 
-	logger = log_create("memoria.log", "memoria", 0, 0);
+	logger = log_create("memoria.log", "memoria", 1, 0); //3er parametro en 1 para mostrarlos en consola. Sino en 0
 
 	config =config_create("memoria.config"); //DUDA: Si es un config por memoria esto va en la carpeta CONFIG tmb  lo hago una por proyecto como aca
 
@@ -35,16 +35,31 @@ int main() {
 		marcos[i].vacio=true;
 		marcos[i].recentlyUsed=false;//ni idea pero le queria poner un valor para acordarme que se setea aca
 	}
-
-	//creo tabla de segmentos
+//	creo tabla de segmentos
 	tablaSegmentos = crearTablaSegmentos();
 
-	//pruebas
 
+
+
+
+//	pruebas alto nivel:
+	insert("TABLA1 123 hola");
+	Select("TABLA1 123");
+	insert("TABLA1 1234 holiiiis");
+//	insert("TABLA2 123 \"buen dia\"");
+//	insert("TABLA1 123 \"chau\"");
+//	insert("TABLA3 99 \"hola soy ivan y trabajo en un ascensor un dia\"");
+//	Select("TABLA1 123");
+//	Select("TABLA1 1234");
+//	Select("TABLA3 123");
+//	Select("TABLA2 123");
+//	Select("TABLA4 123");
+
+
+//	pruebas bajo nivel:
 //	segmento* miSegmento=nuevaTabla(tablaSegmentos,"TABLA1");
 //	agregarDato(miSegmento,123,0,"hola",1);
-//	insert("TABLA1 123 hola");
-//	insert("TABLA1 1234 holiiiis");
+
 //
 //	segmento* miSegmento = tablaSegmentos->head->data;
 //	log_info(logger,"Nombre de mi nueva tabla es: %s",miSegmento->nombreDeTabla);
@@ -54,6 +69,11 @@ int main() {
 //
 //	pagina* datoAgregado= miSegmento->tablaDePaginas->head->data;
 //	log_info(logger,"dato agregado: key=%d - timestamp=%d - value=%s" , datoAgregado->dato->key,datoAgregado->dato->timestamp,&datoAgregado->dato->value);
+
+
+
+
+
 
 	pthread_detach(h_conexiones);
 	pthread_join(h_consola, NULL);

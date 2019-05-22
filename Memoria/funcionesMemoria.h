@@ -14,6 +14,7 @@
 #include <commons/collections/list.h>
 #include "segmentos.h"
 #include "conexionesMem.h"
+#include <time.h>
 #include <stdbool.h>
 
 

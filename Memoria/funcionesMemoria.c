@@ -2,6 +2,7 @@
 
 
 extern t_log* logger;
+extern t_config* config;
 extern t_list* tablaSegmentos;
 
 
@@ -29,7 +30,6 @@ segmento* nuevaTabla(t_list* tablaSegmentos,char* nombreTabla){ //todo: destroy 
 	list_add(tablaSegmentos,nuevoSegmento);
 
 	log_info(logger,"tabla agregada: %s",ultimoSegmento(tablaSegmentos)->nombreDeTabla);
-	log_info(logger,"tabla agregada: %p",ultimoSegmento(tablaSegmentos));
 	return nuevoSegmento;
 }
 
@@ -64,11 +64,9 @@ void asignoPaginaEnMarco(int key, int timestamp,char* value, void* comienzoMarco
 
 
 int numeroMarcoDondeAlocar(){
-//	printf("cant marcos:%d\n",cantMarcos);
 	for(int i = 0; i<cantMarcos; i++){
-//		printf("diponibilidad marco nro:%d=%d\n",i,marcos[i].vacio);
 		if(marcos[i].vacio){
-//			printf("numero marco libre encontrado:%d\n",i);
+			log_info(logger,"numero marco libre encontrado:%d\n",i);
 			marcos[i].vacio=false;
 			return i;
 		}
@@ -77,7 +75,6 @@ int numeroMarcoDondeAlocar(){
 }
 
 void* marcoDondeAlocar(){
-	printf("busco marco donde alocar\n");
 	return comienzoMemoria + numeroMarcoDondeAlocar()*tamanioMarco;
 }
 
@@ -96,7 +93,7 @@ pagina* nuevoDato(t_list* tablaPaginas,int flagModificado,int key, int timestamp
 //	asignoPaginaEnMarco(key,timestamp,value,comienzoMemoria);
 
 
-	log_info(logger,"value pagina a agregar: %s", &nuevaPagina->dato->value);
+//	printf("value pagina a agregar: %s", &nuevaPagina->dato->value);
 
 	list_add(tablaPaginas,nuevaPagina);
 
@@ -258,6 +255,14 @@ void actualizoDato (pagina* pagina , char* nuevoValue){
 
 }
 
+char* sacoComillas(char* cadena){
+	int largoCadena = string_length(cadena);
+	if(cadena[0] == '\"' && cadena[largoCadena-1] == '\"'){
+		return string_substring(cadena,1,largoCadena-2);
+	}
+	return cadena;
+}
+
 void insert(char* parametros) {
 
 	char** parametrosEnVector = string_n_split(parametros, 3, " ");
@@ -265,8 +270,12 @@ void insert(char* parametros) {
 	char* tabla = parametrosEnVector[0];
 	string_to_upper(tabla);
 	int key = atoi(parametrosEnVector[1]);
-	char* value = parametrosEnVector[2]; //TODO deberia sacar las comillas
-	int timestamp = 666; //TODO: asigno timestamp con el epoch
+	char* value = parametrosEnVector[2];
+	value=sacoComillas(value);
+	value=string_substring_until(value,config_get_int_value(config,"CANT_MAX_CARAC"));
+	int timestamp = time(NULL)/1000;
+
+	log_info(logger,"tabla:%s - key:%d - timestamp:%d - value:%s\n",tabla,key,timestamp,value);
 
 	segmento* tablaEncontrada=encuentroTablaPorNombre(tabla,tablaSegmentos);
 	if(tablaEncontrada ==NULL){
@@ -274,8 +283,8 @@ void insert(char* parametros) {
 
 		segmento* tablaCreada= nuevaTabla(tablaSegmentos,tabla);
 
-		log_info(logger,"se creo la tabla:%p",tablaCreada);
-//		printf("tabla:%s - key:%d - timestamp:%d - value:%s\n",tabla,key,timestamp,value);
+
+
 		nuevoDato(tablaCreada->tablaDePaginas,1,key,timestamp,value);
 	}
 	else{
@@ -289,6 +298,10 @@ void insert(char* parametros) {
 			nuevoDato(tablaEncontrada->tablaDePaginas,1,key,timestamp,value);
 		}
 	}
+	free(parametrosEnVector[0]);
+	free(parametrosEnVector[1]);
+	free(parametrosEnVector[2]);
+	free(parametrosEnVector);
 }
 
 
