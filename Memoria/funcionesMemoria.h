@@ -36,7 +36,9 @@ typedef struct{
 
 
 void* comienzoMemoria;
-disponibilidad marcos[];
+disponibilidad* marcos;
+int cantMarcos;
+int tamanioMarco;
 
 segmento* encuentroTablaPorNombre(char* nombreTabla, t_list* tablaDeSegmentos);
 bool filtroNombreTabla( char*,segmento*);

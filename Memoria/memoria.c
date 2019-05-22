@@ -4,13 +4,12 @@
 t_config*config;
 t_log* logger;
 t_list* tablaSegmentos;
-int cantMarcos;
-int tamanioMarco;
+
 
 int main() {
 
 
-	logger = log_create("memoria.log", "memoria", 1, 0);
+	logger = log_create("memoria.log", "memoria", 0, 0);
 
 	config =config_create("memoria.config"); //DUDA: Si es un config por memoria esto va en la carpeta CONFIG tmb  lo hago una por proyecto como aca
 
@@ -24,15 +23,17 @@ int main() {
 	int tamanioMemoria =config_get_int_value(config,"TAM_MEM");
 	log_info(logger,"cree mi memoria tamanio: %d",tamanioMemoria);
 	comienzoMemoria = malloc(tamanioMemoria);
-	printf("comienzo memoria:%p\n", comienzoMemoria);
+	//printf("comienzo memoria:%p\n", comienzoMemoria);
 	//divido en marcos
 	int caracMaxDeValue = config_get_int_value(config,"CANT_MAX_CARAC");
 	tamanioMarco = caracMaxDeValue * sizeof(char) + sizeof(int) + sizeof(int); //value + key + timestamp
 	log_info(logger,"el tamanio de mi marco es: %d", tamanioMarco);
 	cantMarcos = tamanioMemoria/tamanioMarco; //tamanio marco siempre es mult de 2 asi que da redondo
 	log_info(logger,"cantidad de marcos: %d",cantMarcos);
+	marcos=malloc(sizeof(disponibilidad)*cantMarcos);
 	for(int i = 0; i<cantMarcos;i++){
 		marcos[i].vacio=true;
+		marcos[i].recentlyUsed=false;//ni idea pero le queria poner un valor para acordarme que se setea aca
 	}
 
 	//creo tabla de segmentos
@@ -40,10 +41,10 @@ int main() {
 
 	//pruebas
 
-	//segmento* miSegmento=nuevaTabla(tablaSegmentos,"TABLA1");
-	//agregarDato(miSegmento,123,0,"hola",1);
-	insert("TABLA1 123 hola");
-
+//	segmento* miSegmento=nuevaTabla(tablaSegmentos,"TABLA1");
+//	agregarDato(miSegmento,123,0,"hola",1);
+//	insert("TABLA1 123 hola");
+//	insert("TABLA1 1234 holiiiis");
 //
 //	segmento* miSegmento = tablaSegmentos->head->data;
 //	log_info(logger,"Nombre de mi nueva tabla es: %s",miSegmento->nombreDeTabla);

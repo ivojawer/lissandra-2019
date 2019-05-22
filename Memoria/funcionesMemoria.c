@@ -2,8 +2,6 @@
 
 
 extern t_log* logger;
-extern int cantMarcos;
-extern int tamanioMarco;
 extern t_list* tablaSegmentos;
 
 
@@ -61,22 +59,25 @@ void asignoPaginaEnMarco(int key, int timestamp,char* value, void* comienzoMarco
 	void* marcoParaKey=mempcpy(comienzoMarco,&timestamp,sizeof(int));
 	void* marcoParaValue = mempcpy(marcoParaKey,&key,sizeof(int));
 	memcpy(marcoParaValue,value,20);//maximo carac string
-	log_info(logger,"Marco donde asigne: %p",comienzoMarco);
-
+//	log_info(logger,"Marco donde asigne: %p",comienzoMarco);
 }
 
 
 int numeroMarcoDondeAlocar(){
+//	printf("cant marcos:%d\n",cantMarcos);
 	for(int i = 0; i<cantMarcos; i++){
-			if(marcos[i].vacio){
-				marcos[i].vacio=false;
-				return i; //falta aplicar algoritmo LRU
-			}
+//		printf("diponibilidad marco nro:%d=%d\n",i,marcos[i].vacio);
+		if(marcos[i].vacio){
+//			printf("numero marco libre encontrado:%d\n",i);
+			marcos[i].vacio=false;
+			return i;
+		}
 	}
-	return -1;
+	return -1;//falta aplicar algoritmo LRU si no encontro ninguna libre
 }
 
 void* marcoDondeAlocar(){
+	printf("busco marco donde alocar\n");
 	return comienzoMemoria + numeroMarcoDondeAlocar()*tamanioMarco;
 }
 
@@ -87,6 +88,9 @@ pagina* nuevoDato(t_list* tablaPaginas,int flagModificado,int key, int timestamp
 	nuevaPagina->flagModificado= flagModificado;
 
 	nuevaPagina->dato =marcoDondeAlocar();
+//	printf("marco pagina a asigar en marco:%p\n", nuevaPagina->dato);
+//	printf("marco proxima pagina a asigar en marco:%p\n", nuevaPagina->dato+28);
+
 	asignoPaginaEnMarco(key,timestamp,value,nuevaPagina->dato);
 //	nuevaPagina->dato =comienzoMemoria;
 //	asignoPaginaEnMarco(key,timestamp,value,comienzoMemoria);
@@ -100,7 +104,7 @@ pagina* nuevoDato(t_list* tablaPaginas,int flagModificado,int key, int timestamp
 	log_info(logger,"value de mi pagina agregada: %s",&paginaAgregada->dato->value);
 
 
-	//FALTAN FREEs #Crisis
+
 
 	return nuevaPagina;
 }
@@ -199,8 +203,7 @@ segmento* encuentroTablaPorNombre(char* nombreTabla, t_list* tablaDeSegmentos){
 
 pagina* encuentroDatoPorKey(segmento* tabla, int key){
 	bool comparoKey(pagina* pag){
-		printf("pagina encontrada point marco:%p\n",pag->dato);
-		printf("key a comparar:%d - key encontrada:%d\n", key, pag->dato->key);
+//		printf("key a comparar:%d - key encontrada:%d\n", key, pag->dato->key);
 		return pag->dato->key == key;
 	}
 	return list_find(tabla->tablaDePaginas,(void*)comparoKey);
@@ -210,11 +213,11 @@ pagina* encuentroDatoPorKey(segmento* tabla, int key){
 pagina* getPagina(t_list* tablaDeSegmentos, int key, char* nombreTabla){ //retorna un NULL si no existe la tabla o la pagina
 
 	segmento* tabla = encuentroTablaPorNombre(nombreTabla, tablaDeSegmentos);
-	printf("tabla pedida:%p\n",tabla);
+//	printf("tabla pedida:%p\n",tabla);
 	if(tabla != NULL){
 //		log_info(logger, "Encontre una tabla con el nombre: %s", tabla->nombreDeTabla);
 		pagina* dato = encuentroDatoPorKey(tabla,key);
-		printf("marco pedido:%p\n", dato);
+//		printf("marco pedido:%p\n", dato);
 //		log_info(logger, "Encontre un dato con el value: %s", &dato->dato->value);
 
 		return dato;
@@ -272,7 +275,7 @@ void insert(char* parametros) {
 		segmento* tablaCreada= nuevaTabla(tablaSegmentos,tabla);
 
 		log_info(logger,"se creo la tabla:%p",tablaCreada);
-		printf("tabla:%s - key:%d - timestamp:%d - value:%s\n",tabla,key,timestamp,value);
+//		printf("tabla:%s - key:%d - timestamp:%d - value:%s\n",tabla,key,timestamp,value);
 		nuevoDato(tablaCreada->tablaDePaginas,1,key,timestamp,value);
 	}
 	else{
