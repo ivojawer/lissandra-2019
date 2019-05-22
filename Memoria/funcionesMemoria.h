@@ -16,7 +16,6 @@
 #include "conexionesMem.h"
 #include <stdbool.h>
 
-void* comienzoMemoria;
 
 
 typedef struct {
@@ -26,10 +25,20 @@ typedef struct {
 }marco;
 
 typedef struct{
+	bool vacio;
+	bool recentlyUsed;//esto es un bool?
+}disponibilidad;
+
+typedef struct{
 	marco* dato;
 	int flagModificado;
 }pagina;
 
+
+void* comienzoMemoria;
+disponibilidad* marcos;
+int cantMarcos;
+int tamanioMarco;
 
 segmento* encuentroTablaPorNombre(char* nombreTabla, t_list* tablaDeSegmentos);
 bool filtroNombreTabla( char*,segmento*);
