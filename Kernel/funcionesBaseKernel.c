@@ -1,6 +1,12 @@
 #include "funcionesBaseKernel.h"
 
 extern t_list* listaTablas;
+extern t_list* tiemposInsert;
+extern t_list* tiemposSelect;
+extern int operacionesTotales;
+sem_t sem_operacionesTotales;
+sem_t sem_tiemposInsert;
+sem_t sem_tiemposSelect;
 
 int encontrarScriptEnLista(int id, t_list* lista) {
 	for (int i = 0; i < list_size(lista); i++) {
@@ -68,7 +74,6 @@ int existeArchivo(char* script) {
 	archivo = fopen(direccion, "r");
 
 	if (archivo == NULL) {
-		fclose(archivo);
 		return 0;
 	}
 
@@ -102,12 +107,12 @@ char* leerLinea(char* direccion, int lineaALeer) {
 
 	FILE* archivo;
 	archivo = fopen(direccion, "r");
-	char buffer[MAXBUFFER];
 	char* resultado = string_new();
 
 
+
+
 	if (archivo == NULL) {
-		fclose(archivo);
 
 		char* error = "error";
 
@@ -120,12 +125,11 @@ char* leerLinea(char* direccion, int lineaALeer) {
 	for (int i = 0; i <= lineaALeer; i++) {
 
 
-		limpiarBuffer(buffer);
+		char buffer[MAXBUFFER];
+
 		char* resultadoDeLeer = fgets(buffer, MAXBUFFER, archivo);
 
 		if (resultadoDeLeer == NULL) {
-
-			fclose(archivo);
 
 			string_append(&resultado,"fin");
 
@@ -150,6 +154,8 @@ char* leerLinea(char* direccion, int lineaALeer) {
 		//free(resultadoDeLeer); Seg fault en esta linea wowowo (Y no por el free del if resultadoLeer == NULL)
 
 	}
+
+	fclose(archivo);
 
 	return resultado;
 
@@ -213,9 +219,11 @@ void mostrarListaScripts(t_list* lista) {
 	}
 }
 
+
 int moverScript(int scriptID, t_list* listaOrigen, t_list* listaDestino) {
 
 	//TODO: Poner semaforos?
+
 
 	int index = encontrarScriptEnLista(scriptID, listaOrigen);
 
@@ -230,6 +238,113 @@ int moverScript(int scriptID, t_list* listaOrigen, t_list* listaDestino) {
 	}
 
 	list_add(listaDestino, script);
+
+
 	return 1;
+}
+
+
+void insertarTiempo(time_t tiempoInicial, time_t tiempoFinal, int request)
+{
+
+	tiempoDeOperacion* tiempoOperacion = malloc(sizeof(tiempoOperacion));
+
+	tiempoOperacion->duracion = tiempoFinal - tiempoInicial;
+
+	tiempoOperacion->tiempoInicio = tiempoInicial;
+
+	if (request == SELECT)
+	{
+		sem_wait(&sem_tiemposSelect);
+		list_add(tiemposSelect,tiempoOperacion);
+		sem_post(&sem_tiemposSelect);
+	}
+
+	else if (request == INSERT)
+	{
+		sem_wait(&sem_tiemposInsert);
+		list_add(tiemposInsert,tiempoOperacion);
+		sem_post(&sem_tiemposInsert);
+	}
+}
+
+
+int esMasNuevoQue30Segundos (tiempoDeOperacion tiempoOperacion)
+{
+
+	if(difftime(time(NULL),tiempoOperacion.tiempoInicio) < 30)
+	{
+		return 1;
+	}
+	else
+	{
+		return 0;
+	}
+}
+
+t_list* filterCasero_esMasNuevoQue30Segundos (t_list* tiempos)
+{
+	t_list* tiemposAux = list_create();
+
+	tiemposAux = list_duplicate (tiempos);
+
+	for (int i = 0; i<list_size(tiemposAux); i++)
+	{
+		tiempoDeOperacion* elemento = list_get(tiemposAux,i); //Hay que liberar esto?
+
+		if (elemento == NULL)
+		{
+			break;
+		}
+
+		if(!esMasNuevoQue30Segundos( *elemento ) )
+		{
+			list_remove(tiemposAux,i);
+			i--; //Para que se mantenga en la misma posicion
+		}
+	}
+
+	return tiemposAux;
+
+}
+
+int promedioDeTiemposDeOperaciones (t_list* tiempos)
+{
+
+	if (list_size(tiempos) == 0)
+	{
+		return -1;
+	}
+
+
+	int sumaTotalTiempos = 0;
+
+	for (int i = 0; i<list_size(tiempos);i++)
+	{
+		tiempoDeOperacion* tiempoOperacion = list_get(tiempos,i); //Hay que liberar esto?
+
+		sumaTotalTiempos += tiempoOperacion->duracion;
+	}
+
+	int promedio = sumaTotalTiempos/list_size(tiempos);
+
+	return promedio;
+}
+
+void limpiarListasTiempos()
+{
+	t_list* listaInsertAux = tiemposInsert;
+	t_list* listaSelectAux = tiemposSelect;
+
+	sem_wait(&sem_tiemposSelect);
+	tiemposSelect = filterCasero_esMasNuevoQue30Segundos(tiemposSelect);
+	sem_post(&sem_tiemposSelect);
+
+	sem_wait(&sem_tiemposInsert);
+	tiemposInsert = filterCasero_esMasNuevoQue30Segundos(tiemposInsert);
+	sem_post(&sem_tiemposInsert);
+
+	list_destroy(listaInsertAux);
+	list_destroy(listaSelectAux);
 }
 

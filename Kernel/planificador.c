@@ -19,6 +19,8 @@ void planificadorREADYAEXEC() {
 
 		script* scriptAExec = list_get(colaREADY, 0); //El 0 siempre va a ser el mas viejo en la lista
 
+		log_info(logger,"%i%s",scriptAExec->idScript,": READY->EXEC");
+
 		moverScript(scriptAExec->idScript, colaREADY, listaEXEC);
 
 		pthread_t h_EXEC;
@@ -37,8 +39,12 @@ void planificadorEXEC(int IdScript) {
 	script* scriptEXEC = list_get(listaEXEC, index);
 	for (int i = 0; i < quantum; i++) {
 
+
+
 		char* linea = leerLinea(scriptEXEC->direccionScript,
 				scriptEXEC->lineasLeidas);
+
+
 
 		if (!strcmp(linea, "error")) {
 			log_error(logger, "%s%i",
@@ -46,10 +52,12 @@ void planificadorEXEC(int IdScript) {
 					scriptEXEC->idScript);
 
 			free(linea);
+			log_info(logger,"%i%s",scriptEXEC->idScript,": EXEC->EXIT");
 			moverScript(scriptEXEC->idScript, listaEXEC, listaEXIT);
 			sem_post(&sem_multiprocesamiento);
 			return;
 		}
+
 
 		request* requestAEjecutar = crearStructRequest(linea);
 
@@ -63,6 +71,8 @@ void planificadorEXEC(int IdScript) {
 			liberarRequest(requestAEjecutar);
 			free(linea);
 
+
+			log_info(logger,"%i%s",scriptEXEC->idScript,": EXEC->EXIT");
 			moverScript(scriptEXEC->idScript, listaEXEC, listaEXIT);
 			sem_post(&sem_multiprocesamiento);
 			return;
@@ -71,6 +81,8 @@ void planificadorEXEC(int IdScript) {
 
 		char* proximaLinea = leerLinea(scriptEXEC->direccionScript,
 				scriptEXEC->lineasLeidas + 1);
+
+
 
 		scriptEXEC->lineasLeidas++;
 
@@ -82,19 +94,26 @@ void planificadorEXEC(int IdScript) {
 			free(linea);
 			liberarRequest(requestAEjecutar);
 
+			log_info(logger,"%i%s",scriptEXEC->idScript,": EXEC->EXIT");
 			moverScript(scriptEXEC->idScript, listaEXEC, listaEXIT);
 			sem_post(&sem_multiprocesamiento);
 			return;
 
 		}
 
+
 		//free(proximaLinea); //TODO: ver esta linea tambien :)
 		free(linea);
+
 		liberarRequest(requestAEjecutar);
+
 
 		//Semaforo por si cambia el quantum?
 	}
 
+
+
+	log_info(logger,"%i%s",scriptEXEC->idScript,": EXEC->READY");
 	moverScript(scriptEXEC->idScript, listaEXEC, colaREADY);
 
 	sem_post(&sem_disponibleColaREADY);
