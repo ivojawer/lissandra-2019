@@ -44,17 +44,26 @@ int main() {
 
 //	pruebas alto nivel:
 	insert("TABLA1 123 hola");
+	sleep(1);
 	Select("TABLA1 123");
+	sleep(1);
 	insert("TABLA1 1234 holiiiis");
-//	insert("TABLA2 123 \"buen dia\"");
-//	insert("TABLA1 123 \"chau\"");
-//	insert("TABLA3 99 \"hola soy ivan y trabajo en un ascensor un dia\"");
-//	Select("TABLA1 123");
-//	Select("TABLA1 1234");
-//	Select("TABLA3 123");
-//	Select("TABLA2 123");
-//	Select("TABLA4 123");
-
+	sleep(1);
+	insert("TABLA2 123 \"buen dia\"");
+	sleep(1);
+	insert("TABLA1 123 \"chau\"");
+	sleep(1);
+	insert("TABLA3 99 \"hola soy ivan y trabajo en un ascensor un dia\"");
+	sleep(1);
+	Select("TABLA1 123");
+	sleep(1);
+	Select("TABLA1 1234");
+	sleep(1);
+	Select("TABLA3 123");
+	sleep(1);
+	Select("TABLA2 123");
+	sleep(1);
+	Select("TABLA4 123");
 
 //	pruebas bajo nivel:
 //	segmento* miSegmento=nuevaTabla(tablaSegmentos,"TABLA1");

@@ -29,7 +29,7 @@ segmento* nuevaTabla(t_list* tablaSegmentos,char* nombreTabla){ //todo: destroy 
 
 	list_add(tablaSegmentos,nuevoSegmento);
 
-	log_info(logger,"tabla agregada: %s",ultimoSegmento(tablaSegmentos)->nombreDeTabla);
+//	log_info(logger,"tabla agregada: %s",ultimoSegmento(tablaSegmentos)->nombreDeTabla);
 	return nuevoSegmento;
 }
 
@@ -191,7 +191,6 @@ void mandarAEjecutarRequest(request* requestAEjecutar) {
 
 segmento* encuentroTablaPorNombre(char* nombreTabla, t_list* tablaDeSegmentos){
 	bool comparoNombreTabla(segmento* segmentoAComparar){
-		log_info(logger,"nombreTabla:%s - nombre encontrado:%s",nombreTabla,segmentoAComparar->nombreDeTabla);
 		return strcmp(nombreTabla,segmentoAComparar->nombreDeTabla) == 0;
 	}
 
@@ -214,7 +213,6 @@ pagina* getPagina(t_list* tablaDeSegmentos, int key, char* nombreTabla){ //retor
 	if(tabla != NULL){
 //		log_info(logger, "Encontre una tabla con el nombre: %s", tabla->nombreDeTabla);
 		pagina* dato = encuentroDatoPorKey(tabla,key);
-//		printf("marco pedido:%p\n", dato);
 //		log_info(logger, "Encontre un dato con el value: %s", &dato->dato->value);
 
 		return dato;
@@ -222,7 +220,6 @@ pagina* getPagina(t_list* tablaDeSegmentos, int key, char* nombreTabla){ //retor
 }
 
 void Select(char* parametros) {
-
 	char** parametrosEnVector = string_n_split(parametros, 2, " ");
 	char* tabla =  parametrosEnVector[0];
 	string_to_upper(tabla);
@@ -241,11 +238,10 @@ void Select(char* parametros) {
 		log_info(logger,"No encontre el dato, mandando request a LFS");
 		mandarSelectALFS(tabla,key);
 	}
-
-	free(parametrosEnVector[1]);
 	free(parametrosEnVector[0]);
+	free(parametrosEnVector[1]);
 	free(parametrosEnVector);
-	free(parametros);
+	//free(parametros); //TODO: este free rompe el select (si lo hago por codigo, por consola si funciona) :(
 
 }
 
@@ -272,10 +268,10 @@ void insert(char* parametros) {
 	int key = atoi(parametrosEnVector[1]);
 	char* value = parametrosEnVector[2];
 	value=sacoComillas(value);
-	value=string_substring_until(value,config_get_int_value(config,"CANT_MAX_CARAC"));
+	value=string_substring_until(value,config_get_int_value(config,"CANT_MAX_CARAC")); //lo corta para que no ocupe mas de 20 caracteres
 	int timestamp = time(NULL)/1000;
 
-	log_info(logger,"tabla:%s - key:%d - timestamp:%d - value:%s\n",tabla,key,timestamp,value);
+	log_info(logger,"INSERT: Tabla:%s - key:%d - timestamp:%d - value:%s\n",tabla,key,timestamp,value);
 
 	segmento* tablaEncontrada=encuentroTablaPorNombre(tabla,tablaSegmentos);
 	if(tablaEncontrada ==NULL){
@@ -283,19 +279,20 @@ void insert(char* parametros) {
 
 		segmento* tablaCreada= nuevaTabla(tablaSegmentos,tabla);
 
-
-
 		nuevoDato(tablaCreada->tablaDePaginas,1,key,timestamp,value);
+		printf("dato insertado\n");
 	}
 	else{
 		pagina* datoEncontrado = encuentroDatoPorKey(tablaEncontrada,key);
 		if(datoEncontrado != NULL){
 			log_info(logger,"tengo que actualizar el dato");
 			actualizoDato(datoEncontrado,value);
+			printf("dato actualizado\n");
 		}
 		else{
 			log_info(logger,"tengo que cear el dato");
 			nuevoDato(tablaEncontrada->tablaDePaginas,1,key,timestamp,value);
+			printf("dato insertado\n");
 		}
 	}
 	free(parametrosEnVector[0]);
