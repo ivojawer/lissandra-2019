@@ -388,7 +388,7 @@ char* recibirString(int deQuien, t_log* logger) {
 void enviarString(char* string, int aQuien) {
 	void* paquete;
 
-	int tamanioRequest = strlen(string) + 1;
+	int tamanioRequest = (strlen(string) + 1)* sizeof(char);
 
 	int tamanioEnvio = sizeof(int) + tamanioRequest;
 
@@ -404,7 +404,7 @@ void enviarString(char* string, int aQuien) {
 void enviarStringConHeader(char* string, int aQuien, int header) {
 	void* paquete;
 
-	int tamanioRequest = strlen(string);
+	int tamanioRequest = (strlen(string) + 1)* sizeof(char);
 
 	int tamanioEnvio = sizeof(int) + sizeof(int) + tamanioRequest;
 
@@ -507,4 +507,72 @@ void liberarRequest(request* request)
 {
 	free(request->parametros);
 	free(request);
+}
+
+void enviarMetadatas(t_list* metadatas, int aQuien)
+{
+
+	int cantidadMetadatas = list_size(metadatas);
+
+	int tamanioPaquete = sizeof(int); //Se pone "= sizeof(int)" por el int de cantidadMetadatas que va a ir al principio
+
+	for (int i = 0; i< list_size(metadatas);i++)
+	{
+		metadataTablaLFS* elemento = list_get(metadatas,i);
+
+		int tamanioNombre = (strlen(elemento->nombre) + 1 )* sizeof(char);
+
+		tamanioPaquete += sizeof(int) + tamanioNombre + sizeof(int) + sizeof(int) + sizeof(int);
+
+	}
+
+	void* paquete = malloc(tamanioPaquete);
+
+	memcpy(paquete,&cantidadMetadatas,sizeof(int));
+
+
+	for (int i = 0; i<list_size(metadatas);i++)
+	{
+		metadataTablaLFS* elemento = list_get(metadatas,i);
+
+		int tamanioNombre = (strlen(elemento->nombre) + 1 )* sizeof(char);
+
+		memcpy(paquete+tamanioPaquete , &tamanioNombre , sizeof(int));
+
+		memcpy(paquete+tamanioPaquete+sizeof(int), elemento->nombre,tamanioNombre);
+
+		memcpy(paquete+tamanioPaquete+sizeof(int)+tamanioNombre, &elemento->consistencia, sizeof(int));
+
+		memcpy(paquete+tamanioPaquete+sizeof(int)+tamanioNombre+sizeof(int), &elemento->particiones, sizeof(int));
+
+		memcpy(paquete+tamanioPaquete+sizeof(int)+tamanioNombre+sizeof(int)+sizeof(int), &elemento->compactTime, sizeof(int));
+
+		tamanioPaquete += sizeof(int) + tamanioNombre + sizeof(int) + sizeof(int) + sizeof(int);
+
+	}
+
+	send(aQuien, paquete, tamanioPaquete, 0);
+
+}
+
+
+t_list* recibirMetadatas (int deQuien, t_log* logger)
+{
+	int cantidadMetadatas = recibirInt (deQuien,logger);
+
+	t_list* metadatas = list_create();
+
+	for (int i = 0; i< cantidadMetadatas; i++)
+	{
+		metadataTablaLFS* metadata = malloc(sizeof(metadataTablaLFS));
+
+		metadata->nombre = recibirString(deQuien,logger);
+		metadata->consistencia = recibirInt (deQuien,logger);
+		metadata->particiones = recibirInt (deQuien,logger);
+		metadata->compactTime = recibirInt (deQuien,logger);
+
+		list_add(metadatas,metadata);
+	}
+
+	return metadatas;
 }

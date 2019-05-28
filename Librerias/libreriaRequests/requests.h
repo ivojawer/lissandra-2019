@@ -23,12 +23,21 @@
 #include<readline/readline.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
+#include <commons/collections/list.h>
 
 typedef struct{
 	int requestEnInt;
 	char* parametros;
 }request;
 
+typedef struct{
+
+	char* nombre;
+	int consistencia;
+	int particiones;
+	int compactTime;
+
+}metadataTablaLFS;
 
 int esUnaRequestValida(char* requestEnString);
 int queRequestEs(char* palabra);
