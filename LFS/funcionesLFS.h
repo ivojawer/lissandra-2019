@@ -26,7 +26,7 @@ typedef struct {
 	int timestamp;
 	int key;
 	char* value;
-} dato;
+} registro;
 
 void consola();
 void conexiones();

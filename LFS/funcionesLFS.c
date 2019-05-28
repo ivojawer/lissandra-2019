@@ -137,6 +137,8 @@ void crearTablaEnMemTable(char* nombreDeTabla) {
 
 	list_add(memTable, nuevaTabla);
 
+	//creo que falta el to upper??
+
 }
 
 t_tablaEnMemTable* getTablaPorNombre(t_list* memoriaTemp, char* nombreDeTabla){
@@ -190,19 +192,19 @@ void insert(char* parametros) {
 
 	//TODO: Dice obtener la metadata asociada a dicha tabla. ?? dafuq - preguntar
 
-	dato* nuevoDato;
-	nuevoDato = malloc(sizeof(dato));
-	nuevoDato->timestamp = unTimestamp;
-	nuevoDato->key = unaKey;
-	nuevoDato->value = malloc(sizeof(unValue));
-	nuevoDato->value = unValue;
+	registro* nuevoRegistro;
+	nuevoRegistro = malloc(sizeof(registro));
+	nuevoRegistro->timestamp = unTimestamp;
+	nuevoRegistro->key = unaKey;
+	nuevoRegistro->value = malloc(sizeof(unValue));
+	nuevoRegistro->value = unValue;
 
 	if (!tablaExisteEnMemTable(nomTabla)){
 		crearTablaEnMemTable(nomTabla);
 	}
 
 	t_tablaEnMemTable* tabla = getTablaPorNombre(memTable,nomTabla);
-	list_add(tabla->datosAInsertar,nuevoDato);
+	list_add(tabla->datosAInsertar,nuevoRegistro);
 }
 
 //t_tablaEnMemTable* ultimaTabla(t_list* memTemp){
@@ -217,7 +219,7 @@ void create(char* parametros) {
 	char** parametrosEnVector = string_n_split(parametros, 4, " ");
 	char* tabla = string_duplicate(parametrosEnVector[0]);
 	char* consistencia = parametrosEnVector[1];
-	int particiones = atoi(parametrosEnVector[2]);
+	char* particiones = parametrosEnVector[2];
 	char* tiempoCompactacion = parametrosEnVector[3];
 
 	//chequea si existe
@@ -227,27 +229,72 @@ void create(char* parametros) {
 	}
 
 	//crea directorio
-	char* pathCompleto = NULL;
-	int tablaLen = strlen( tabla );
-	pathCompleto = malloc( 7 + tablaLen  + 1 ); // Add 1 for null terminator.
-	strcpy( pathCompleto, "Tablas/" );
-	strcat( pathCompleto, tabla );
+	char* pathAbsoluto = string_new();
+	// char* rutaPrincipal = (????); TODO: poner la primera parte (ruta principal) sino esta wea no funciona
+	// string_append(&pathAbsoluto,rutaPrincipal);  y bueno aca se agregaria la primera parte mentienden
 
-	printf("Path entero:%s\n", pathCompleto);
-	int result = mkdir(pathCompleto, 0700);
+	//Aca va lo feo hardcodeado que NO TIENE QUE IR pero quiero ver si funciona chiks:
+	string_append(&pathAbsoluto,"/home/utnso/workspace/tp-2019-1c-U-TN-Tecno/LFS/Debug/");
+	string_append(&pathAbsoluto,"Tablas/");
+	string_append(&pathAbsoluto,tabla);
+
+	printf("Path entero:%s\n", pathAbsoluto);
+	int result = mkdir(pathAbsoluto, 0700);
 
 	if (-1 == result){
 		printf("Error creating directory!\n");
 		exit(1);
 	}
 
-	//crea metadata
+	//crea metadata y la escribe
+
+	char* archivoMetadata = string_new();
+	string_append(&archivoMetadata,pathAbsoluto);
+	string_append(&archivoMetadata,"/metadata");
+	FILE* metadata = fopen(archivoMetadata,"a+");
+	fprintf(metadata,"CONSISTENCY = %s \n",consistencia); //se evalua si la consistencia que meten es valida? okonfiamo' ?
+	fprintf(metadata,"PARTITIONS = %s \n",particiones);
+	fprintf(metadata,"COMPACTION_TIME = %s \n",tiempoCompactacion);
+	fclose(metadata);
 
 
+	//crea los .bin
+
+	/*
+
+	int cantParticiones = atoi(particiones);
+	FILE* bin;
+
+	for(int i=0;i<cantParticiones;i++){
+
+		// estas 3 lineas son para PASAR UN INT A STRING... TODO: preguntar si hay solucion feliz
+		int length = snprintf( NULL, 0, "%d", i );
+		char* numParticion = malloc( length + 1 );
+		snprintf( numParticion, length + 1, "%d", i );
+		//
+
+		char* particion = string_new();
+		string_append(&particion,pathAbsoluto);
+		string_append(&particion,"/");
+		string_append(&particion,numParticion);
+		string_append(&particion,".bin");
+
+		FILE* bin = fopen(particion,"a+");
+
+		free(length);
+		free(numParticion);
+		free(particion);
+
+	}
 
 	liberarArrayDeStrings(parametrosEnVector);
-	free(pathCompleto);//?
-	free(parametros);
+	free(cantParticiones);
+	free(pathAbsoluto);//?
+	free(archivoMetadata);
+	//free(parametros);
+	//seguro faltan frees aca
+
+	 */
 
 }
 

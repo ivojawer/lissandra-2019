@@ -15,12 +15,17 @@ int main() {
 //	dato* holis =ultimoDato(tabla->datosAInsertar); //funciona pero me tira un warning que no entiendo
 //	printf("holis es ts: \n   Key: \n y value: \n %i %i %s",holis->timestamp,holis->key,holis->value);
 
+
 	pthread_t h_consola;
 	pthread_t h_conexiones;
 
 
+
+
 	pthread_create(&h_consola, NULL, (void *) consola, NULL);
 	pthread_create(&h_conexiones, NULL, (void *) conexiones, NULL);
+
+	//create("TABLA-A SC 4 60000");
 
 	pthread_detach(h_conexiones);
 	pthread_join(h_consola, NULL);
