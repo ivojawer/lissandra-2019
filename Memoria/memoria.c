@@ -43,11 +43,11 @@ int main() {
 
 
 //	pruebas alto nivel:
-	insert("TABLA1 123 hola");
+	insert("TABLA1 123 \"hola\"");
 	sleep(1);
 	Select("TABLA1 123");
 	sleep(1);
-	insert("TABLA1 1234 holiiiis");
+	insert("TABLA1 1234 \"holiiiis\"");
 	sleep(1);
 	insert("TABLA2 123 \"buen dia\"");
 	sleep(1);

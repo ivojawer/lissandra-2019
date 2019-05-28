@@ -66,7 +66,7 @@ void asignoPaginaEnMarco(int key, int timestamp,char* value, void* comienzoMarco
 int numeroMarcoDondeAlocar(){
 	for(int i = 0; i<cantMarcos; i++){
 		if(marcos[i].vacio){
-			log_info(logger,"numero marco libre encontrado:%d\n",i);
+			log_info(logger,"numero marco libre encontrado:%d",i);
 			marcos[i].vacio=false;
 			return i;
 		}
@@ -241,7 +241,7 @@ void Select(char* parametros) {
 	free(parametrosEnVector[0]);
 	free(parametrosEnVector[1]);
 	free(parametrosEnVector);
-	//free(parametros); //TODO: este free rompe el select (si lo hago por codigo, por consola si funciona) :(
+	//free(parametros); //TODO: este free rompe el select (si lo hago por codigo, por consola si funciona) :( (ahora que lo pienso no se si lo tengo que hacer)
 
 }
 
@@ -326,6 +326,10 @@ void mandarSelectALFS(char* tabla,int key){
 	//TODO
 }
 
+void mandarDropALFS(char* tabla){
+	//TODO
+}
+
 void describe(char* parametro) {
 
 	if (strcmp(parametro, " ")) //Si hay un parametro
@@ -336,6 +340,38 @@ void describe(char* parametro) {
 
 }
 
+
+
 void drop(char* parametro) {
 
+	void liberoDato(pagina* pag){
+
+		int nroMarco = ((void*)pag->dato - comienzoMemoria) / tamanioMarco;
+		printf("nro de marco a dropear:%d\n", nroMarco);
+		marcos[nroMarco].vacio=true;
+		printf("hola\n");
+		marcos[nroMarco].recentlyUsed=false; //devuelta, ni idea pero aca va a haber que cambiar esto
+		printf("cambie valores marco\n");
+		free(pag);
+		printf("libere pagina");
+	}
+
+	char* tabla = string_duplicate(parametro);
+	string_to_upper(tabla);
+	segmento* tablaADropear = encuentroTablaPorNombre(tabla,tablaSegmentos);
+	if(tablaADropear !=NULL){
+
+
+		printf("encontre la tabla a dropear, nombre:%s\n",tablaADropear->nombreDeTabla);
+		list_iterate(tablaADropear->tablaDePaginas,(void*)liberoDato);
+		printf("libere los datos\n");
+		list_destroy(tablaADropear->tablaDePaginas);
+		printf("destruyo tabla paginas\n");
+		free(tablaADropear->nombreDeTabla);
+		free(tablaADropear->tablaDePaginas);
+		free(tablaADropear);
+		printf("tabla eliminada\n");
+		mandarDropALFS(tabla);
+		free(tabla);
+	}
 }
