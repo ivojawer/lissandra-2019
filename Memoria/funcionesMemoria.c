@@ -352,6 +352,7 @@ void drop(char* parametro) {
 		printf("hola\n");
 		marcos[nroMarco].recentlyUsed=false; //devuelta, ni idea pero aca va a haber que cambiar esto
 		printf("cambie valores marco\n");
+
 		free(pag);
 		printf("libere pagina");
 	}
@@ -361,14 +362,15 @@ void drop(char* parametro) {
 	segmento* tablaADropear = encuentroTablaPorNombre(tabla,tablaSegmentos);
 	if(tablaADropear !=NULL){
 
-
 		printf("encontre la tabla a dropear, nombre:%s\n",tablaADropear->nombreDeTabla);
-		list_iterate(tablaADropear->tablaDePaginas,(void*)liberoDato);
-		printf("libere los datos\n");
-		list_destroy(tablaADropear->tablaDePaginas);
-		printf("destruyo tabla paginas\n");
-		free(tablaADropear->nombreDeTabla);
-		free(tablaADropear->tablaDePaginas);
+		list_destroy_and_destroy_elements(tablaADropear->tablaDePaginas,(void*)liberoDato);
+
+		bool comparoNombreTabla(segmento* segmentoAComparar){
+				return strcmp(tablaADropear,segmentoAComparar->nombreDeTabla) == 0;
+		}
+
+		list_remove_by_condition(tablaSegmentos,(void*)comparoNombreTabla);
+		printf("libere los datos y destruyo tabla paginas\n");
 		free(tablaADropear);
 		printf("tabla eliminada\n");
 		mandarDropALFS(tabla);
