@@ -41,13 +41,13 @@ disponibilidad* marcos;
 int cantMarcos;
 int tamanioMarco;
 
-segmento* encuentroTablaPorNombre(char* nombreTabla, t_list* tablaDeSegmentos);
+segmento* encuentroTablaPorNombre(char* nombreTabla);
 bool filtroNombreTabla( char*,segmento*);
 t_list* crearTablaSegmentos();
 t_list* crearTablaPaginas();
 segmento* nuevaTabla(t_list*,char*);
 pagina* nuevoDato(t_list* tablaPaginas,int flagModificado,int key, int timestamp, char* value);
-pagina* getPagina(t_list* tablaSegmentos,int key, char* nombreTabla);
+pagina* getPagina(int key, char* nombreTabla);
 void consola();
 void mandarAEjecutarRequest(request* requestAEjecutar);
 void mandarSelectALFS(char*,int);

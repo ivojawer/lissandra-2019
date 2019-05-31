@@ -189,12 +189,12 @@ void mandarAEjecutarRequest(request* requestAEjecutar) {
 
 
 
-segmento* encuentroTablaPorNombre(char* nombreTabla, t_list* tablaDeSegmentos){
+segmento* encuentroTablaPorNombre(char* nombreTabla){
 	bool comparoNombreTabla(segmento* segmentoAComparar){
 		return strcmp(nombreTabla,segmentoAComparar->nombreDeTabla) == 0;
 	}
 
-	return list_find(tablaDeSegmentos,(void*)comparoNombreTabla);
+	return list_find(tablaSegmentos,(void*)comparoNombreTabla);
 }
 
 pagina* encuentroDatoPorKey(segmento* tabla, int key){
@@ -206,14 +206,14 @@ pagina* encuentroDatoPorKey(segmento* tabla, int key){
 
 }
 
-pagina* getPagina(t_list* tablaDeSegmentos, int key, char* nombreTabla){ //retorna un NULL si no existe la tabla o la pagina
+pagina* getPagina(int key, char* nombreTabla){ //retorna un NULL si no existe la tabla o la pagina
 
-	segmento* tabla = encuentroTablaPorNombre(nombreTabla, tablaDeSegmentos);
-//	printf("tabla pedida:%p\n",tabla);
+	segmento* tabla = encuentroTablaPorNombre(nombreTabla);
+	printf("tabla pedida:%p\n",tabla);
 	if(tabla != NULL){
-//		log_info(logger, "Encontre una tabla con el nombre: %s", tabla->nombreDeTabla);
+		log_info(logger, "Encontre una tabla con el nombre: %s", tabla->nombreDeTabla);
 		pagina* dato = encuentroDatoPorKey(tabla,key);
-//		log_info(logger, "Encontre un dato con el value: %s", &dato->dato->value);
+		log_info(logger, "Encontre un dato con el value: %s", &dato->dato->value);
 
 		return dato;
 	}else return NULL;
@@ -229,7 +229,7 @@ void Select(char* parametros) {
 
 	log_info(logger,"Select de tabla: %s - key: %d",tabla,key);
 
-	pagina* paginaPedida=getPagina(tablaSegmentos,key,tabla);
+	pagina* paginaPedida=getPagina(key,tabla);
 
 	if(paginaPedida!=NULL)	{
 		printf("Registro pedido: %s\n",&paginaPedida->dato->value);
@@ -241,13 +241,14 @@ void Select(char* parametros) {
 	free(parametrosEnVector[0]);
 	free(parametrosEnVector[1]);
 	free(parametrosEnVector);
-	//free(parametros); //TODO: este free rompe el select (si lo hago por codigo, por consola si funciona) :( (ahora que lo pienso no se si lo tengo que hacer)
+	free(parametros); //si pruebo por codigo este free rompe porque no viene de un malloc.
 
 }
 
 
-void actualizoDato (pagina* pagina , char* nuevoValue){
+void actualizoDato (pagina* pagina , char* nuevoValue,int nuevoTimestamp){
 	strcpy(&pagina->dato->value,nuevoValue);
+	pagina->dato->timestamp=nuevoTimestamp;
 
 }
 
@@ -273,20 +274,20 @@ void insert(char* parametros) {
 
 	log_info(logger,"INSERT: Tabla:%s - key:%d - timestamp:%d - value:%s\n",tabla,key,timestamp,value);
 
-	segmento* tablaEncontrada=encuentroTablaPorNombre(tabla,tablaSegmentos);
+	segmento* tablaEncontrada=encuentroTablaPorNombre(tabla);
 	if(tablaEncontrada ==NULL){
 		log_info(logger,"tengo que crear la tabla y el dato");
 
 		segmento* tablaCreada= nuevaTabla(tablaSegmentos,tabla);
 
 		nuevoDato(tablaCreada->tablaDePaginas,1,key,timestamp,value);
-		printf("dato insertado\n");
+		printf("dato insertado y tabla creada\n");
 	}
 	else{
 		pagina* datoEncontrado = encuentroDatoPorKey(tablaEncontrada,key);
 		if(datoEncontrado != NULL){
 			log_info(logger,"tengo que actualizar el dato");
-			actualizoDato(datoEncontrado,value);
+			actualizoDato(datoEncontrado,value,timestamp);
 			printf("dato actualizado\n");
 		}
 		else{
@@ -299,6 +300,7 @@ void insert(char* parametros) {
 	free(parametrosEnVector[1]);
 	free(parametrosEnVector[2]);
 	free(parametrosEnVector);
+	free(parametros);
 }
 
 
@@ -349,24 +351,21 @@ void drop(char* parametro) {
 		int nroMarco = ((void*)pag->dato - comienzoMemoria) / tamanioMarco;
 		printf("nro de marco a dropear:%d\n", nroMarco);
 		marcos[nroMarco].vacio=true;
-		printf("hola\n");
 		marcos[nroMarco].recentlyUsed=false; //devuelta, ni idea pero aca va a haber que cambiar esto
 		printf("cambie valores marco\n");
-
 		free(pag);
-		printf("libere pagina");
 	}
 
 	char* tabla = string_duplicate(parametro);
 	string_to_upper(tabla);
-	segmento* tablaADropear = encuentroTablaPorNombre(tabla,tablaSegmentos);
+	segmento* tablaADropear = encuentroTablaPorNombre(tabla);
 	if(tablaADropear !=NULL){
 
 		printf("encontre la tabla a dropear, nombre:%s\n",tablaADropear->nombreDeTabla);
 		list_destroy_and_destroy_elements(tablaADropear->tablaDePaginas,(void*)liberoDato);
 
 		bool comparoNombreTabla(segmento* segmentoAComparar){
-				return strcmp(tablaADropear,segmentoAComparar->nombreDeTabla) == 0;
+				return strcmp(tablaADropear->nombreDeTabla,segmentoAComparar->nombreDeTabla) == 0;
 		}
 
 		list_remove_by_condition(tablaSegmentos,(void*)comparoNombreTabla);

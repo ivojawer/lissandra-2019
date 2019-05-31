@@ -1,7 +1,7 @@
 #include "funcionesMemoria.h"
 
 
-t_config*config;
+t_config* config;
 t_log* logger;
 t_list* tablaSegmentos;
 
@@ -37,49 +37,6 @@ int main() {
 	}
 //	creo tabla de segmentos
 	tablaSegmentos = crearTablaSegmentos();
-
-
-
-
-
-//	pruebas alto nivel:
-	insert("TABLA1 123 \"hola\"");
-	sleep(1);
-	Select("TABLA1 123");
-	sleep(1);
-	insert("TABLA1 1234 \"holiiiis\"");
-	sleep(1);
-	insert("TABLA2 123 \"buen dia\"");
-	sleep(1);
-	insert("TABLA1 123 \"chau\"");
-	sleep(1);
-	insert("TABLA3 99 \"hola soy ivan y trabajo en un ascensor un dia\"");
-	sleep(1);
-	Select("TABLA1 123");
-	sleep(1);
-	Select("TABLA1 1234");
-	sleep(1);
-	Select("TABLA3 123");
-	sleep(1);
-	Select("TABLA2 123");
-	sleep(1);
-	Select("TABLA4 123");
-
-//	pruebas bajo nivel:
-//	segmento* miSegmento=nuevaTabla(tablaSegmentos,"TABLA1");
-//	agregarDato(miSegmento,123,0,"hola",1);
-
-//
-//	segmento* miSegmento = tablaSegmentos->head->data;
-//	log_info(logger,"Nombre de mi nueva tabla es: %s",miSegmento->nombreDeTabla);
-//
-//
-//	agregarDato(miSegmento,123,0,"hola",1);
-//
-//	pagina* datoAgregado= miSegmento->tablaDePaginas->head->data;
-//	log_info(logger,"dato agregado: key=%d - timestamp=%d - value=%s" , datoAgregado->dato->key,datoAgregado->dato->timestamp,&datoAgregado->dato->value);
-
-
 
 
 
