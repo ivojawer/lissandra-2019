@@ -5,7 +5,6 @@ void consola() {
 	while (1)
 
 	{
-
 		char* lectura = readline("--> ");
 
 		if (string_is_empty(lectura)) {
@@ -31,7 +30,6 @@ void consola() {
 
 		liberarArrayDeStrings(requestYParametros);
 		free(lectura);
-
 	}
 
 }

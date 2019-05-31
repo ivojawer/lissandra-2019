@@ -16,7 +16,7 @@
 #include "conexionesMem.h"
 #include <time.h>
 #include <stdbool.h>
-
+#include "gossiping.h"
 
 
 typedef struct {
