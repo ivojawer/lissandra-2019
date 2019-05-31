@@ -190,8 +190,6 @@ void insert(char* parametros) {
 		return;
 	}
 
-	//TODO: Dice obtener la metadata asociada a dicha tabla. ?? dafuq - preguntar
-
 	registro* nuevoRegistro;
 	nuevoRegistro = malloc(sizeof(registro));
 	nuevoRegistro->timestamp = unTimestamp;
@@ -214,6 +212,7 @@ void insert(char* parametros) {
 //t_tablaEnMemTable* ultimoDato(t_list* datos){
 //	return list_get(datos,datos->elements_count - 1);
 //}
+
 
 void create(char* parametros) {
 	char** parametrosEnVector = string_n_split(parametros, 4, " ");
@@ -247,54 +246,57 @@ void create(char* parametros) {
 	}
 
 	//crea metadata y la escribe
-
 	char* archivoMetadata = string_new();
 	string_append(&archivoMetadata,pathAbsoluto);
 	string_append(&archivoMetadata,"/metadata");
+
 	FILE* metadata = fopen(archivoMetadata,"a+");
+
 	fprintf(metadata,"CONSISTENCY = %s \n",consistencia); //se evalua si la consistencia que meten es valida? okonfiamo' ?
 	fprintf(metadata,"PARTITIONS = %s \n",particiones);
 	fprintf(metadata,"COMPACTION_TIME = %s \n",tiempoCompactacion);
+
 	fclose(metadata);
 
-
 	//crea los .bin
-
-	/*
-
 	int cantParticiones = atoi(particiones);
-	FILE* bin;
+	// int cantidadTotalBloques = encontrar cantidad de bloques totales
 
 	for(int i=0;i<cantParticiones;i++){
 
-		// estas 3 lineas son para PASAR UN INT A STRING... TODO: preguntar si hay solucion feliz
-		int length = snprintf( NULL, 0, "%d", i );
-		char* numParticion = malloc( length + 1 );
-		snprintf( numParticion, length + 1, "%d", i );
-		//
-
+		char* numParticion[cantParticiones]; //no hay malloc, no va free
+		sprintf(numParticion, "%i.bin", i);
 		char* particion = string_new();
 		string_append(&particion,pathAbsoluto);
 		string_append(&particion,"/");
 		string_append(&particion,numParticion);
-		string_append(&particion,".bin");
+
 
 		FILE* bin = fopen(particion,"a+");
 
-		free(length);
-		free(numParticion);
-		free(particion);
+		//char* numBloque[cantidadTotalBloques];
+		//int unBloque = encontrarBloqueLibre();
+		//sprintf(numBloque,"%i",unBloque);
+		char* numBloque = "1";
+		fprintf(bin,"BLOCKS = [%s]\n",numBloque);
 
+		fseek(bin, 0, SEEK_END);
+		int tamanioArchivo = ftell(bin);
+
+		char* bytes[20]; //este 20 es sumamente cuestionable, preguntar
+		sprintf(bytes, "%i", tamanioArchivo + 7); // mi problema es que esto lo calcula mal,no toma en cuenta lo que escribo despues
+		fprintf(bin,"SIZE = %s \n",bytes);
+
+		fclose(bin);
+
+		free(particion);
 	}
 
 	liberarArrayDeStrings(parametrosEnVector);
-	free(cantParticiones);
-	free(pathAbsoluto);//?
+	free(pathAbsoluto);
 	free(archivoMetadata);
 	//free(parametros);
 	//seguro faltan frees aca
-
-	 */
 
 }
 

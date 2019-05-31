@@ -25,7 +25,7 @@ int main() {
 	pthread_create(&h_consola, NULL, (void *) consola, NULL);
 	pthread_create(&h_conexiones, NULL, (void *) conexiones, NULL);
 
-	//create("TABLA-A SC 4 60000");
+	create("TABLA-A SC 4 60000");
 
 	pthread_detach(h_conexiones);
 	pthread_join(h_consola, NULL);
