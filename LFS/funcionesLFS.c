@@ -237,7 +237,6 @@ void create(char* parametros) {
 	string_append(&pathAbsoluto,"Tablas/");
 	string_append(&pathAbsoluto,tabla);
 
-	printf("Path entero:%s\n", pathAbsoluto);
 	int result = mkdir(pathAbsoluto, 0700);
 
 	if (-1 == result){
@@ -274,18 +273,13 @@ void create(char* parametros) {
 
 		FILE* bin = fopen(particion,"a+");
 
+		fprintf(bin,"SIZE = 0 \n");
+
 		//char* numBloque[cantidadTotalBloques];
 		//int unBloque = encontrarBloqueLibre();
 		//sprintf(numBloque,"%i",unBloque);
 		char* numBloque = "1";
 		fprintf(bin,"BLOCKS = [%s]\n",numBloque);
-
-		fseek(bin, 0, SEEK_END);
-		int tamanioArchivo = ftell(bin);
-
-		char* bytes[20]; //este 20 es sumamente cuestionable, preguntar
-		sprintf(bytes, "%i", tamanioArchivo + 7); // mi problema es que esto lo calcula mal,no toma en cuenta lo que escribo despues
-		fprintf(bin,"SIZE = %s \n",bytes);
 
 		fclose(bin);
 
@@ -312,3 +306,9 @@ void drop(char* parametro) {
 }
 
 //TODO: faltan todos los frees
+
+//fseek(bin, 0, SEEK_END);
+//int tamanioArchivo = ftell(bin);
+//
+//char* bytes[20]; //este 20 es sumamente cuestionable, preguntar
+//sprintf(bytes, "%i", tamanioArchivo);
