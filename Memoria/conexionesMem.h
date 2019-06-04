@@ -3,6 +3,8 @@
 #include <sys/socket.h>
 #include <commons/config.h>
 
+int socketALFS;
+
 void conexiones();
 int crearConexion(int);
 void messageHandler(char*,int);
