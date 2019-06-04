@@ -2,18 +2,19 @@
 
 extern t_list* colaNEW;
 extern t_list* colaREADY;
-extern t_list* listaTablas;
 extern t_list* listaEXEC;
 extern t_list* listaEXIT;
 extern int idInicial;
 extern sem_t sem_cambioId;
 extern sem_t sem_disponibleColaREADY;
-extern sem_t sem_multiprocesamiento;
 extern t_log* logger;
 extern t_list* tiemposInsert;
 extern t_list* tiemposSelect;
+extern t_list* memorias;
+extern int proximaMemoriaEC;
 
 void crearScript(request* nuevaRequest) {
+
 	//Importante: Si el parametro es enteramente vacio, aca tiene que entrar aca como " ".
 
 	script* nuevoScript = malloc(sizeof(script));
@@ -23,15 +24,11 @@ void crearScript(request* nuevaRequest) {
 	idInicial++;
 	sem_post(&sem_cambioId);
 
-	list_add(colaNEW, nuevoScript); //Esto es puramente por formalidad del TP
-
 	nuevoScript->lineasLeidas = 0;
 
 	if (nuevaRequest->requestEnInt == RUN) {
 
 		char* direccion = scriptConRaiz(nuevaRequest->parametros);
-
-		nuevoScript->direccionScript = malloc(sizeof(direccion));
 
 		nuevoScript->direccionScript = direccion;
 		nuevoScript->esPorConsola = 0;
@@ -51,7 +48,9 @@ void crearScript(request* nuevaRequest) {
 
 	}
 
-	log_info(logger,"%i%s",nuevoScript->idScript,": NEW->READY");
+	list_add(colaNEW, nuevoScript); //Esto es puramente por formalidad del TP
+
+	log_info(logger, "%i%s", nuevoScript->idScript, ": NEW->READY");
 
 	moverScript(nuevoScript->idScript, colaNEW, colaREADY);
 
@@ -63,46 +62,38 @@ void crearScript(request* nuevaRequest) {
 
 int ejecutarRequest(request* requestAEjecutar) {
 
-	switch (requestAEjecutar->requestEnInt) {
-
-	case JOURNAL: {
-		;
-		//Hacer el journal
+	if (unaMemoriaCualquiera() == -1) //No hay memorias
+			{
 		return -1;
-	}
-
-	case RUN: {
-		;
-		//Preguntar
-		return 1;
-	}
-
-	case METRICS: {
-		;
-		metrics();
-		return 1;
-	}
-
-	case ADD: {
-		;
-		//Hacer el add
-		return -1;
-	}
-
 	}
 
 	if (esDescribeGlobal(requestAEjecutar)) {
-		//Hacer el describe global
+		enviarRequestAMemoria(requestAEjecutar, unaMemoriaCualquiera());
+	}
+
+	int criterio = criterioDeTabla(devolverTablaDeRequest(requestAEjecutar));
+
+	if (criterio == -1) //No existe la tabla (TODO: Ver si esto se hace antes o que, tambien lo del CREATE)
+			{
 		return -1;
 	}
 
-	//int criterio = criterioDeTabla(devolverTablaDeRequest(request));
+	int memoria = determinarAQueMemoriaEnviar(criterio);
+
+	if (memoria == -1) // No existe la memoria, lo mismo que arriba
+			{
+		return -1;
+	}
 
 	time_t tiempoInicial = time(NULL);
 
-	sleep(2); //No olvidar sacar esto jesus NO OLVIDAR
+	enviarRequestAMemoria(requestAEjecutar, memoria);
 
-	//Esperar y eso a la respuesta
+	int resultado = recibirRespuestaDeMemoria(memoria);
+
+	if (resultado == MEMORIA_ERROR) {
+		return -1;
+	}
 
 	time_t tiempoFinal = time(NULL);
 
@@ -111,46 +102,60 @@ int ejecutarRequest(request* requestAEjecutar) {
 	return 1;
 }
 
-void matarTodo() //TODO
-{
-}
-
-void metrics() //TODO: Faltan los memory loads
+void metrics(int loggear) //TODO: Faltan los memory loads
 {
 
-	t_list* tiemposSelectAux = filterCasero_esMasNuevoQue30Segundos(tiemposSelect);
-	t_list* tiemposInsertAux = filterCasero_esMasNuevoQue30Segundos(tiemposInsert);
+	t_list* tiemposSelectAux = filterCasero_esMasNuevoQue30Segundos(
+			tiemposSelect);
+	t_list* tiemposInsertAux = filterCasero_esMasNuevoQue30Segundos(
+			tiemposInsert);
 
 	int promedioSelect = promedioDeTiemposDeOperaciones(tiemposSelectAux);
 	int promedioInsert = promedioDeTiemposDeOperaciones(tiemposInsertAux);
 
-	printf("\n\n----METRICS----");
+	if (loggear) {
 
-	if (promedioSelect == -1) {
-		printf("\n\nRead latency: ---");
+		log_info(logger, "\n\n----METRICS----");
+		if (promedioSelect == -1) {
+			log_info(logger,"\n\nRead latency: ---");
+		} else {
+			log_info(logger,"%s%i", "\n\nRead latency: ", promedioSelect);
+		}
+
+		if (promedioInsert == -1) {
+			log_info(logger,"\n\nWrite latency: ---");
+		} else {
+			log_info(logger,"%s%i", "\n\nWrite latency: ", promedioInsert);
+		}
+
+		log_info(logger,"%s%i", "\n\nReads: ", list_size(tiemposSelectAux));
+		log_info(logger,"%s%i", "\n\nWrites: ", list_size(tiemposInsertAux));
+
+
+
 	} else {
-		printf("%s%i", "\n\nRead latency: ", promedioSelect);
-	}
+		printf("\n\n----METRICS----");
+		if (promedioSelect == -1) {
+			printf("\n\nRead latency: ---");
+		} else {
+			printf("%s%i", "\n\nRead latency: ", promedioSelect);
+		}
 
-	if (promedioInsert == -1) {
-		printf("\n\nWrite latency: ---");
-	} else {
-		printf("%s%i", "\n\nWrite latency: ", promedioInsert);
-	}
+		if (promedioInsert == -1) {
+			printf("\n\nWrite latency: ---");
+		} else {
+			printf("%s%i", "\n\nWrite latency: ", promedioInsert);
+		}
 
-	printf("%s%i", "\n\nReads: ", list_size(tiemposSelectAux));
-	printf("%s%i", "\n\nWrites: ", list_size(tiemposInsertAux));
-	printf("\n\n");
+		printf("%s%i", "\n\nReads: ", list_size(tiemposSelectAux));
+		printf("%s%i", "\n\nWrites: ", list_size(tiemposInsertAux));
+		printf("\n\n");
+	}
 
 	list_destroy(tiemposSelectAux);
 	list_destroy(tiemposInsertAux);
 
-	//limpiarListasTiempos();
-
-}
-
-void loggearMetrics() //TODO
-{
+	limpiarListasTiempos();
 
 }
 
@@ -164,5 +169,35 @@ void status() {
 	printf("\n\n----EXIT----\n\n");
 	mostrarListaScripts(listaEXIT);
 	printf("\n\n");
+}
+
+void add(char* consistenciaYMemoriaEnString) {
+
+	char** consistenciaYMemoriaEnArray = string_n_split(
+			consistenciaYMemoriaEnString, 2, " ");
+
+	int consistencia = atoi(consistenciaYMemoriaEnArray[0]);
+	int nombreMemoria = atoi(consistenciaYMemoriaEnArray[1]);
+
+	liberarArrayDeStrings(consistenciaYMemoriaEnArray);
+
+	int posicionMemoria = encontrarPosicionDeMemoria(nombreMemoria);
+
+	if (posicionMemoria == -1) {
+		printf("%s%i%s", "No se pudo encontrar la memoria ", nombreMemoria,
+				"\n");
+		return;
+	}
+
+	memoriaEnLista* memoria = list_get(memorias, posicionMemoria);
+
+	//TODO: Semaforo para cuando se usa?
+	memoria->consistencias[consistencia] = consistencia; //La consistencia esta en la misma posicion del numero que lo representa (0,1 o 2);
+
+	//TODO: Semaforo???
+	if ((consistencia == EC) && (proximaMemoriaEC == -1)) {
+		proximaMemoriaEC = memoria->nombre;
+	}
 
 }
+

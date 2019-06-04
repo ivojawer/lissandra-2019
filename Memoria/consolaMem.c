@@ -7,6 +7,10 @@ void consola() {
 	{
 		char* lectura = readline("--> ");
 
+		if (lectura) {
+			add_history(lectura);
+		}
+
 		if (string_is_empty(lectura)) {
 			printf("No es una request valida, vuelva prontos \n");
 			free(lectura);
@@ -17,7 +21,8 @@ void consola() {
 
 		int requestEnInt = queRequestEs(requestYParametros[0]);
 
-		if (!esUnaRequestValida(lectura) || requestEnInt == ADD || requestEnInt == RUN || requestEnInt == METRICS) { //Si es invalida o es una request que no vale en la memoria
+		if (!esUnaRequestValida(
+				lectura) || requestEnInt == ADD || requestEnInt == RUN || requestEnInt == METRICS) { //Si es invalida o es una request que no vale en la memoria
 
 			printf("No es una request valida, vuelva prontos \n");
 
