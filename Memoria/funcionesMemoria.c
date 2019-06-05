@@ -236,7 +236,7 @@ void Select(char* parametros) {
 	}
 	else{
 		log_info(logger,"No encontre el dato, mandando request a LFS");
-		mandarSelectALFS(tabla,key);
+		mandarALFS(SELECT,parametros);
 	}
 	free(parametrosEnVector[0]);
 	free(parametrosEnVector[1]);
@@ -306,32 +306,31 @@ void insert(char* parametros) {
 
 void create(char* parametros) {
 
-	char** parametrosEnVector = string_n_split(parametros, 4, " ");
+//	char** parametrosEnVector = string_n_split(parametros, 4, " ");
+//
+//	char* tabla = string_duplicate(parametrosEnVector[0]);
+//	char* consistencia = parametrosEnVector[1];
+//	int particiones = atoi(parametrosEnVector[2]);
+//	char* tiempoCompactacion = parametrosEnVector[3];
+//
+//	mandarCreateALFS(tabla,consistencia,particiones,tiempoCompactacion);
+//
+//	liberarArrayDeStrings(parametrosEnVector);
 
-	char* tabla = string_duplicate(parametrosEnVector[0]);
-	char* consistencia = parametrosEnVector[1];
-	int particiones = atoi(parametrosEnVector[2]);
-	char* tiempoCompactacion = parametrosEnVector[3];
+	mandarALFS(CREATE, parametros);
 
-	mandarCreateALFS(tabla,consistencia,particiones,tiempoCompactacion);
-
-	liberarArrayDeStrings(parametrosEnVector);
 	free(parametros);
 
 }
 
-void mandarCreateALFS(char* tabla ,char* consistencia,int particiones  ,char* tiempoCompactacion){
-	//TODO
-}
+void mandarALFS(int requestAMandar, char* parametros){
+	request nuevaRequest;
+	nuevaRequest.requestEnInt = requestAMandar;
+	nuevaRequest.parametros = parametros;
+	char* requestParseada = requestStructAString(&nuevaRequest);
 
-void mandarSelectALFS(char* tabla,int key){
-	//TODO
+	enviarString(requestParseada,socketALFS);
 }
-
-void mandarDropALFS(char* tabla){
-	//TODO
-}
-
 void describe(char* parametro) {
 
 	if (strcmp(parametro, " ")) //Si hay un parametro
@@ -372,7 +371,8 @@ void drop(char* parametro) {
 		printf("libere los datos y destruyo tabla paginas\n");
 		free(tablaADropear);
 		printf("tabla eliminada\n");
-		mandarDropALFS(tabla);
 		free(tabla);
 	}
+	mandarALFS(DROP,parametro);
+	free(parametro);
 }
