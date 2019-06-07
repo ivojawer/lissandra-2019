@@ -7,6 +7,7 @@ C_SRCS += \
 ../conexionesMem.c \
 ../consolaMem.c \
 ../funcionesMemoria.c \
+../gossiping.c \
 ../memoria.c \
 ../segmentos.c 
 
@@ -14,6 +15,7 @@ OBJS += \
 ./conexionesMem.o \
 ./consolaMem.o \
 ./funcionesMemoria.o \
+./gossiping.o \
 ./memoria.o \
 ./segmentos.o 
 
@@ -21,6 +23,7 @@ C_DEPS += \
 ./conexionesMem.d \
 ./consolaMem.d \
 ./funcionesMemoria.d \
+./gossiping.d \
 ./memoria.d \
 ./segmentos.d 
 

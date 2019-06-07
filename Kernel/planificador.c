@@ -19,7 +19,7 @@ void planificadorREADYAEXEC() {
 
 		script* scriptAExec = list_get(colaREADY, 0); //El 0 siempre va a ser el mas viejo en la lista
 
-		log_info(logger,"%i%s",scriptAExec->idScript,": READY->EXEC");
+		log_info(logger, "%i%s", scriptAExec->idScript, ": READY->EXEC");
 
 		moverScript(scriptAExec->idScript, colaREADY, listaEXEC);
 
@@ -37,14 +37,12 @@ void planificadorEXEC(int IdScript) {
 	int index = encontrarScriptEnLista(IdScript, listaEXEC);
 
 	script* scriptEXEC = list_get(listaEXEC, index);
-	for (int i = 0; i < quantum; i++) {
 
 
+	for (int i = 0; i < quantum; i++) { //TODO: Ver el tema del quantum, como sigue planificando cuando cambia
 
 		char* linea = leerLinea(scriptEXEC->direccionScript,
 				scriptEXEC->lineasLeidas);
-
-
 
 		if (!strcmp(linea, "error")) {
 			log_error(logger, "%s%i",
@@ -52,18 +50,24 @@ void planificadorEXEC(int IdScript) {
 					scriptEXEC->idScript);
 
 			free(linea);
-			log_info(logger,"%i%s",scriptEXEC->idScript,": EXEC->EXIT");
+			log_info(logger, "%i%s", scriptEXEC->idScript, ": EXEC->EXIT");
 			moverScript(scriptEXEC->idScript, listaEXEC, listaEXIT);
+
 			sem_post(&sem_multiprocesamiento);
+
+			if (scriptEXEC->esPorConsola) {
+				remove(scriptEXEC->direccionScript);
+			}
+
 			return;
 		}
-
 
 		request* requestAEjecutar = crearStructRequest(linea);
 
 		int resultado = ejecutarRequest(requestAEjecutar);
 
-		if (resultado == -1) {
+		if (resultado == -1) { //TODO: Expandir los errores
+
 			log_error(logger, "%s%i",
 					"Hubo un error en la ejecucion del script ",
 					scriptEXEC->idScript);
@@ -71,18 +75,19 @@ void planificadorEXEC(int IdScript) {
 			liberarRequest(requestAEjecutar);
 			free(linea);
 
-
-			log_info(logger,"%i%s",scriptEXEC->idScript,": EXEC->EXIT");
+			log_info(logger, "%i%s", scriptEXEC->idScript, ": EXEC->EXIT");
 			moverScript(scriptEXEC->idScript, listaEXEC, listaEXIT);
 			sem_post(&sem_multiprocesamiento);
+
+			if (scriptEXEC->esPorConsola) {
+				remove(scriptEXEC->direccionScript);
+			}
+
 			return;
 		}
 
-
 		char* proximaLinea = leerLinea(scriptEXEC->direccionScript,
 				scriptEXEC->lineasLeidas + 1);
-
-
 
 		scriptEXEC->lineasLeidas++;
 
@@ -90,30 +95,31 @@ void planificadorEXEC(int IdScript) {
 			log_info(logger, "%s%i",
 					"Termino de ejecutar exitosamente el script ", IdScript);
 
-			//free(proximaLinea); TODO: VER ESTA LINEA HIJO DE PUTAAAAAAAAAAAAAAAAAAAAAAAAAAA
+			free(proximaLinea); //Aca se solia romper ok
 			free(linea);
 			liberarRequest(requestAEjecutar);
 
-			log_info(logger,"%i%s",scriptEXEC->idScript,": EXEC->EXIT");
+			log_info(logger, "%i%s", scriptEXEC->idScript, ": EXEC->EXIT");
 			moverScript(scriptEXEC->idScript, listaEXEC, listaEXIT);
 			sem_post(&sem_multiprocesamiento);
+
+			if (scriptEXEC->esPorConsola) {
+				remove(scriptEXEC->direccionScript);
+			}
+
 			return;
 
 		}
 
-
-		//free(proximaLinea); //TODO: ver esta linea tambien :)
+		free(proximaLinea); //Aca se solia romper ok
 		free(linea);
 
 		liberarRequest(requestAEjecutar);
 
-
-		//Semaforo por si cambia el quantum?
+		//TODO: Semaforo por si cambia el quantum?
 	}
 
-
-
-	log_info(logger,"%i%s",scriptEXEC->idScript,": EXEC->READY");
+	log_info(logger, "%i%s", scriptEXEC->idScript, ": EXEC->READY");
 	moverScript(scriptEXEC->idScript, listaEXEC, colaREADY);
 
 	sem_post(&sem_disponibleColaREADY);

@@ -15,6 +15,9 @@
 #define SHC 1
 #define EC 2
 
+#define MEMORIA_ERROR -1
+#define MEMORIA_BIEN 1
+
 #include<stdio.h>
 #include<stdlib.h>
 #include<commons/log.h>
@@ -43,15 +46,20 @@ int esUnaRequestValida(char* requestEnString);
 int queRequestEs(char* palabra);
 int esUnParametroValido(int request, char* parametro);
 int queConsistenciaEs(char* string);
-int devolverSoloRequest(char* request);
 void liberarArrayDeStrings(char** array);
-char* devolverSoloParametros(char* request);
-void empaquetarYEnviarRequest(char* request, int aQuien);
-char* recibirRequest(int deQuien, t_log* logger);
 request* crearStructRequest(char* requestEnString);
 char* requestStructAString(request* request);
-void liberarRequest(request* request);
 int esDescribeGlobal (request* request);
+void liberarRequest(request* request);
+char* recibirString(int deQuien, t_log* logger);
+void enviarString(char* string, int aQuien);
+void enviarMetadatas(t_list* metadatas, int aQuien);
+t_list* recibirMetadatas (int deQuien, t_log* logger);
+void enviarRequest (int aQuien, request* requestAEnviar);
+request* recibirRequest(int deQuien,t_log* logger);
+int recibirInt(int deQuien, t_log* logger);
+void enviarInt (int intAEnviar, int aQuien);
+int crearConexion(int puerto);
 
 #include "requests.h"
 

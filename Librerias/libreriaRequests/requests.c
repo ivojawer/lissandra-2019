@@ -359,6 +359,14 @@ int recibirInt(int deQuien, t_log* logger) {
 	return intRecibido;
 }
 
+void enviarInt (int intAEnviar, int aQuien)
+{
+	void* paquete = malloc(sizeof(int));
+	memcpy(paquete,&intAEnviar,sizeof(int));
+	send(aQuien,paquete,sizeof(int),0);
+	free(paquete);
+}
+
 char* recibirString(int deQuien, t_log* logger) {
 
 	int tamanioString = recibirInt(deQuien, logger);
@@ -553,6 +561,8 @@ void enviarMetadatas(t_list* metadatas, int aQuien)
 
 	send(aQuien, paquete, tamanioPaquete, 0);
 
+	free(paquete);
+
 }
 
 
@@ -575,4 +585,25 @@ t_list* recibirMetadatas (int deQuien, t_log* logger)
 	}
 
 	return metadatas;
+}
+
+void enviarRequest (int aQuien, request* requestAEnviar)
+{
+	char* stringAEnviar = requestStructAString(requestAEnviar);
+
+	enviarString(stringAEnviar, aQuien);
+
+	free(stringAEnviar);
+}
+
+request* recibirRequest(int deQuien,t_log* logger)
+{
+	char* requestEnString = recibirString(deQuien,logger);
+
+    request* requestNuevo = crearStructRequest(requestEnString);
+
+    free(requestEnString);
+
+    return requestNuevo;
+
 }

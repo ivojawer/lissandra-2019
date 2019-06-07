@@ -23,7 +23,7 @@ void consola() {
 		int requestEnInt = queRequestEs(requestYParametros[0]);
 
 		if (!strcmp(requestYParametros[0], "EXIT")) {
-			//Aca hay que matar a los hijos
+			//TODO: Aca hay que matar a los hijos, si se puede
 
 			liberarArrayDeStrings(requestYParametros);
 			free(lectura);
@@ -33,54 +33,43 @@ void consola() {
 		else if (!strcmp(requestYParametros[0], "STATUS")) {
 
 			status();
-
-			liberarArrayDeStrings(requestYParametros);
-			free(lectura);
-			continue;
 		}
 
 		else if (!strcmp(requestYParametros[0], "METRICS")) {
 
-			metrics();
-			liberarArrayDeStrings(requestYParametros);
-			free(lectura);
-			continue;
+			metrics(0);
+
+		} else if (!strcmp(requestYParametros[0], "ADD")) {
+
+			add(requestYParametros[1]);
+
 		}
 
 		else if (!esUnaRequestValida(lectura)) {
 
 			printf("No es una request valida, vuelva prontos \n");
 
-			liberarArrayDeStrings(requestYParametros);
-			free(lectura);
-
-			continue;
 		}
 
 		else if (requestEnInt == RUN && !existeArchivo(requestYParametros[1])) {
 			printf("%s%s%s", "El archivo ", requestYParametros[1],
 					" no pudo ser encontrado \n");
-
-			liberarArrayDeStrings(requestYParametros);
-			free(lectura);
-
-			continue;
 		}
 
-		if (requestYParametros[1] == NULL) { //Para que no rompa
-			requestYParametros[1] = (char *) malloc(sizeof(" "));
-			strcpy(requestYParametros[1], " ");
+		else {
+
+			request* requestParaHilo = crearStructRequest(lectura);
+
+			pthread_t h_script;
+
+			pthread_create(&h_script, NULL, (void *) crearScript,
+					requestParaHilo); //El hilo se encarga de liberarlo
+
+			pthread_detach(h_script);
+
+			//Agregar lista de hilos?
+
 		}
-
-		request* requestParaHilo = crearStructRequest(lectura);
-
-		pthread_t h_script;
-
-		pthread_create(&h_script, NULL, (void *) crearScript, requestParaHilo); //El hilo se encarga de liberarlo
-
-		pthread_detach(h_script);
-
-		//Agregar lista de hilos?
 
 		liberarArrayDeStrings(requestYParametros);
 		free(lectura);

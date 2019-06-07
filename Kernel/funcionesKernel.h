@@ -12,5 +12,6 @@ int ejecutarRequest(request* requestAEjecutar);
 void metrics();
 void crearScript(request* nuevaRequest);
 void status();
+void add (char* consistenciaYMemoriaEnString);
 
 #endif /* FUNCIONESKERNEL_H_ */

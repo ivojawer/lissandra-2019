@@ -31,14 +31,15 @@ typedef struct {
 } parametros_hiloScript;
 
 typedef struct {
-	char* nombreTabla;
-	int consistencia;
-} tablaEnLista;
-
-typedef struct {
 	time_t duracion;
 	time_t tiempoInicio;
 } tiempoDeOperacion;
+
+typedef struct{
+	int nombre;
+	int socket; //Algo asi
+	int consistencias[3];
+} memoriaEnLista;
 
 char* leerLinea(char* direccion,int lineaALeer);
 int removerScriptDeLista(int id, t_list* lista);
@@ -58,5 +59,14 @@ int promedioDeTiemposDeOperaciones (t_list* tiempos);
 int esMasNuevoQue30Segundos (tiempoDeOperacion tiempoOperacion);
 void insertarTiempo(time_t tiempoInicial, time_t tiempoFinal, int request);
 t_list* filterCasero_esMasNuevoQue30Segundos (t_list* tiempos);
+void matarListas();
+int encontrarPosicionDeMemoria(int memoriaAEncontrar);
+int memoriaECSiguiente(int memoriaInicialEC);
+void enviarRequestAMemoria(request* requestAEnviar, int memoria);
+int recibirRespuestaDeMemoria(int memoria);
+int determinarAQueMemoriaEnviar(int consistencia);
+int unaMemoriaCualquiera();
+
+
 
 #endif /* FUNCIONESBASEKERNEL_H_ */

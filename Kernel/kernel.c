@@ -9,9 +9,11 @@ t_list* listaEXIT;
 t_list* listaTablas;
 t_list* tiemposInsert;
 t_list* tiemposSelect;
+t_list* memorias;
 int idInicial;
 int quantum;
 int multiprocesamiento;
+int proximaMemoriaEC;
 sem_t sem_multiprocesamiento;
 sem_t sem_cambioId;
 sem_t sem_disponibleColaREADY;
@@ -36,8 +38,10 @@ int main() {
 	listaTablas = list_create();
 	tiemposInsert = list_create();
 	tiemposSelect = list_create();
+	memorias = list_create();
 
 	idInicial = 1000;
+	proximaMemoriaEC = -1;
 
 	pthread_t h_consola;
 	pthread_t h_conexiones;
@@ -58,7 +62,7 @@ int main() {
 	pthread_detach(h_conexiones);
 	pthread_join(h_consola, NULL);
 
-	matarTodo();
+	//Matar lo que se pueda
 
 	config_destroy(config);
 	log_destroy(logger);
@@ -69,6 +73,8 @@ int main() {
 	sem_destroy(&sem_operacionesTotales);
 	sem_destroy(&sem_tiemposInsert);
 	sem_destroy(&sem_tiemposSelect);
+
+	matarListas();
 
 	return 0; //Gracias tux tkm
 }

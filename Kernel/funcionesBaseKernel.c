@@ -3,10 +3,16 @@
 extern t_list* listaTablas;
 extern t_list* tiemposInsert;
 extern t_list* tiemposSelect;
-extern int operacionesTotales;
-sem_t sem_operacionesTotales;
-sem_t sem_tiemposInsert;
-sem_t sem_tiemposSelect;
+extern sem_t sem_tiemposInsert;
+extern sem_t sem_tiemposSelect;
+extern t_list* colaNEW;
+extern t_list* colaREADY;
+extern t_list* listaTablas;
+extern t_list* listaEXEC;
+extern t_list* listaEXIT;
+extern t_list* memorias;
+extern int proximaMemoriaEC;
+extern t_log* logger;
 
 int encontrarScriptEnLista(int id, t_list* lista) {
 	for (int i = 0; i < list_size(lista); i++) {
@@ -34,10 +40,10 @@ int removerScriptDeLista(int id, t_list* lista) {
 }
 
 int criterioDeTabla(char* nombreTabla) {
-	for (int i; i < list_size(listaTablas); i++) {
-		tablaEnLista* tabla = list_get(listaTablas, i);
+	for (int i = 0; i < list_size(listaTablas); i++) {
+		metadataTablaLFS* tabla = list_get(listaTablas, i);
 
-		if (!strcmp(tabla->nombreTabla, nombreTabla)) {
+		if (!strcmp(tabla->nombre, nombreTabla)) {
 			return tabla->consistencia;
 		}
 	}
@@ -45,9 +51,9 @@ int criterioDeTabla(char* nombreTabla) {
 	return -1;
 }
 
-char* devolverTablaDeRequest(request* request) {
+char* devolverTablaDeRequest(request* unaRequest) {
 
-	char** parametros = string_split(request->parametros, " ");
+	char** parametros = string_split(unaRequest->parametros, " ");
 
 	char* tabla = string_duplicate(parametros[0]);
 
@@ -102,28 +108,22 @@ int charsDeBuffer(char* buffer) {
 
 char* leerLinea(char* direccion, int lineaALeer) {
 
-
 	//TODO: Semaforo con crearArchivo?
 
 	FILE* archivo;
 	archivo = fopen(direccion, "r");
 	char* resultado = string_new();
 
-
-
-
 	if (archivo == NULL) {
 
-		char* error = "error";
+		char* error = string_new();
+
+		string_append(&resultado, "fin");
 
 		return error;
 	}
 
-
-
-
 	for (int i = 0; i <= lineaALeer; i++) {
-
 
 		char buffer[MAXBUFFER];
 
@@ -131,7 +131,7 @@ char* leerLinea(char* direccion, int lineaALeer) {
 
 		if (resultadoDeLeer == NULL) {
 
-			string_append(&resultado,"fin");
+			string_append(&resultado, "fin");
 
 			free(resultadoDeLeer);
 
@@ -139,15 +139,14 @@ char* leerLinea(char* direccion, int lineaALeer) {
 
 		}
 
-		if (i == lineaALeer)
-		{
-			string_append(&resultado,resultadoDeLeer);
+		if (i == lineaALeer) {
+			string_append(&resultado, resultadoDeLeer);
 
 			resultadoDeLeer = fgets(buffer, MAXBUFFER, archivo);
 
 			if (resultadoDeLeer == NULL) //Si es el ultimo string, no viene con \n
 			{
-				string_append(&resultado,"\n");
+				string_append(&resultado, "\n");
 			}
 		}
 
@@ -172,8 +171,6 @@ char* leerLinea(char* direccion, int lineaALeer) {
 //	return linea;
 
 }
-
-
 
 int crearArchivoParaRequest(script* script, request* requestAArchivo) {
 
@@ -202,28 +199,45 @@ int crearArchivoParaRequest(script* script, request* requestAArchivo) {
 }
 
 char* nombreScript(script* script) {
+
+	char* nombre = string_new();
+
 	if (script->esPorConsola) {
-		return leerLinea(script->direccionScript, 0);
+
+		string_append(&nombre, leerLinea(script->direccionScript, 0));
+
+		char* nombreAux = nombre;
+
+		nombre = string_substring_until(nombre, strlen(nombre) - 1);
+
+		free(nombreAux);
 	}
 
-	return string_substring_from(script->direccionScript,
-			sizeof(RAIZSCRIPTS) - 1);
+	else {
+		string_append(&nombre,
+				string_substring_from(script->direccionScript,
+						sizeof(RAIZSCRIPTS) - 1));
+	}
+
+	return nombre;
 }
 
 void mostrarListaScripts(t_list* lista) {
 	for (int i = 0; i < list_size(lista); i++) {
 		script* script = list_get(lista, i);
+
+		char* nombre = nombreScript(script);
 		printf("%s%i%s%i%s%s%s", "Script ", script->idScript,
 				": Lineas ejecutadas: ", script->lineasLeidas, ". Script: ",
-				nombreScript(script), "\n");
+				nombre, "\n");
+
+		free(nombre);
 	}
 }
-
 
 int moverScript(int scriptID, t_list* listaOrigen, t_list* listaDestino) {
 
 	//TODO: Poner semaforos?
-
 
 	int index = encontrarScriptEnLista(scriptID, listaOrigen);
 
@@ -239,13 +253,10 @@ int moverScript(int scriptID, t_list* listaOrigen, t_list* listaDestino) {
 
 	list_add(listaDestino, script);
 
-
 	return 1;
 }
 
-
-void insertarTiempo(time_t tiempoInicial, time_t tiempoFinal, int request)
-{
+void insertarTiempo(time_t tiempoInicial, time_t tiempoFinal, int request) {
 
 	tiempoDeOperacion* tiempoOperacion = malloc(sizeof(tiempoOperacion));
 
@@ -253,53 +264,42 @@ void insertarTiempo(time_t tiempoInicial, time_t tiempoFinal, int request)
 
 	tiempoOperacion->tiempoInicio = tiempoInicial;
 
-	if (request == SELECT)
-	{
+	if (request == SELECT) {
 		sem_wait(&sem_tiemposSelect);
-		list_add(tiemposSelect,tiempoOperacion);
+		list_add(tiemposSelect, tiempoOperacion);
 		sem_post(&sem_tiemposSelect);
 	}
 
-	else if (request == INSERT)
-	{
+	else if (request == INSERT) {
 		sem_wait(&sem_tiemposInsert);
-		list_add(tiemposInsert,tiempoOperacion);
+		list_add(tiemposInsert, tiempoOperacion);
 		sem_post(&sem_tiemposInsert);
 	}
 }
 
+int esMasNuevoQue30Segundos(tiempoDeOperacion tiempoOperacion) {
 
-int esMasNuevoQue30Segundos (tiempoDeOperacion tiempoOperacion)
-{
-
-	if(difftime(time(NULL),tiempoOperacion.tiempoInicio) < 30)
-	{
+	if (difftime(time(NULL), tiempoOperacion.tiempoInicio) < 30) {
 		return 1;
-	}
-	else
-	{
+	} else {
 		return 0;
 	}
 }
 
-t_list* filterCasero_esMasNuevoQue30Segundos (t_list* tiempos)
-{
+t_list* filterCasero_esMasNuevoQue30Segundos(t_list* tiempos) {
 	t_list* tiemposAux = list_create();
 
-	tiemposAux = list_duplicate (tiempos);
+	tiemposAux = list_duplicate(tiempos);
 
-	for (int i = 0; i<list_size(tiemposAux); i++)
-	{
-		tiempoDeOperacion* elemento = list_get(tiemposAux,i); //Hay que liberar esto?
+	for (int i = 0; i < list_size(tiemposAux); i++) {
+		tiempoDeOperacion* elemento = list_get(tiemposAux, i); //Hay que liberar esto?
 
-		if (elemento == NULL)
-		{
+		if (elemento == NULL) {
 			break;
 		}
 
-		if(!esMasNuevoQue30Segundos( *elemento ) )
-		{
-			list_remove(tiemposAux,i);
+		if (!esMasNuevoQue30Segundos(*elemento)) {
+			list_remove(tiemposAux, i);
 			i--; //Para que se mantenga en la misma posicion
 		}
 	}
@@ -308,31 +308,26 @@ t_list* filterCasero_esMasNuevoQue30Segundos (t_list* tiempos)
 
 }
 
-int promedioDeTiemposDeOperaciones (t_list* tiempos)
-{
+int promedioDeTiemposDeOperaciones(t_list* tiempos) {
 
-	if (list_size(tiempos) == 0)
-	{
+	if (list_size(tiempos) == 0) {
 		return -1;
 	}
 
-
 	int sumaTotalTiempos = 0;
 
-	for (int i = 0; i<list_size(tiempos);i++)
-	{
-		tiempoDeOperacion* tiempoOperacion = list_get(tiempos,i); //Hay que liberar esto?
+	for (int i = 0; i < list_size(tiempos); i++) {
+		tiempoDeOperacion* tiempoOperacion = list_get(tiempos, i); //Hay que liberar esto?
 
 		sumaTotalTiempos += tiempoOperacion->duracion;
 	}
 
-	int promedio = sumaTotalTiempos/list_size(tiempos);
+	int promedio = sumaTotalTiempos / list_size(tiempos);
 
 	return promedio;
 }
 
-void limpiarListasTiempos()
-{
+void limpiarListasTiempos() {
 	t_list* listaInsertAux = tiemposInsert;
 	t_list* listaSelectAux = tiemposSelect;
 
@@ -348,3 +343,121 @@ void limpiarListasTiempos()
 	list_destroy(listaSelectAux);
 }
 
+void matarListaScripts(t_list* scripts) {
+
+	for (int i = 0; i < list_size(scripts); i++) {
+		script* elemento = list_get(scripts, i);
+
+		free(elemento->direccionScript);
+
+		list_remove(scripts, i);
+	}
+
+	list_destroy(scripts);
+}
+
+void matarListas() {
+
+	list_destroy(tiemposInsert);
+	list_destroy(tiemposSelect);
+
+	matarListaScripts(listaEXIT);
+	matarListaScripts(listaEXEC);
+	matarListaScripts(colaREADY);
+	matarListaScripts(colaNEW);
+
+}
+
+int encontrarPosicionDeMemoria(int memoriaAEncontrar) {
+
+	for (int i = 0; i < list_size(memorias); i++) {
+		memoriaEnLista* memoria = list_get(memorias, i);
+
+		if (memoria->nombre == memoriaAEncontrar) {
+			return i;
+		}
+	}
+
+	return -1;
+}
+
+int memoriaECSiguiente(int memoriaInicialEC) {
+
+	int posicionMemoriaInicialEnLista = encontrarPosicionDeMemoria(memoriaInicialEC);
+
+	for (int i = posicionMemoriaInicialEnLista + 1; i < list_size(memorias); i++) { // De memoriaEC a fin de lista
+		memoriaEnLista* unaMemoria = list_get(memorias, i);
+
+		if (unaMemoria->consistencias[EC] == EC) {
+			return unaMemoria->nombre;
+		}
+	}
+
+	for (int i = 0; i < posicionMemoriaInicialEnLista; i++) { //De comienzo de lista a memoriaEC
+		memoriaEnLista* unaMemoria = list_get(memorias, i);
+
+		if (unaMemoria->consistencias[EC] == EC) {
+			return unaMemoria->nombre;
+		}
+	}
+
+	return memoriaInicialEC; //Si no encuentra otra devuelve la misma
+}
+
+
+void enviarRequestAMemoria(request* requestAEnviar, int memoria)
+{
+	memoriaEnLista* memoriaALaQueEnviar = list_get(memorias,encontrarPosicionDeMemoria(memoria));
+	enviarRequest(memoriaALaQueEnviar->socket, requestAEnviar);
+}
+
+int recibirRespuestaDeMemoria(int memoria)
+{
+	memoriaEnLista* memoriaDeQuienRecibir = list_get(memorias,encontrarPosicionDeMemoria(memoria));
+	return recibirInt(memoriaDeQuienRecibir->socket,logger);
+}
+
+int determinarAQueMemoriaEnviar(int consistencia) {
+	switch (consistencia) {
+
+	case SC: {
+		for (int i = 0; i < list_size(memorias); i++) {
+			memoriaEnLista* unaMemoria = list_get(memorias, i);
+			if (unaMemoria->consistencias[SC] == SC) {
+				return unaMemoria->nombre;
+			}
+		}
+		return -1;
+	}
+
+	case EC: {
+
+		int memoriaAux = proximaMemoriaEC;
+
+		proximaMemoriaEC = memoriaECSiguiente(proximaMemoriaEC);
+
+		return memoriaAux;
+
+	}
+
+	case SHC:
+	{
+		return proximaMemoriaEC; //TODO
+	}
+
+
+	}
+
+	return -1;
+
+}
+
+int unaMemoriaCualquiera() //TODO: Ver si tiene que tener criterio o no
+{
+	if (list_size(memorias) == 0)
+	{
+		return -1;
+	}
+	memoriaEnLista* unaMemoria = list_get(memorias,0);
+	return unaMemoria->nombre;
+}

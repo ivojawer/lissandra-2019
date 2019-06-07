@@ -10,8 +10,8 @@ void consola() {
 		char* lectura = readline("--> ");
 
 		if (lectura) {
-					add_history(lectura);
-				}
+			add_history(lectura);
+		}
 
 		if (string_is_empty(lectura)) {
 			printf("No es una request valida, vuelva prontos \n");
@@ -23,7 +23,8 @@ void consola() {
 
 		int requestEnInt = queRequestEs(requestYParametros[0]);
 
-		if (!esUnaRequestValida(lectura) || requestEnInt == JOURNAL
+		if (!esUnaRequestValida(
+				lectura) || requestEnInt == JOURNAL
 				|| requestEnInt == ADD || requestEnInt == RUN || requestEnInt == METRICS) { //Si es invalida o es una request que no vale en el LFS
 
 			printf("No es una request valida, vuelva prontos \n");
