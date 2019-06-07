@@ -7,7 +7,7 @@ extern t_log* logger;
 extern int cantidadBloques;
 extern char* puntoDeMontaje;
 extern int socketLFSAMEM;
-
+extern t_bitarray* bitMap;
 
 
 void mandarAEjecutarRequest(request* requestAEjecutar) {
@@ -128,13 +128,15 @@ void crearTablaEnMemTable(char* nombreDeTabla) {
 
 	nuevaTabla->nombreTabla = malloc(sizeof(nombreDeTabla));
 
-	nuevaTabla->nombreTabla = string_duplicate(nombreDeTabla);
+	char* tabla = string_duplicate(nombreDeTabla);
+
+	string_to_upper(tabla);
+
+	nuevaTabla->nombreTabla = tabla;
 
 	nuevaTabla->datosAInsertar = list_create();
 
 	list_add(memTable, nuevaTabla);
-
-	//creo que falta el to upper??
 
 }
 
@@ -145,6 +147,17 @@ t_tablaEnMemTable* getTablaPorNombre(t_list* memoriaTemp, char* nombreDeTabla){
 	}
 
 	return list_find(memoriaTemp,(void*)filtroNombreTabla);
+}
+
+int posicionLibreEnBitMap(){
+	int i;
+	for(i=0;i<cantidadBloques;i++){
+		if(!bitarray_test_bit(bitMap,i)){
+			log_info(logger,"Posicion %i en el bitmap libre.",i);
+			return i;
+		}
+	}
+	return -1;
 }
 
 
@@ -201,47 +214,6 @@ void insert(char* parametros) {
 	t_tablaEnMemTable* tabla = getTablaPorNombre(memTable,nomTabla);
 	list_add(tabla->datosAInsertar,nuevoRegistro);
 }
-
-//t_tablaEnMemTable* ultimaTabla(t_list* memTemp){
-//	return list_get(memTemp,memTemp->elements_count - 1);
-//}
-//
-//t_tablaEnMemTable* ultimoDato(t_list* datos){
-//	return list_get(datos,datos->elements_count - 1);
-//}
-
-void testearBitMap(t_bitarray* bitMap){
-	for(int i=0;i<cantidadBloques;i++){
-		int bit = bitarray_test_bit(bitMap,i);
-		printf("bittt:%i\n",bit);
-	}
-}
-
-//t_bitarray* generarBitMap(){      //esto es rancio pero lo que sigue es peor lo100to
-//
-//	char* bitArray = config_get_string_value(bitMapMetadata,"BITMAP");
-//	t_bitarray* bitMap = bitarray_create(bitArray,string_length(bitArray));
-//	return bitMap;
-//}
-//
-//void guardarBitMapEnConfig(t_bitarray* bitMap){ //ESTA FUNCION ES LO MAS FEO QUE HICE EN MI VIDA, SI QUIEREN POR DISCORD EXPLICO EL PORQUE
-//
-//	//genero UN STRING CON LA ESTRUCTURA DEL ARRAY A PARTIR DE UN BITMAP KHE (horrible ya se)
-//	char* arrayEnString = string_new();
-//	string_append(&arrayEnString,"[");
-//	for(int i=0;i<cantidadBloques;i++){
-//		int bit = bitarray_test_bit(bitMap,i);
-//		string_append(&arrayEnString,string_itoa(bit));
-//		string_append(&arrayEnString,",");
-//	}
-//	int largo =string_length(arrayEnString);
-//	char* arrayEnStringSinComa = string_substring_until(arrayEnString,largo-1);
-//	string_append(&arrayEnStringSinComa,"]");
-//
-//	//guardo esta criatura del diablo en el CONFIG
-//	config_set_value(bitMapMetadata,"BITMAP",arrayEnStringSinComa);
-//}
-
 
 void create(char* parametros) {
 	char** parametrosEnVector = string_n_split(parametros, 4, " ");
@@ -300,10 +272,16 @@ void create(char* parametros) {
 
 		fprintf(bin,"SIZE=0 \n");
 
-//		char numBloque[cantidadBloques];
-//		int unBloque = encontrarBloqueLibre();
-//		sprintf(numBloque,"%i",unBloque);
-//		fprintf(bin,"BLOCKS=[%s]\n",numBloque);
+		int posicionBloque = posicionLibreEnBitMap();
+		if(posicionBloque == -1){
+				log_error(logger,"No hay bloques disponibles");
+				return;
+		}
+		bitarray_set_bit(bitMap,posicionBloque);
+
+		char numBloque[cantidadBloques];
+		sprintf(numBloque,"%i",posicionBloque);
+		fprintf(bin,"BLOCKS=[%s]\n",numBloque);
 
 		fclose(bin);
 
@@ -330,6 +308,62 @@ void drop(char* parametro) {
 }
 
 //TODO: faltan todos los frees
+
+//--------------Basura que quiero guardar--------------------------------------------
+
+//----------Basura del bitMap en el config------------------------
+
+//	t_bitarray* bitMap = generarBitMap();
+//	bitarray_set_bit(bitMap,0);
+//	guardarBitMapEnConfig(bitMap);
+//	bitarray_destroy(bitMap);
+//	t_bitarray* bitMap2 = generarBitMap();
+//	testearBitMap(bitMap2);
+
+//----------------------------------------------------------------
+
+//t_bitarray* generarBitMap(){      //esto es rancio pero lo que sigue es peor lo100to
+//
+//	char* bitArray = config_get_string_value(bitMapMetadata,"BITMAP");
+//	t_bitarray* bitMap = bitarray_create(bitArray,string_length(bitArray));
+//	return bitMap;
+//}
+//
+//void guardarBitMapEnConfig(t_bitarray* bitMap){ //ESTA FUNCION ES LO MAS FEO QUE HICE EN MI VIDA, SI QUIEREN POR DISCORD EXPLICO EL PORQUE
+//
+//	//genero UN STRING CON LA ESTRUCTURA DEL ARRAY A PARTIR DE UN BITMAP KHE (horrible ya se)
+//	char* arrayEnString = string_new();
+//	string_append(&arrayEnString,"[");
+//	for(int i=0;i<cantidadBloques;i++){
+//		int bit = bitarray_test_bit(bitMap,i);
+//		string_append(&arrayEnString,string_itoa(bit));
+//		string_append(&arrayEnString,",");
+//	}
+//	int largo =string_length(arrayEnString);
+//	char* arrayEnStringSinComa = string_substring_until(arrayEnString,largo-1);
+//	string_append(&arrayEnStringSinComa,"]");
+//
+//	//guardo esta criatura del diablo en el CONFIG
+//	config_set_value(bitMapMetadata,"BITMAP",arrayEnStringSinComa);
+//}
+
+//----------------------------------------------------------------
+
+//----------Basura para probar algunas funciones---------
+
+//t_tablaEnMemTable* ultimaTabla(t_list* memTemp){
+//	return list_get(memTemp,memTemp->elements_count - 1);
+//}
+//
+//t_tablaEnMemTable* ultimoDato(t_list* datos){
+//	return list_get(datos,datos->elements_count - 1);
+//}
+void testearBitMap(t_bitarray* bitMap){
+	for(int i=0;i<cantidadBloques;i++){
+		int bit = bitarray_test_bit(bitMap,i);
+		printf("bittt:%i\n",bit);
+	}
+}
 
 //fseek(bin, 0, SEEK_END);
 //int tamanioArchivo = ftell(bin);

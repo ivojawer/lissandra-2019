@@ -41,9 +41,10 @@ int tablaYaExiste(char* nombreTabla);
 void crearTablaEnMemTable(char* nombreDeTabla);
 int tablaExisteEnMemTable(char* nombreDeLaTabla);
 t_tablaEnMemTable* getTablaPorNombre(t_list* memoriaTemp, char* nombreDeTabla);
+int posicionLibreEnBitMap();
 void testearBitMap(t_bitarray* bitMap);
-void guardarBitMapEnConfig(t_bitarray* bitMap);
-t_bitarray* generarBitMap();
 //t_tablaEnMemTable* ultimaTabla(t_list* memTemp);
 //t_tablaEnMemTable* ultimoDato(t_list* memTemp);
+//void guardarBitMapEnConfig(t_bitarray* bitMap);
+//t_bitarray* generarBitMap();
 #endif /* FUNCIONESLFS_H_ */
