@@ -50,8 +50,7 @@ pagina* nuevoDato(t_list* tablaPaginas,int flagModificado,int key, int timestamp
 pagina* getPagina(int key, char* nombreTabla);
 void consola();
 void mandarAEjecutarRequest(request* requestAEjecutar);
-void mandarSelectALFS(char*,int);
-void mandarCreateALFS(char*,char*,int,char*);
+void mandarALFS(int,char*);
 void Select(char* parametros);
 void insert(char* parametros);
 void create(char* parametros);

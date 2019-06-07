@@ -39,7 +39,7 @@ int main() {
 	tablaSegmentos = crearTablaSegmentos();
 
 
-	cargarSeedsIniciales();
+//	cargarSeedsIniciales();
 
 	pthread_detach(h_conexiones);
 	pthread_join(h_consola, NULL);

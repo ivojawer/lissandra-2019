@@ -2,11 +2,11 @@
 
 extern t_log* logger;
 extern t_config* config;
-int socketLFSAMem;
+
 
 void conexiones() {
 
-	socketLFSAMem = crearConexion(4444);//conexion con LFS
+	socketALFS= crearConexion(config_get_int_value(config,"PUERTO_FS"));//conexion con LFS
 
 	//        Creo servidor
 	int puerto = config_get_int_value(config,"PUERTO_ESCUCHA");

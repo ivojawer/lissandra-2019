@@ -1,9 +1,11 @@
 #include "funcionesLFS.h"
 
+extern t_config* bitMapMetadata;
 extern t_list* listaDeNombreDeTablas;
 extern t_list* memTable;
 extern t_log* logger;
-
+extern int cantidadBloques;
+extern char* puntoDeMontaje;
 extern int socketLFSAMEM;
 
 
@@ -90,12 +92,7 @@ int tablaYaExiste(char* nombreTabla) {
 	string_to_upper(nombreTablaGuardado);
 
 	char* pathAbsoluto = string_new();
-
-	// char* rutaPrincipal = (????); TODO: poner la primera parte (ruta principal) sino esta wea no funciona
-	// string_append(&pathAbsoluto,rutaPrincipal);  y bueno aca se agregaria la primera parte mentienden
-
-	// Aca va lo feo hardcodeado que NO TIENE QUE IR pero quiero ver si funciona chiks:
-	string_append(&pathAbsoluto,"/home/utnso/workspace/tp-2019-1c-U-TN-Tecno/LFS/Debug/");
+	string_append(&pathAbsoluto,puntoDeMontaje);
 	string_append(&pathAbsoluto,"Tablas/");
 	string_append(&pathAbsoluto,nombreTablaGuardado);
 
@@ -194,7 +191,7 @@ void insert(char* parametros) {
 	nuevoRegistro = malloc(sizeof(registro));
 	nuevoRegistro->timestamp = unTimestamp;
 	nuevoRegistro->key = unaKey;
-	nuevoRegistro->value = malloc(sizeof(unValue));
+	nuevoRegistro->value = malloc(sizeof(unValue)); //por aca falta contemplar que el size del value sea valido
 	nuevoRegistro->value = unValue;
 
 	if (!tablaExisteEnMemTable(nomTabla)){
@@ -213,10 +210,43 @@ void insert(char* parametros) {
 //	return list_get(datos,datos->elements_count - 1);
 //}
 
+void testearBitMap(t_bitarray* bitMap){
+	for(int i=0;i<cantidadBloques;i++){
+		int bit = bitarray_test_bit(bitMap,i);
+		printf("bittt:%i\n",bit);
+	}
+}
+
+//t_bitarray* generarBitMap(){      //esto es rancio pero lo que sigue es peor lo100to
+//
+//	char* bitArray = config_get_string_value(bitMapMetadata,"BITMAP");
+//	t_bitarray* bitMap = bitarray_create(bitArray,string_length(bitArray));
+//	return bitMap;
+//}
+//
+//void guardarBitMapEnConfig(t_bitarray* bitMap){ //ESTA FUNCION ES LO MAS FEO QUE HICE EN MI VIDA, SI QUIEREN POR DISCORD EXPLICO EL PORQUE
+//
+//	//genero UN STRING CON LA ESTRUCTURA DEL ARRAY A PARTIR DE UN BITMAP KHE (horrible ya se)
+//	char* arrayEnString = string_new();
+//	string_append(&arrayEnString,"[");
+//	for(int i=0;i<cantidadBloques;i++){
+//		int bit = bitarray_test_bit(bitMap,i);
+//		string_append(&arrayEnString,string_itoa(bit));
+//		string_append(&arrayEnString,",");
+//	}
+//	int largo =string_length(arrayEnString);
+//	char* arrayEnStringSinComa = string_substring_until(arrayEnString,largo-1);
+//	string_append(&arrayEnStringSinComa,"]");
+//
+//	//guardo esta criatura del diablo en el CONFIG
+//	config_set_value(bitMapMetadata,"BITMAP",arrayEnStringSinComa);
+//}
+
 
 void create(char* parametros) {
 	char** parametrosEnVector = string_n_split(parametros, 4, " ");
 	char* tabla = string_duplicate(parametrosEnVector[0]);
+	string_to_upper(tabla);
 	char* consistencia = parametrosEnVector[1];
 	char* particiones = parametrosEnVector[2];
 	char* tiempoCompactacion = parametrosEnVector[3];
@@ -229,11 +259,7 @@ void create(char* parametros) {
 
 	//crea directorio
 	char* pathAbsoluto = string_new();
-	// char* rutaPrincipal = (????); TODO: poner la primera parte (ruta principal) sino esta wea no funciona
-	// string_append(&pathAbsoluto,rutaPrincipal);  y bueno aca se agregaria la primera parte mentienden
-
-	//Aca va lo feo hardcodeado que NO TIENE QUE IR pero quiero ver si funciona chiks:
-	string_append(&pathAbsoluto,"/home/utnso/workspace/tp-2019-1c-U-TN-Tecno/LFS/Debug/");
+	string_append(&pathAbsoluto,puntoDeMontaje);
 	string_append(&pathAbsoluto,"Tablas/");
 	string_append(&pathAbsoluto,tabla);
 
@@ -251,19 +277,18 @@ void create(char* parametros) {
 
 	FILE* metadata = fopen(archivoMetadata,"a+");
 
-	fprintf(metadata,"CONSISTENCY = %s \n",consistencia); //se evalua si la consistencia que meten es valida? okonfiamo' ?
-	fprintf(metadata,"PARTITIONS = %s \n",particiones);
-	fprintf(metadata,"COMPACTION_TIME = %s \n",tiempoCompactacion);
+	fprintf(metadata,"CONSISTENCY=%s \n",consistencia);
+	fprintf(metadata,"PARTITIONS=%s \n",particiones);
+	fprintf(metadata,"COMPACTION_TIME=%s \n",tiempoCompactacion);
 
 	fclose(metadata);
 
 	//crea los .bin
 	int cantParticiones = atoi(particiones);
-	// int cantidadTotalBloques = encontrar cantidad de bloques totales
 
 	for(int i=0;i<cantParticiones;i++){
 
-		char* numParticion[cantParticiones]; //no hay malloc, no va free
+		char numParticion[cantParticiones]; //no hay malloc, no va free
 		sprintf(numParticion, "%i.bin", i);
 		char* particion = string_new();
 		string_append(&particion,pathAbsoluto);
@@ -273,13 +298,12 @@ void create(char* parametros) {
 
 		FILE* bin = fopen(particion,"a+");
 
-		fprintf(bin,"SIZE = 0 \n");
+		fprintf(bin,"SIZE=0 \n");
 
-		//char* numBloque[cantidadTotalBloques];
-		//int unBloque = encontrarBloqueLibre();
-		//sprintf(numBloque,"%i",unBloque);
-		char* numBloque = "1";
-		fprintf(bin,"BLOCKS = [%s]\n",numBloque);
+//		char numBloque[cantidadBloques];
+//		int unBloque = encontrarBloqueLibre();
+//		sprintf(numBloque,"%i",unBloque);
+//		fprintf(bin,"BLOCKS=[%s]\n",numBloque);
 
 		fclose(bin);
 

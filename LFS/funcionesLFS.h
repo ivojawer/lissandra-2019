@@ -6,6 +6,7 @@
 #include<stdbool.h>
 #include<commons/log.h>
 #include<commons/string.h>
+#include<commons/bitarray.h>
 #include<commons/config.h>
 #include<readline/readline.h>
 #include <pthread.h>
@@ -40,6 +41,9 @@ int tablaYaExiste(char* nombreTabla);
 void crearTablaEnMemTable(char* nombreDeTabla);
 int tablaExisteEnMemTable(char* nombreDeLaTabla);
 t_tablaEnMemTable* getTablaPorNombre(t_list* memoriaTemp, char* nombreDeTabla);
+void testearBitMap(t_bitarray* bitMap);
+void guardarBitMapEnConfig(t_bitarray* bitMap);
+t_bitarray* generarBitMap();
 //t_tablaEnMemTable* ultimaTabla(t_list* memTemp);
 //t_tablaEnMemTable* ultimoDato(t_list* memTemp);
 #endif /* FUNCIONESLFS_H_ */
