@@ -651,7 +651,7 @@ int ultimaPosicionDelCharEnString(char charBuscado, char* string) {
 	return ultima_ocurrencia;
 }
 
-double get_timestamp() {
+int get_timestamp() {
 	struct timeval tv;
 	gettimeofday(&tv, NULL);
 	return (tv.tv_sec) * 1000 + (tv.tv_usec) / 1000;
@@ -663,5 +663,72 @@ char* get_value(char* string) {
 
 	return string_substring(string, primera_ocurrencia + 1,
 			segunda_ocurrencia - primera_ocurrencia - 1);
+}
+
+
+char* leerLinea(char* direccion, int lineaALeer) {
+
+	//TODO: Semaforo con crearArchivo?
+
+	FILE* archivo;
+	archivo = fopen(direccion, "r");
+	char* resultado = string_new();
+
+	if (archivo == NULL) {
+
+		char* error = string_new();
+
+		string_append(&resultado, "fin");
+
+		return error;
+	}
+
+	for (int i = 0; i <= lineaALeer; i++) {
+
+		char buffer[MAXBUFFER];
+
+		char* resultadoDeLeer = fgets(buffer, MAXBUFFER, archivo);
+
+		if (resultadoDeLeer == NULL) {
+
+			string_append(&resultado, "fin");
+
+			free(resultadoDeLeer);
+
+			break;
+
+		}
+
+		if (i == lineaALeer) {
+			string_append(&resultado, resultadoDeLeer);
+
+			resultadoDeLeer = fgets(buffer, MAXBUFFER, archivo);
+
+			if (resultadoDeLeer == NULL) //Si es el ultimo string, no viene con \n
+			{
+				string_append(&resultado, "\n");
+			}
+		}
+
+		//free(resultadoDeLeer); Seg fault en esta linea wowowo (Y no por el free del if resultadoLeer == NULL)
+
+	}
+
+	fclose(archivo);
+
+	return resultado;
+
+//	int caracteres = charsDeBuffer(buffer);
+//
+//	char* linea = malloc(sizeof(char) * caracteres);
+//
+//	memcpy(linea, buffer, caracteres * sizeof(char));
+//
+//	fclose(archivo);
+//
+//
+//
+//	return linea;
+
 }
 

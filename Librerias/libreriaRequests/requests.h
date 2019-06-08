@@ -22,6 +22,8 @@
 #define MEMORIA 1
 #define LFS 2
 
+#define MAXBUFFER 100
+
 #include<stdio.h>
 #include<stdlib.h>
 #include<commons/log.h>
@@ -31,6 +33,7 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <commons/collections/list.h>
+#include <dirent.h>
 
 typedef struct{
 	int requestEnInt;
@@ -54,6 +57,7 @@ typedef struct {
 
 int esUnaRequestValida(char* requestEnString);
 int queRequestEs(char* palabra);
+int get_timestamp();
 int esUnParametroValido(int request, char* parametro);
 int queConsistenciaEs(char* string);
 void liberarArrayDeStrings(char** array);
@@ -70,7 +74,8 @@ request* recibirRequest(int deQuien,t_log* logger);
 int recibirInt(int deQuien, t_log* logger);
 void enviarInt (int intAEnviar, int aQuien);
 int crearConexion(int puerto,char* ip);
-
+char* get_value(char* string);
+char* leerLinea(char* direccion, int lineaALeer);
 #include "requests.h"
 
 #endif /* REQUESTS_H_ */

@@ -8,6 +8,7 @@ t_list* memTable;
 int cantidadBloques;
 int valorMaximoValue;
 char* puntoDeMontaje;
+t_bitarray* bitMap;
 
 int main() {
 
@@ -17,7 +18,7 @@ int main() {
 
 	memTable = list_create();
 
-	metadataLFS = config_create("Metadata/Metadata.bin");
+	metadataLFS = config_create("/home/utnso/workspace/tp-2019-1c-U-TN-Tecno/LFS/raiz/Metadata/Metadata.bin");
 
 	cantidadBloques = config_get_int_value(metadataLFS,"BLOCKS");
 
@@ -27,19 +28,12 @@ int main() {
 
 	bitMapMetadata = config_create("Metadata/BitMap.bin");
 
-//	t_bitarray* bitMap = generarBitMap();
-//	bitarray_set_bit(bitMap,0);
-//	guardarBitMapEnConfig(bitMap);
-//	bitarray_destroy(bitMap);
-//	t_bitarray* bitMap2 = generarBitMap();
-//	testearBitMap(bitMap2);
+	//Estas son 3 formas de sacar el bitArray, la posta es con el config pero eSo nO AnDA~~
+	//char* bitArray = config_get_string_value(bitMapMetadata,"BITMAP");
+	//char bitArray[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+	char* bitArray = string_repeat(0,cantidadBloques);
 
-
-//	insert("Tabla1 12 VAYNE 43");
-//	t_tablaEnMemTable* tabla = ultimaTabla(memTable);
-//	dato* holis =ultimoDato(tabla->datosAInsertar); //funciona pero me tira un warning que no entiendo
-//	printf("holis es ts: \n   Key: \n y value: \n %i %i %s",holis->timestamp,holis->key,holis->value);
-
+	bitMap = bitarray_create(bitArray,string_length(bitArray));
 
 	pthread_t h_consola;
 	pthread_t h_conexiones;
@@ -48,7 +42,21 @@ int main() {
 	pthread_create(&h_consola, NULL, (void *) consola, NULL);
 	pthread_create(&h_conexiones, NULL, (void *) conexiones, NULL);
 
-	//create("TABLA-cz SC 4 60000");
+
+	// ---------Prueba Create-----------
+
+//	create("TABLA2 SC 4 60000");
+
+	// ---------Prueba Insert-----------
+
+//	insert("Tabla2 12 VAYNE 43");
+//	t_tablaEnMemTable* tabla = ultimaTabla(memTable);
+//	registro* holis =ultimoDato(tabla->datosAInsertar); //funciona pero me tira un warning que no entiendo
+//	printf("holis es ts:%i \n   Key:%i \n y value:%s \n   ",holis->timestamp,holis->key,holis->value);
+
+	// ---------Prueba Select-----------
+
+//	Select("TABLA-X 5");
 
 	pthread_detach(h_conexiones);
 	pthread_join(h_consola, NULL);

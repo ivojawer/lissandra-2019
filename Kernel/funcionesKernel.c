@@ -62,40 +62,40 @@ void crearScript(request* nuevaRequest) {
 
 int ejecutarRequest(request* requestAEjecutar) {
 
-	if (unaMemoriaCualquiera() == -1) //No hay memorias
-			{
-		return -1;
-	}
-
-	if (esDescribeGlobal(requestAEjecutar)) {
-		enviarRequestAMemoria(requestAEjecutar, unaMemoriaCualquiera());
-	}
-
-	int criterio = criterioDeTabla(devolverTablaDeRequest(requestAEjecutar));
-
-	if (criterio == -1) //No existe la tabla (TODO: Ver si esto se hace antes o que, tambien lo del CREATE)
-			{
-		return -1;
-	}
-
-	int memoria = determinarAQueMemoriaEnviar(criterio);
-
-	if (memoria == -1) // No existe la memoria, lo mismo que arriba
-			{
-		return -1;
-	}
+//	if (unaMemoriaCualquiera() == -1) //No hay memorias
+//			{
+//		return -1;
+//	}
+//
+//	if (esDescribeGlobal(requestAEjecutar)) {
+//		enviarRequestAMemoria(requestAEjecutar, unaMemoriaCualquiera());
+//	}
+//
+//	int criterio = criterioDeTabla(devolverTablaDeRequest(requestAEjecutar));
+//
+//	if (criterio == -1) //No existe la tabla (TODO: Ver si esto se hace antes o que, tambien lo del CREATE)
+//			{
+//		return -1;
+//	}
+//
+//	int memoria = determinarAQueMemoriaEnviar(criterio);
+//
+//	if (memoria == -1) // No existe la memoria, lo mismo que arriba
+//			{
+//		return -1;
+//	}
 
 	time_t tiempoInicial = time(NULL);
 
-	enviarRequestAMemoria(requestAEjecutar, memoria);
-
-
-	int resultado = recibirRespuestaDeMemoria(memoria);
-
-
-	if (resultado == MEMORIA_ERROR) {
-		return -1;
-	}
+//	enviarRequestAMemoria(requestAEjecutar, memoria);
+//
+//
+//	int resultado = recibirRespuestaDeMemoria(memoria);
+	sleep(1);
+//
+//	if (resultado == MEMORIA_ERROR) {
+//		return -1;
+//	}
 
 	time_t tiempoFinal = time(NULL);
 

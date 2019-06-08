@@ -1,5 +1,5 @@
 #include "funcionesLFS.h"
-
+#define MAXCHAR 1000
 extern t_config* bitMapMetadata;
 extern t_list* listaDeNombreDeTablas;
 extern t_list* memTable;
@@ -8,17 +8,7 @@ extern int cantidadBloques;
 extern char* puntoDeMontaje;
 extern int socketLFSAMEM;
 extern int valorMaximoValue;
-
-
-
-
-//  "No chabon que paso aca antes era mas bonito este archivo" Mira cucha despues se hace mas bonito esto ok? No te preocupes como esta ahora pensa en el futuro
-
-
-
-
-
-
+extern t_bitarray* bitMap;
 
 void mandarAEjecutarRequest(request* requestAEjecutar) {
 
@@ -101,9 +91,8 @@ int tablaYaExiste(char* nombreTabla) {
 	string_to_upper(nombreTablaGuardado);
 
 	char* pathAbsoluto = string_new();
-	string_append(&pathAbsoluto, puntoDeMontaje);
-	string_append(&pathAbsoluto, "Tablas/");
-	string_append(&pathAbsoluto, nombreTablaGuardado);
+		string_append(&pathAbsoluto, "/home/utnso/workspace/tp-2019-1c-U-TN-Tecno/LFS/raiz/tables/");
+		string_append(&pathAbsoluto, nombreTabla);
 
 	if (access(pathAbsoluto, F_OK) == -1) {
 		return 0;
@@ -137,13 +126,15 @@ void crearTablaEnMemTable(char* nombreDeTabla) {
 
 	nuevaTabla->nombreTabla = malloc(sizeof(nombreDeTabla));
 
-	nuevaTabla->nombreTabla = string_duplicate(nombreDeTabla);
+	char* tabla = string_duplicate(nombreDeTabla);
+
+	string_to_upper(tabla);
+
+	nuevaTabla->nombreTabla = tabla;
 
 	nuevaTabla->datosAInsertar = list_create();
 
 	list_add(memTable, nuevaTabla);
-
-	//creo que falta el to upper??
 
 }
 
@@ -156,36 +147,169 @@ t_tablaEnMemTable* getTablaPorNombre(t_list* memoriaTemp, char* nombreDeTabla) {
 	return list_find(memoriaTemp, (void*) filtroNombreTabla);
 }
 
-void Select(char* parametros) {
+int posicionLibreEnBitMap() {
+	int i;
+	for (i = 0; i < cantidadBloques; i++) {
+		if (!bitarray_test_bit(bitMap, i)) {
+			log_info(logger, "Posicion %i en el bitmap libre.", i);
+			return i;
+		}
+	}
+	return -1;
+}
+
+registro* Select(char* parametros) {
 
 	char** parametrosEnVector = string_n_split(parametros, 2, " ");
 
-	char* tabla = parametrosEnVector[0];
-	int key = atoi(parametrosEnVector[1]);
+	registro* registroNulo = NULL;
+
+	char* tabla = string_duplicate(parametrosEnVector[0]);
+
+	int keyDatoBuscado = atoi(parametrosEnVector[1]);
+
+	liberarArrayDeStrings(parametrosEnVector);
 
 	if (!tablaYaExiste(tabla)) {
 		log_error(logger, "%s%s%s", "La tabla ", tabla, " no existe.");
-		return;
+		return registroNulo;
 	}
 
-	int particion = particionDeKey(key, tabla);
+	char *root = string_new();
+	string_append(&root, "/home/utnso/workspace/tp-2019-1c-U-TN-Tecno/LFS/raiz/tables/");
+	string_append(&root, tabla);
 
-	free(parametrosEnVector[1]);
-	free(parametrosEnVector[0]);
-	free(parametrosEnVector);
-	free(parametros);
+	string_append(&root, "/");
 
+	int particion = particionDeKey(keyDatoBuscado, tabla);
+
+	string_append(&root, string_itoa(particion));
+
+	string_append(&root, ".bin");
+
+	char* stringDatoMasAltoDeLaParticion = string_new();
+	registro* datoMasAltoDeLaMemTable;
+
+	int timestampMasAlto = 0;
+
+	int i = 0;
+	while (1) {
+
+		char* lineaLeida = leerLinea(root, i);
+
+		if (!strcmp(lineaLeida, "fin")) {
+			free(lineaLeida);
+			break;
+		}
+
+		char** elementosEnVector = string_n_split(lineaLeida, 3, ";");
+
+		int timestamp = atoi(elementosEnVector[0]);
+		int key = atoi(elementosEnVector[1]);
+
+		liberarArrayDeStrings(elementosEnVector);
+
+		if (key == keyDatoBuscado && timestamp > timestampMasAlto) {
+			free(stringDatoMasAltoDeLaParticion);
+			stringDatoMasAltoDeLaParticion = string_duplicate(lineaLeida);
+			timestampMasAlto = timestamp;
+		}
+
+		free(lineaLeida);
+		i++;
+
+	}
+
+	t_tablaEnMemTable* laTabla = NULL;
+
+	for (int d = 0; d < list_size(memTable); d++) {
+		t_tablaEnMemTable* unaTabla = list_get(memTable, d);
+
+		if (!strcmp(unaTabla->nombreTabla, tabla))
+
+		{
+			laTabla = unaTabla;
+		}
+	}
+
+	if (laTabla == NULL) {
+		if (strcmp(stringDatoMasAltoDeLaParticion, "\0")) {
+
+			printf("SELECT de la key %i de la tabla %s: %s", keyDatoBuscado,
+					tabla, stringDatoMasAltoDeLaParticion);
+
+			char** parametrosEnVector = string_n_split(
+					stringDatoMasAltoDeLaParticion, 3, ";");
+
+			int unaKey = atoi(parametrosEnVector[1]);
+			char* unValue = get_value(parametros);
+			int unTimestamp = atoi(parametrosEnVector[0]);
+
+			registro* nuevoRegistro;
+			nuevoRegistro = malloc(sizeof(registro));
+			nuevoRegistro->timestamp = unTimestamp;
+			nuevoRegistro->key = unaKey;
+			nuevoRegistro->value = unValue;
+
+			return nuevoRegistro;
+		} else {
+			printf("No se encontro la key %i de la tabla %s", keyDatoBuscado,
+					tabla);
+			return registroNulo;
+		}
+	}
+
+	for (int d = 0; d < list_size(laTabla->datosAInsertar); d++) {
+		registro* unDatazo = list_get(laTabla->datosAInsertar, d);
+
+		if ((unDatazo->timestamp > timestampMasAlto)
+				&& (unDatazo->key == keyDatoBuscado)) {
+			datoMasAltoDeLaMemTable = unDatazo;
+		}
+	}
+
+	if (datoMasAltoDeLaMemTable == NULL
+			&& strcmp(stringDatoMasAltoDeLaParticion, "\0")) {
+
+		printf("No se encontro la key %i de la tabla %s", keyDatoBuscado,
+				tabla);
+		return registroNulo;
+	}
+
+	if (datoMasAltoDeLaMemTable == NULL) {
+		printf("SELECT de la key %i de la tabla %s: %s", keyDatoBuscado, tabla,
+				stringDatoMasAltoDeLaParticion);
+
+		char** parametrosEnVector = string_n_split(
+				stringDatoMasAltoDeLaParticion, 3, ";");
+
+		int unaKey = atoi(parametrosEnVector[1]);
+		char* unValue = get_value(parametros);
+		int unTimestamp = atoi(parametrosEnVector[0]);
+
+		registro* nuevoRegistro;
+		nuevoRegistro = malloc(sizeof(registro));
+		nuevoRegistro->timestamp = unTimestamp;
+		nuevoRegistro->key = unaKey;
+		nuevoRegistro->value = unValue;
+
+		return nuevoRegistro;
+	}
+
+	printf("SELECT de la key %i de la tabla %s: %s",
+			datoMasAltoDeLaMemTable->key, tabla,
+			datoMasAltoDeLaMemTable->value);
+
+	return datoMasAltoDeLaMemTable;
 }
 
 int particionDeKey(int key, char* nombreTabla) {
-
 
 	metadataTablaLFS laMetadata = describirTabla(nombreTabla);
 
 	free(laMetadata.nombre);
 
 	return key % laMetadata.particiones;
-
 
 }
 
@@ -235,14 +359,6 @@ void insert(char* parametros) {
 //t_tablaEnMemTable* ultimoDato(t_list* datos){
 //	return list_get(datos,datos->elements_count - 1);
 //}
-
-void testearBitMap(t_bitarray* bitMap) {
-	for (int i = 0; i < cantidadBloques; i++) {
-		int bit = bitarray_test_bit(bitMap, i);
-		printf("bittt:%i\n", bit);
-	}
-}
-
 //t_bitarray* generarBitMap(){      //esto es rancio pero lo que sigue es peor lo100to
 //
 //	char* bitArray = config_get_string_value(bitMapMetadata,"BITMAP");
@@ -276,26 +392,25 @@ void create(char* parametros) {
 	char* particiones = parametrosEnVector[2];
 	char* tiempoCompactacion = parametrosEnVector[3];
 
-	//chequea si existe
+//chequea si existe
 	if (tablaYaExiste(tabla)) {
 		log_error(logger, "%s%s%s", "La tabla ", tabla, " ya existe.");
 		return;
 	}
 
-	//crea directorio
+//crea directorio
 	char* pathAbsoluto = string_new();
-	string_append(&pathAbsoluto, puntoDeMontaje);
-	string_append(&pathAbsoluto, "Tablas/");
+	string_append(&pathAbsoluto, "/home/utnso/workspace/tp-2019-1c-U-TN-Tecno/LFS/raiz/tables/");
 	string_append(&pathAbsoluto, tabla);
 
-	int result = mkdir(pathAbsoluto, 0700);
+	int result = mkdir(pathAbsoluto, ACCESSPERMS);
 
 	if (-1 == result) {
 		printf("Error creating directory!\n");
 		exit(1);
 	}
 
-	//crea metadata y la escribe
+//crea metadata y la escribe
 	char* archivoMetadata = string_new();
 	string_append(&archivoMetadata, pathAbsoluto);
 	string_append(&archivoMetadata, "/metadata");
@@ -308,26 +423,33 @@ void create(char* parametros) {
 
 	fclose(metadata);
 
-	//crea los .bin
+//crea los .bin
 	int cantParticiones = atoi(particiones);
 
 	for (int i = 0; i < cantParticiones; i++) {
 
 		char numParticion[cantParticiones]; //no hay malloc, no va free
-		sprintf(numParticion, "%i.bin", i);
+		sprintf(numParticion, "%i", i);
 		char* particion = string_new();
 		string_append(&particion, pathAbsoluto);
 		string_append(&particion, "/");
 		string_append(&particion, numParticion);
+		string_append(&particion, ".bin");
 
 		FILE* bin = fopen(particion, "a+");
 
 		fprintf(bin, "SIZE=0 \n");
 
-//		char numBloque[cantidadBloques];
-//		int unBloque = encontrarBloqueLibre();
-//		sprintf(numBloque,"%i",unBloque);
-//		fprintf(bin,"BLOCKS=[%s]\n",numBloque);
+		int posicionBloque = posicionLibreEnBitMap();
+		if (posicionBloque == -1) {
+			log_error(logger, "No hay bloques disponibles");
+			return;
+		}
+		bitarray_set_bit(bitMap, posicionBloque);
+
+		char numBloque[cantidadBloques];
+		sprintf(numBloque, "%i", posicionBloque);
+		fprintf(bin, "BLOCKS=[%s]\n", numBloque);
 
 		fclose(bin);
 
@@ -337,27 +459,25 @@ void create(char* parametros) {
 	liberarArrayDeStrings(parametrosEnVector);
 	free(pathAbsoluto);
 	free(archivoMetadata);
-	//free(parametros);
-	//seguro faltan frees aca
+//free(parametros);
+//seguro faltan frees aca
 
 }
 
 t_list* describe(char* parametro) { //Por que devuelve una lista esta funcion? Porque son las 12am y tengo que tomar atajos para llegar, despues se hace mas bonito -Tom
 
-	//Por cierto asi como esta, esto genera tantos memory leaks como le plazca a la pc asi que esto es super malo
+//Por cierto asi como esta, esto genera tantos memory leaks como le plazca a la pc asi que esto es super malo
 
-
-	if (esDescribeGlobal(parametro)) {
+	if (!strcmp(parametro, " ")) {
 
 		return describirTodasLasTablas();
 	}
-
 
 	t_list* unaMetadataSolitaria = list_create();
 
 	metadataTablaLFS laMetadataSolitaria = describirTabla(parametro);
 
-	list_add(unaMetadataSolitaria,&laMetadataSolitaria);
+	list_add(unaMetadataSolitaria, &laMetadataSolitaria);
 
 	return unaMetadataSolitaria;
 
@@ -368,7 +488,7 @@ void drop(char* parametro) { //Perdon por esto
 	DIR *dir;
 	struct dirent *sd;
 	char *root = string_new();
-	string_append(&root, "../Tablas/");
+	string_append(&root, "/home/utnso/workspace/tp-2019-1c-U-TN-Tecno/LFS/raiz/tables/");
 	string_append(&root, parametro);
 
 	t_list* listaDeArraysDeBloquesALiberar = list_create();
@@ -389,7 +509,7 @@ void drop(char* parametro) { //Perdon por esto
 				t_config* archivoDeTabla = config_create(aux);
 				char** arrayBloquesALiberar = config_get_array_value(
 						archivoDeTabla, "BLOCKS");
-				list_add(&listaDeArraysDeBloquesALiberar, arrayBloquesALiberar);
+				list_add(listaDeArraysDeBloquesALiberar, &arrayBloquesALiberar);
 				config_destroy(archivoDeTabla);
 			}
 
@@ -430,7 +550,7 @@ void liberarBloques(t_list* listaDeArraysDeBloques) {
 	for (int i = 0; list_size(listaBloquesALiberar); i++) {
 		int* bloqueALiberar = list_get(listaBloquesALiberar, i);
 
-		bitarray_clean_bit(bitarray, *bloqueALiberar);
+		bitarray_clean_bit(bitMap, *bloqueALiberar);
 	}
 
 	list_destroy(listaBloquesALiberar);
@@ -439,9 +559,9 @@ void liberarBloques(t_list* listaDeArraysDeBloques) {
 
 metadataTablaLFS describirTabla(char* nombreTabla) { //Precaucion! Esta funcion como esta ahora necesita Conocimiento Experto(tm) para ser usada, consultar a Tom antes de usar (es un tema de memory leaks)
 	char* direccion = string_new();
-	string_append(&direccion, "../Tablas/");
+	string_append(&direccion, "/home/utnso/workspace/tp-2019-1c-U-TN-Tecno/LFS/raiz/tables/");
 	string_append(&direccion, nombreTabla);
-	string_append(&direccion, "/Metadata");
+	string_append(&direccion, "/metadata");
 
 	t_config* metadataTabla = config_create(direccion);
 
@@ -451,18 +571,15 @@ metadataTablaLFS describirTabla(char* nombreTabla) { //Precaucion! Esta funcion 
 
 	int compactTime = config_get_int_value(metadataTabla, "COMPACTION_TIME");
 
-
-
 	printf("Metadata de %s: ", nombreTabla);
 
 	printf("\n\nConsistencia: %s", consistenciaEnString);
 
-	printf("\nParticiones: %i",particiones);
+	printf("\nParticiones: %i", particiones);
 
 	printf("\nCompaction time: %i", compactTime);
 
 	int consistenciaEnInt = queConsistenciaEs(consistenciaEnString);
-
 
 	metadataTablaLFS metadataADevolver;
 
@@ -474,13 +591,10 @@ metadataTablaLFS describirTabla(char* nombreTabla) { //Precaucion! Esta funcion 
 
 	metadataADevolver.nombre = nombreTabla;
 
-
-
 	config_destroy(metadataTabla);
 
 	free(consistenciaEnString);
 	free(direccion);
-
 
 	return metadataADevolver;
 }
@@ -495,7 +609,10 @@ t_list* describirTodasLasTablas() { //Leer el comentario de decribirTabla(), se 
 	while ((sd = readdir(dir)) != NULL) {
 		if ((strcmp((sd->d_name), ".") != 0)
 				&& (strcmp((sd->d_name), "..") != 0)) {
-			list_add(metadatasADevolver,describirTabla(sd->d_name));
+
+			metadataTablaLFS unaMetadata = describirTabla(sd->d_name);
+
+			list_add(metadatasADevolver, &unaMetadata);
 		}
 	}
 	closedir(dir);
@@ -503,7 +620,154 @@ t_list* describirTodasLasTablas() { //Leer el comentario de decribirTabla(), se 
 	return metadatasADevolver;
 }
 
+void dumpTemporal(t_tablaEnMemTable* tablaADumpear) { //La funcion de la ineficiencia
+
+	for (int i = 0; i < list_size(tablaADumpear->datosAInsertar); i++) {
+		registro* registroAGuardar = list_get(tablaADumpear->datosAInsertar, i);
+
+		int particionDelRegistro = particionDeKey(registroAGuardar->key,
+				tablaADumpear->nombreTabla);
+
+		char *root = string_new();
+		string_append(&root, "/home/utnso/workspace/tp-2019-1c-U-TN-Tecno/LFS/raiz/tables/");
+			string_append(&root, tablaADumpear->nombreTabla);
+
+		mkdir(root, ACCESSPERMS);
+
+		char* direccionArchivo = string_duplicate(root);
+
+		free(root);
+
+		string_append(&direccionArchivo, "/");
+		string_append(&direccionArchivo, string_itoa(particionDelRegistro));
+		string_append(&direccionArchivo, ".bin");
+
+		FILE* archivoOriginal = fopen(direccionArchivo, "r");
+
+		char* registroEnString = string_new();
+
+		string_append(&registroEnString,
+				string_itoa(registroAGuardar->timestamp));
+		string_append(&registroEnString, ";");
+		string_append(&registroEnString, string_itoa(registroAGuardar->key));
+		string_append(&registroEnString, ";");
+		string_append(&registroEnString, registroAGuardar->value);
+		string_append(&registroEnString, "\n");
+
+		if (archivoOriginal == NULL) {
+			archivoOriginal = fopen(direccionArchivo, "w");
+			fputs(registroEnString, archivoOriginal);
+			fclose(archivoOriginal);
+			return;
+		}
+
+		fclose(archivoOriginal);
+
+		char* nuevaDireccionArchivo = string_duplicate(direccionArchivo);
+		string_append(&nuevaDireccionArchivo, "tmp");
+
+		FILE* archivoNuevo = fopen(nuevaDireccionArchivo, "w");
+
+		while (1) {
+
+			char* lineaLeida = leerLinea(direccionArchivo, i);
+
+			if (!strcmp(lineaLeida, "fin")) {
+				free(lineaLeida);
+				break;
+			}
+
+			char** elementosEnVector = string_n_split(lineaLeida, 3, ";");
+
+			int timestamp = atoi(elementosEnVector[0]);
+			int key = atoi(elementosEnVector[1]);
+
+			liberarArrayDeStrings(elementosEnVector);
+
+			if (!(key == registroAGuardar->key
+					&& timestamp > registroAGuardar->timestamp)) {
+				string_append(&lineaLeida, "\n");
+				fputs(lineaLeida, archivoNuevo);
+			}
+
+			else {
+				fputs(registroEnString, archivoOriginal);
+			}
+
+			free(lineaLeida);
+			i++;
+
+		}
+
+		fclose(archivoNuevo);
+
+		remove(direccionArchivo);
+		rename(nuevaDireccionArchivo, direccionArchivo);
+
+		free(direccionArchivo);
+		free(nuevaDireccionArchivo);
+
+	}
+
+}
+
 //TODO: faltan todos los frees
+
+//--------------Basura que quiero guardar--------------------------------------------
+
+//----------Basura del bitMap en el config------------------------
+
+//	t_bitarray* bitMap = generarBitMap();
+//	bitarray_set_bit(bitMap,0);
+//	guardarBitMapEnConfig(bitMap);
+//	bitarray_destroy(bitMap);
+//	t_bitarray* bitMap2 = generarBitMap();
+//	testearBitMap(bitMap2);
+
+//----------------------------------------------------------------
+
+//t_bitarray* generarBitMap(){      //esto es rancio pero lo que sigue es peor lo100to
+//
+//	char* bitArray = config_get_string_value(bitMapMetadata,"BITMAP");
+//	t_bitarray* bitMap = bitarray_create(bitArray,string_length(bitArray));
+//	return bitMap;
+//}
+//
+//void guardarBitMapEnConfig(t_bitarray* bitMap){ //ESTA FUNCION ES LO MAS FEO QUE HICE EN MI VIDA, SI QUIEREN POR DISCORD EXPLICO EL PORQUE
+//
+//	//genero UN STRING CON LA ESTRUCTURA DEL ARRAY A PARTIR DE UN BITMAP KHE (horrible ya se)
+//	char* arrayEnString = string_new();
+//	string_append(&arrayEnString,"[");
+//	for(int i=0;i<cantidadBloques;i++){
+//		int bit = bitarray_test_bit(bitMap,i);
+//		string_append(&arrayEnString,string_itoa(bit));
+//		string_append(&arrayEnString,",");
+//	}
+//	int largo =string_length(arrayEnString);
+//	char* arrayEnStringSinComa = string_substring_until(arrayEnString,largo-1);
+//	string_append(&arrayEnStringSinComa,"]");
+//
+//	//guardo esta criatura del diablo en el CONFIG
+//	config_set_value(bitMapMetadata,"BITMAP",arrayEnStringSinComa);
+//}
+
+//----------------------------------------------------------------
+
+//----------Basura para probar algunas funciones---------
+
+//t_tablaEnMemTable* ultimaTabla(t_list* memTemp){
+//	return list_get(memTemp,memTemp->elements_count - 1);
+//}
+//
+//t_tablaEnMemTable* ultimoDato(t_list* datos){
+//	return list_get(datos,datos->elements_count - 1);
+//}
+void testearBitMap(t_bitarray* bitMap) {
+	for (int i = 0; i < cantidadBloques; i++) {
+		int bit = bitarray_test_bit(bitMap, i);
+		printf("bittt:%i\n", bit);
+	}
+}
 
 //fseek(bin, 0, SEEK_END);
 //int tamanioArchivo = ftell(bin);
