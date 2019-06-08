@@ -38,7 +38,7 @@ typedef struct {
 typedef struct{
 	int nombre;
 	int socket; //Algo asi
-	int consistencias[3];
+	int* consistencias;
 } memoriaEnLista;
 
 char* leerLinea(char* direccion,int lineaALeer);

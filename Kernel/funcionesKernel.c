@@ -89,7 +89,9 @@ int ejecutarRequest(request* requestAEjecutar) {
 
 	enviarRequestAMemoria(requestAEjecutar, memoria);
 
+
 	int resultado = recibirRespuestaDeMemoria(memoria);
+
 
 	if (resultado == MEMORIA_ERROR) {
 		return -1;

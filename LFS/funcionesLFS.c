@@ -7,11 +7,20 @@ extern t_log* logger;
 extern int cantidadBloques;
 extern char* puntoDeMontaje;
 extern int socketLFSAMEM;
+extern int valorMaximoValue;
+
+
+
+
+//  "No chabon que paso aca antes era mas bonito este archivo" Mira cucha despues se hace mas bonito esto ok? No te preocupes como esta ahora pensa en el futuro
+
+
+
+
 
 
 
 void mandarAEjecutarRequest(request* requestAEjecutar) {
-
 
 	char* parametros = string_duplicate(requestAEjecutar->parametros); //Esto es para que se pueda hacer un free() en consola.c sin que rompa
 	switch (requestAEjecutar->requestEnInt) {
@@ -92,33 +101,33 @@ int tablaYaExiste(char* nombreTabla) {
 	string_to_upper(nombreTablaGuardado);
 
 	char* pathAbsoluto = string_new();
-	string_append(&pathAbsoluto,puntoDeMontaje);
-	string_append(&pathAbsoluto,"Tablas/");
-	string_append(&pathAbsoluto,nombreTablaGuardado);
+	string_append(&pathAbsoluto, puntoDeMontaje);
+	string_append(&pathAbsoluto, "Tablas/");
+	string_append(&pathAbsoluto, nombreTablaGuardado);
 
-	if (access(pathAbsoluto, F_OK) == -1){
-       return 0;
+	if (access(pathAbsoluto, F_OK) == -1) {
+		return 0;
 	}
-	return 1; // devuelve 1 si existe la tabla, sino devuelve 0.
+	return 1;
 
 }
 
-int tablaExisteEnMemTable(char* nombreDeTabla){
+int tablaExisteEnMemTable(char* nombreDeTabla) {
 
 	char* nombreTablaGuardado = string_duplicate(nombreDeTabla);
 	string_to_upper(nombreTablaGuardado);
 
-	bool coincideNombreTabla(t_tablaEnMemTable* unaTabla){
-		return string_equals_ignore_case(unaTabla->nombreTabla,nombreTablaGuardado);
+	bool coincideNombreTabla(t_tablaEnMemTable* unaTabla) {
+		return string_equals_ignore_case(unaTabla->nombreTabla,
+				nombreTablaGuardado);
 	}
 
-	if(list_any_satisfy(memTable,(void*) coincideNombreTabla)){
+	if (list_any_satisfy(memTable, (void*) coincideNombreTabla)) {
 		return 1;
 	}
-	return 0; // devuelve 1 si existe la tabla, sino devuelve 0.
+	return 0;
 
 }
-
 
 void crearTablaEnMemTable(char* nombreDeTabla) {
 
@@ -138,15 +147,14 @@ void crearTablaEnMemTable(char* nombreDeTabla) {
 
 }
 
-t_tablaEnMemTable* getTablaPorNombre(t_list* memoriaTemp, char* nombreDeTabla){
+t_tablaEnMemTable* getTablaPorNombre(t_list* memoriaTemp, char* nombreDeTabla) {
 
-	bool filtroNombreTabla(t_tablaEnMemTable* unaTabla){
-		return string_equals_ignore_case(unaTabla->nombreTabla,nombreDeTabla);
+	bool filtroNombreTabla(t_tablaEnMemTable* unaTabla) {
+		return string_equals_ignore_case(unaTabla->nombreTabla, nombreDeTabla);
 	}
 
-	return list_find(memoriaTemp,(void*)filtroNombreTabla);
+	return list_find(memoriaTemp, (void*) filtroNombreTabla);
 }
-
 
 void Select(char* parametros) {
 
@@ -160,10 +168,24 @@ void Select(char* parametros) {
 		return;
 	}
 
+	int particion = particionDeKey(key, tabla);
+
 	free(parametrosEnVector[1]);
 	free(parametrosEnVector[0]);
 	free(parametrosEnVector);
 	free(parametros);
+
+}
+
+int particionDeKey(int key, char* nombreTabla) {
+
+
+	metadataTablaLFS laMetadata = describirTabla(nombreTabla);
+
+	free(laMetadata.nombre);
+
+	return key % laMetadata.particiones;
+
 
 }
 
@@ -173,11 +195,16 @@ void insert(char* parametros) {
 
 	char* nomTabla = parametrosEnVector[0];
 	int unaKey = atoi(parametrosEnVector[1]);
-	char* unValue = parametrosEnVector[2]; //TODO: Sacarle las comillas
+	char* unValue = get_value(parametros);
 	int unTimestamp;
 
-	if (parametrosEnVector[3] == NULL) {
-		unTimestamp = 123; //TODO: poner aca el tiempo actual
+	if (strlen(unValue) > valorMaximoValue) {
+		printf("El valor ingresado sobrepasa el tamaño maximo permitido.\n");
+		return;
+	}
+
+	if (parametrosEnVector[3] == NULL) { //Esto se podria delegar
+		unTimestamp = get_timestamp();
 	} else {
 		unTimestamp = atoi(parametrosEnVector[3]);
 	}
@@ -191,15 +218,14 @@ void insert(char* parametros) {
 	nuevoRegistro = malloc(sizeof(registro));
 	nuevoRegistro->timestamp = unTimestamp;
 	nuevoRegistro->key = unaKey;
-	nuevoRegistro->value = malloc(sizeof(unValue)); //por aca falta contemplar que el size del value sea valido
 	nuevoRegistro->value = unValue;
 
-	if (!tablaExisteEnMemTable(nomTabla)){
+	if (!tablaExisteEnMemTable(nomTabla)) {
 		crearTablaEnMemTable(nomTabla);
 	}
 
-	t_tablaEnMemTable* tabla = getTablaPorNombre(memTable,nomTabla);
-	list_add(tabla->datosAInsertar,nuevoRegistro);
+	t_tablaEnMemTable* tabla = getTablaPorNombre(memTable, nomTabla);
+	list_add(tabla->datosAInsertar, nuevoRegistro);
 }
 
 //t_tablaEnMemTable* ultimaTabla(t_list* memTemp){
@@ -210,10 +236,10 @@ void insert(char* parametros) {
 //	return list_get(datos,datos->elements_count - 1);
 //}
 
-void testearBitMap(t_bitarray* bitMap){
-	for(int i=0;i<cantidadBloques;i++){
-		int bit = bitarray_test_bit(bitMap,i);
-		printf("bittt:%i\n",bit);
+void testearBitMap(t_bitarray* bitMap) {
+	for (int i = 0; i < cantidadBloques; i++) {
+		int bit = bitarray_test_bit(bitMap, i);
+		printf("bittt:%i\n", bit);
 	}
 }
 
@@ -242,7 +268,6 @@ void testearBitMap(t_bitarray* bitMap){
 //	config_set_value(bitMapMetadata,"BITMAP",arrayEnStringSinComa);
 //}
 
-
 void create(char* parametros) {
 	char** parametrosEnVector = string_n_split(parametros, 4, " ");
 	char* tabla = string_duplicate(parametrosEnVector[0]);
@@ -259,46 +284,45 @@ void create(char* parametros) {
 
 	//crea directorio
 	char* pathAbsoluto = string_new();
-	string_append(&pathAbsoluto,puntoDeMontaje);
-	string_append(&pathAbsoluto,"Tablas/");
-	string_append(&pathAbsoluto,tabla);
+	string_append(&pathAbsoluto, puntoDeMontaje);
+	string_append(&pathAbsoluto, "Tablas/");
+	string_append(&pathAbsoluto, tabla);
 
 	int result = mkdir(pathAbsoluto, 0700);
 
-	if (-1 == result){
+	if (-1 == result) {
 		printf("Error creating directory!\n");
 		exit(1);
 	}
 
 	//crea metadata y la escribe
 	char* archivoMetadata = string_new();
-	string_append(&archivoMetadata,pathAbsoluto);
-	string_append(&archivoMetadata,"/metadata");
+	string_append(&archivoMetadata, pathAbsoluto);
+	string_append(&archivoMetadata, "/metadata");
 
-	FILE* metadata = fopen(archivoMetadata,"a+");
+	FILE* metadata = fopen(archivoMetadata, "a+");
 
-	fprintf(metadata,"CONSISTENCY=%s \n",consistencia);
-	fprintf(metadata,"PARTITIONS=%s \n",particiones);
-	fprintf(metadata,"COMPACTION_TIME=%s \n",tiempoCompactacion);
+	fprintf(metadata, "CONSISTENCY=%s \n", consistencia);
+	fprintf(metadata, "PARTITIONS=%s \n", particiones);
+	fprintf(metadata, "COMPACTION_TIME=%s \n", tiempoCompactacion);
 
 	fclose(metadata);
 
 	//crea los .bin
 	int cantParticiones = atoi(particiones);
 
-	for(int i=0;i<cantParticiones;i++){
+	for (int i = 0; i < cantParticiones; i++) {
 
 		char numParticion[cantParticiones]; //no hay malloc, no va free
 		sprintf(numParticion, "%i.bin", i);
 		char* particion = string_new();
-		string_append(&particion,pathAbsoluto);
-		string_append(&particion,"/");
-		string_append(&particion,numParticion);
+		string_append(&particion, pathAbsoluto);
+		string_append(&particion, "/");
+		string_append(&particion, numParticion);
 
+		FILE* bin = fopen(particion, "a+");
 
-		FILE* bin = fopen(particion,"a+");
-
-		fprintf(bin,"SIZE=0 \n");
+		fprintf(bin, "SIZE=0 \n");
 
 //		char numBloque[cantidadBloques];
 //		int unBloque = encontrarBloqueLibre();
@@ -318,15 +342,165 @@ void create(char* parametros) {
 
 }
 
-void describe(char* parametro) {
-	if (strcmp(parametro, " ")) //Si hay un parametro
-	{
-		return;
+t_list* describe(char* parametro) { //Por que devuelve una lista esta funcion? Porque son las 12am y tengo que tomar atajos para llegar, despues se hace mas bonito -Tom
+
+	//Por cierto asi como esta, esto genera tantos memory leaks como le plazca a la pc asi que esto es super malo
+
+
+	if (esDescribeGlobal(parametro)) {
+
+		return describirTodasLasTablas();
 	}
+
+
+	t_list* unaMetadataSolitaria = list_create();
+
+	metadataTablaLFS laMetadataSolitaria = describirTabla(parametro);
+
+	list_add(unaMetadataSolitaria,&laMetadataSolitaria);
+
+	return unaMetadataSolitaria;
+
 }
 
-void drop(char* parametro) {
+void drop(char* parametro) { //Perdon por esto
 
+	DIR *dir;
+	struct dirent *sd;
+	char *root = string_new();
+	string_append(&root, "../Tablas/");
+	string_append(&root, parametro);
+
+	t_list* listaDeArraysDeBloquesALiberar = list_create();
+
+	dir = opendir(root);
+
+	string_append(&root, "/");
+
+	char *aux = string_new();
+	while ((sd = readdir(dir)) != NULL) {
+
+		if ((strcmp((sd->d_name), ".") != 0)
+				&& (strcmp((sd->d_name), "..") != 0)) {
+			string_append(&aux, root);
+			string_append(&aux, sd->d_name);
+
+			if (strcmp(aux, "Metadata")) {
+				t_config* archivoDeTabla = config_create(aux);
+				char** arrayBloquesALiberar = config_get_array_value(
+						archivoDeTabla, "BLOCKS");
+				list_add(&listaDeArraysDeBloquesALiberar, arrayBloquesALiberar);
+				config_destroy(archivoDeTabla);
+			}
+
+			remove(aux);
+			free(aux);
+			aux = string_new();
+		}
+	}
+
+	liberarBloques(listaDeArraysDeBloquesALiberar);
+
+	rmdir(root);
+
+	free(root);
+	free(aux);
+	closedir(dir);
+
+}
+
+void liberarBloques(t_list* listaDeArraysDeBloques) {
+	t_list* listaBloquesALiberar = list_create();
+
+	for (int i = 0; i < list_size(listaDeArraysDeBloques); i++) {
+
+		char*** arrayDeBloques = list_get(listaDeArraysDeBloques, i);
+
+		for (int i = 0; *arrayDeBloques[i] != NULL; i++) {
+
+			int bloqueAAgregar = atoi(*arrayDeBloques[i]);
+
+			list_add(listaBloquesALiberar, &bloqueAAgregar);
+
+		}
+
+		free(arrayDeBloques);
+	}
+
+	for (int i = 0; list_size(listaBloquesALiberar); i++) {
+		int* bloqueALiberar = list_get(listaBloquesALiberar, i);
+
+		bitarray_clean_bit(bitarray, *bloqueALiberar);
+	}
+
+	list_destroy(listaBloquesALiberar);
+
+}
+
+metadataTablaLFS describirTabla(char* nombreTabla) { //Precaucion! Esta funcion como esta ahora necesita Conocimiento Experto(tm) para ser usada, consultar a Tom antes de usar (es un tema de memory leaks)
+	char* direccion = string_new();
+	string_append(&direccion, "../Tablas/");
+	string_append(&direccion, nombreTabla);
+	string_append(&direccion, "/Metadata");
+
+	t_config* metadataTabla = config_create(direccion);
+
+	char* consistenciaEnString = config_get_string_value(metadataTabla,
+			"CONSISTENCY");
+	int particiones = config_get_int_value(metadataTabla, "PARTITIONS");
+
+	int compactTime = config_get_int_value(metadataTabla, "COMPACTION_TIME");
+
+
+
+	printf("Metadata de %s: ", nombreTabla);
+
+	printf("\n\nConsistencia: %s", consistenciaEnString);
+
+	printf("\nParticiones: %i",particiones);
+
+	printf("\nCompaction time: %i", compactTime);
+
+	int consistenciaEnInt = queConsistenciaEs(consistenciaEnString);
+
+
+	metadataTablaLFS metadataADevolver;
+
+	metadataADevolver.compactTime = compactTime;
+
+	metadataADevolver.particiones = particiones;
+
+	metadataADevolver.consistencia = consistenciaEnInt;
+
+	metadataADevolver.nombre = nombreTabla;
+
+
+
+	config_destroy(metadataTabla);
+
+	free(consistenciaEnString);
+	free(direccion);
+
+
+	return metadataADevolver;
+}
+
+t_list* describirTodasLasTablas() { //Leer el comentario de decribirTabla(), se aplica lo mismo
+	DIR *dir;
+	struct dirent *sd;
+	dir = opendir("../Tablas");
+
+	t_list* metadatasADevolver = list_create();
+
+	while ((sd = readdir(dir)) != NULL) {
+		if ((strcmp((sd->d_name), ".") != 0)
+				&& (strcmp((sd->d_name), "..") != 0)) {
+			list_add(metadatasADevolver,describirTabla(sd->d_name));
+		}
+	}
+	closedir(dir);
+
+	return metadatasADevolver;
 }
 
 //TODO: faltan todos los frees

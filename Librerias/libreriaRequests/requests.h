@@ -18,6 +18,10 @@
 #define MEMORIA_ERROR -1
 #define MEMORIA_BIEN 1
 
+#define KERNEL 0
+#define MEMORIA 1
+#define LFS 2
+
 #include<stdio.h>
 #include<stdlib.h>
 #include<commons/log.h>
@@ -42,6 +46,12 @@ typedef struct{
 
 }metadataTablaLFS;
 
+typedef struct {
+	int timestamp;
+	int key;
+	char* value;
+} registro;
+
 int esUnaRequestValida(char* requestEnString);
 int queRequestEs(char* palabra);
 int esUnParametroValido(int request, char* parametro);
@@ -59,7 +69,7 @@ void enviarRequest (int aQuien, request* requestAEnviar);
 request* recibirRequest(int deQuien,t_log* logger);
 int recibirInt(int deQuien, t_log* logger);
 void enviarInt (int intAEnviar, int aQuien);
-int crearConexion(int puerto);
+int crearConexion(int puerto,char* ip);
 
 #include "requests.h"
 

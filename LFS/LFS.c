@@ -6,6 +6,7 @@ t_config*bitMapMetadata;
 t_log* logger;
 t_list* memTable;
 int cantidadBloques;
+int valorMaximoValue;
 char* puntoDeMontaje;
 
 int main() {
@@ -19,6 +20,8 @@ int main() {
 	metadataLFS = config_create("Metadata/Metadata.bin");
 
 	cantidadBloques = config_get_int_value(metadataLFS,"BLOCKS");
+
+	valorMaximoValue = config_get_int_value(metadataLFS,"TAMAÑO_VALUE");
 
 	puntoDeMontaje = config_get_string_value(config,"PUNTO_MONTAJE");
 
