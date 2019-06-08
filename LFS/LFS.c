@@ -39,6 +39,7 @@ int main() {
 	pthread_create(&h_consola, NULL, (void *) consola, NULL);
 	pthread_create(&h_conexiones, NULL, (void *) conexiones, NULL);
 
+
 	// ---------Prueba Create-----------
 
 //	create("TABLA2 SC 4 60000");
@@ -52,6 +53,7 @@ int main() {
 
 	// ---------Prueba Select-----------
 
+//	Select("TABLA-X 5");
 
 	pthread_detach(h_conexiones);
 	pthread_join(h_consola, NULL);

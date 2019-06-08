@@ -1,5 +1,5 @@
 #include "funcionesLFS.h"
-
+#define MAXCHAR 1000
 extern t_config* bitMapMetadata;
 extern t_list* listaDeNombreDeTablas;
 extern t_list* memTable;
@@ -160,23 +160,94 @@ int posicionLibreEnBitMap(){
 	return -1;
 }
 
-
 void Select(char* parametros) {
 
-	char** parametrosEnVector = string_n_split(parametros, 2, " ");
-
-	char* tabla = parametrosEnVector[0];
-	int key = atoi(parametrosEnVector[1]);
-
-	if (!tablaYaExiste(tabla)) {
-		log_error(logger, "%s%s%s", "La tabla ", tabla, " no existe.");
-		return;
-	}
-
-	free(parametrosEnVector[1]);
-	free(parametrosEnVector[0]);
-	free(parametrosEnVector);
-	free(parametros);
+//	char** parametrosEnVector = string_n_split(parametros, 2, " ");
+//
+//	char* tabla = parametrosEnVector[0];
+//	int key = atoi(parametrosEnVector[1]);
+//
+//	//chequea si existe
+//	if (!tablaYaExiste(tabla)) {
+//		log_error(logger, "%s%s%s", "La tabla ", tabla, " no existe.");
+//		return;
+//	}
+//
+//	//sacar path de tabla - TODO: quizas esto lo tengo que abstraer en otra funcion?? (despues refactoreo)
+//	char* pathAbsoluto = string_new();
+//	string_append(&pathAbsoluto,puntoDeMontaje);
+//	string_append(&pathAbsoluto,"Tablas/");
+//	string_append(&pathAbsoluto,tabla);
+//
+//	//obtener metadata (cant particiones)
+//	char* archivoMetadata = string_new();
+//	string_append(&archivoMetadata,pathAbsoluto);
+//	string_append(&archivoMetadata,"/metadata");
+//
+//	t_config* metadata = config_create(archivoMetadata);
+//
+//	//calcular particion con key
+//	int cantParticiones=config_get_int_value(metadata,"PARTITIONS");
+//	int numeroParticion = key % cantParticiones; //funcion modulo
+//
+//	char* archivoParticion = string_new();
+//	string_append(&archivoParticion,pathAbsoluto);
+//	char numParticion[cantParticiones];
+//	sprintf(numParticion, "%i.bin",numeroParticion);
+//	string_append(&archivoParticion,numParticion);
+//
+//
+//	t_config* particion = config_create(archivoParticion);
+//	printf("hola \n");
+//
+//	//buscar en los bloques
+//
+//	char** bloques = config_get_array_value(particion,"BLOQUES");
+//	printf("hola \n");
+//
+//	char* pathBloques = string_new();
+//	string_append(&pathBloques,puntoDeMontaje);
+//	string_append(&pathBloques,"/Bloques/");
+//
+//	// proximamente: REFACTOREO DONDE ABSTRAIGO BUSCAR EN BLOQUE - Solo En Cines
+//
+//	printf("hola \n");
+//
+//	for(int i=0;bloques[i]!=NULL;i++){
+//
+//		printf("hola \n");
+//
+//		char* bloque = string_new();
+//		string_append(&bloque,pathBloques);
+//		string_append(&bloque,bloques[i]);
+//		string_append(&bloque,".bin");
+//
+//		FILE* bin = fopen(bloque,"a+");
+//		char str[MAXCHAR];
+//
+//		while (fgets(str, MAXCHAR, bin) != NULL){
+//
+//			printf("hola \n");
+//
+//			char** unRegistro = string_split(str,";"); //SEPARO LOS TRES VALORES DEL REGISTRO
+//
+//			char* keyParseada = string_substring(unRegistro[1],1,string_length(unRegistro[1])-1);
+//
+//			printf("hola \n");
+//
+//			printf("naooos: %s \n",keyParseada);
+//
+//		}
+//
+//		fclose(bin);
+//
+//	}
+//
+//
+//	free(parametrosEnVector[1]);
+//	free(parametrosEnVector[0]);
+//	free(parametrosEnVector);
+//	free(parametros);
 
 }
 
@@ -261,12 +332,12 @@ void create(char* parametros) {
 	for(int i=0;i<cantParticiones;i++){
 
 		char numParticion[cantParticiones]; //no hay malloc, no va free
-		sprintf(numParticion, "%i.bin", i);
+		sprintf(numParticion, "%i", i);
 		char* particion = string_new();
 		string_append(&particion,pathAbsoluto);
 		string_append(&particion,"/");
 		string_append(&particion,numParticion);
-
+		string_append(&particion,".bin");
 
 		FILE* bin = fopen(particion,"a+");
 
