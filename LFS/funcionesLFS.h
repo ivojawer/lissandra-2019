@@ -23,15 +23,19 @@ typedef struct {
 	t_list* datosAInsertar;
 } t_tablaEnMemTable;
 
-
+typedef struct {
+	int timestamp;
+	int key;
+	char* value;
+} registro;
 
 void consola();
 void conexiones();
 void mandarAEjecutarRequest(request* requestAEjecutar);
-registro* Select(char* parametros);
+void Select(char* parametros);
 void insert(char* parametros);
 void create(char* parametros);
-t_list* describe(char* parametro);
+void describe(char* parametro);
 void drop(char* parametro);
 int tablaYaExiste(char* nombreTabla);
 void crearTablaEnMemTable(char* nombreDeTabla);
@@ -39,12 +43,6 @@ int tablaExisteEnMemTable(char* nombreDeLaTabla);
 t_tablaEnMemTable* getTablaPorNombre(t_list* memoriaTemp, char* nombreDeTabla);
 int posicionLibreEnBitMap();
 void testearBitMap(t_bitarray* bitMap);
-void guardarBitMapEnConfig(t_bitarray* bitMap);
-t_bitarray* generarBitMap();
-metadataTablaLFS describirTabla(char* nombreTabla);
-t_list* describirTodasLasTablas();
-void liberarBloques(t_list* listaDeArraysDeBloques);
-int particionDeKey(int key, char* nombreTabla);
 //t_tablaEnMemTable* ultimaTabla(t_list* memTemp);
 //t_tablaEnMemTable* ultimoDato(t_list* memTemp);
 //void guardarBitMapEnConfig(t_bitarray* bitMap);

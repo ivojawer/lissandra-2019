@@ -292,12 +292,14 @@ int esUnaRequestValida(char* requestEnString) {
 		return 0;
 	}
 
-	if (esUnParametroValido(requestEnInt, requestYParametros[1])) {
+	if(esUnParametroValido(requestEnInt, requestYParametros[1]))
+	{
 		liberarArrayDeStrings(requestYParametros);
 		return 1;
 	}
 
-	else {
+	else
+	{
 		liberarArrayDeStrings(requestYParametros);
 		return 0;
 	}
@@ -325,6 +327,7 @@ request* crearStructRequest(char* requestEnString) {
 	liberarArrayDeStrings(requestYParametros);
 
 	return requestNuevo;
+
 
 }
 
@@ -356,38 +359,13 @@ int recibirInt(int deQuien, t_log* logger) {
 	return intRecibido;
 }
 
-void enviarInt(int intAEnviar, int aQuien) {
-	void* paquete = malloc(sizeof(int));
-	memcpy(paquete, &intAEnviar, sizeof(int));
-	send(aQuien, paquete, sizeof(int), 0);
-	free(paquete);
-}
-
-void enviarIntConHeader(int intAEnviar,int header, int aQuien) {
-	void* paquete = malloc(sizeof(int) + sizeof(int));
-	memcpy(paquete, &header, sizeof(int));
-	memcpy(paquete+sizeof(int), &intAEnviar, sizeof(int));
-	send(aQuien, paquete, sizeof(int)+sizeof(int), 0);
-	free(paquete);
-}
-
-int* recibirIntConHeader(int deQuien, t_log* logger)
+void enviarInt (int intAEnviar, int aQuien)
 {
-	int header = recibirInt(deQuien, logger);
-
-	int intRecibido = recibirInt(deQuien, logger);
-
-	int* punteroAInts = malloc(sizeof(int)*2);
-
-	memcpy(punteroAInts, &header, sizeof(int));
-
-	memcpy(punteroAInts + sizeof(int), &intRecibido, sizeof(int));
-
-	return punteroAInts;
-
+	void* paquete = malloc(sizeof(int));
+	memcpy(paquete,&intAEnviar,sizeof(int));
+	send(aQuien,paquete,sizeof(int),0);
+	free(paquete);
 }
-
-
 
 char* recibirString(int deQuien, t_log* logger) {
 
@@ -418,7 +396,7 @@ char* recibirString(int deQuien, t_log* logger) {
 void enviarString(char* string, int aQuien) {
 	void* paquete;
 
-	int tamanioRequest = (strlen(string) + 1) * sizeof(char);
+	int tamanioRequest = (strlen(string) + 1)* sizeof(char);
 
 	int tamanioEnvio = sizeof(int) + tamanioRequest;
 
@@ -434,7 +412,7 @@ void enviarString(char* string, int aQuien) {
 void enviarStringConHeader(char* string, int aQuien, int header) {
 	void* paquete;
 
-	int tamanioRequest = (strlen(string) + 1) * sizeof(char);
+	int tamanioRequest = (strlen(string) + 1)* sizeof(char);
 
 	int tamanioEnvio = sizeof(int) + sizeof(int) + tamanioRequest;
 
@@ -449,10 +427,10 @@ void enviarStringConHeader(char* string, int aQuien, int header) {
 	send(aQuien, paquete, tamanioEnvio, 0);
 }
 
-int crearConexion(int puerto,char* ip) {
+int crearConexion(int puerto) {
 	struct sockaddr_in direccionServidor;
 	direccionServidor.sin_family = AF_INET;
-	direccionServidor.sin_addr.s_addr = inet_addr(ip);
+	direccionServidor.sin_addr.s_addr = inet_addr("127.0.0.1"); //el ip tiene que salir del config
 	direccionServidor.sin_port = htons(puerto);
 
 	int conexion = socket(AF_INET, SOCK_STREAM, 0);
@@ -524,63 +502,60 @@ char* requestStructAString(request* request) {
 	return requestEnString;
 }
 
-int esDescribeGlobal(request* request) {
-	if (request->requestEnInt == DESCRIBE
-			&& !strcmp(request->parametros, " ")) {
+int esDescribeGlobal (request* request)
+{
+	if (request->requestEnInt == DESCRIBE && !strcmp(request->parametros," "))
+	{
 		return 1;
 	}
 	return 0;
 }
 
-void liberarRequest(request* request) {
+void liberarRequest(request* request)
+{
 	free(request->parametros);
 	free(request);
 }
 
-void enviarMetadatas(t_list* metadatas, int aQuien) {
+void enviarMetadatas(t_list* metadatas, int aQuien)
+{
 
 	int cantidadMetadatas = list_size(metadatas);
 
 	int tamanioPaquete = sizeof(int); //Se pone "= sizeof(int)" por el int de cantidadMetadatas que va a ir al principio
 
-	for (int i = 0; i < list_size(metadatas); i++) {
-		metadataTablaLFS* elemento = list_get(metadatas, i);
+	for (int i = 0; i< list_size(metadatas);i++)
+	{
+		metadataTablaLFS* elemento = list_get(metadatas,i);
 
-		int tamanioNombre = (strlen(elemento->nombre) + 1) * sizeof(char);
+		int tamanioNombre = (strlen(elemento->nombre) + 1 )* sizeof(char);
 
-		tamanioPaquete += sizeof(int) + tamanioNombre + sizeof(int)
-				+ sizeof(int) + sizeof(int);
+		tamanioPaquete += sizeof(int) + tamanioNombre + sizeof(int) + sizeof(int) + sizeof(int);
 
 	}
 
 	void* paquete = malloc(tamanioPaquete);
 
-	memcpy(paquete, &cantidadMetadatas, sizeof(int));
+	memcpy(paquete,&cantidadMetadatas,sizeof(int));
 
-	for (int i = 0; i < list_size(metadatas); i++) {
-		metadataTablaLFS* elemento = list_get(metadatas, i);
 
-		int tamanioNombre = (strlen(elemento->nombre) + 1) * sizeof(char);
+	for (int i = 0; i<list_size(metadatas);i++)
+	{
+		metadataTablaLFS* elemento = list_get(metadatas,i);
 
-		memcpy(paquete + tamanioPaquete, &tamanioNombre, sizeof(int));
+		int tamanioNombre = (strlen(elemento->nombre) + 1 )* sizeof(char);
 
-		memcpy(paquete + tamanioPaquete + sizeof(int), elemento->nombre,
-				tamanioNombre);
+		memcpy(paquete+tamanioPaquete , &tamanioNombre , sizeof(int));
 
-		memcpy(paquete + tamanioPaquete + sizeof(int) + tamanioNombre,
-				&elemento->consistencia, sizeof(int));
+		memcpy(paquete+tamanioPaquete+sizeof(int), elemento->nombre,tamanioNombre);
 
-		memcpy(
-				paquete + tamanioPaquete + sizeof(int) + tamanioNombre
-						+ sizeof(int), &elemento->particiones, sizeof(int));
+		memcpy(paquete+tamanioPaquete+sizeof(int)+tamanioNombre, &elemento->consistencia, sizeof(int));
 
-		memcpy(
-				paquete + tamanioPaquete + sizeof(int) + tamanioNombre
-						+ sizeof(int) + sizeof(int), &elemento->compactTime,
-				sizeof(int));
+		memcpy(paquete+tamanioPaquete+sizeof(int)+tamanioNombre+sizeof(int), &elemento->particiones, sizeof(int));
 
-		tamanioPaquete += sizeof(int) + tamanioNombre + sizeof(int)
-				+ sizeof(int) + sizeof(int);
+		memcpy(paquete+tamanioPaquete+sizeof(int)+tamanioNombre+sizeof(int)+sizeof(int), &elemento->compactTime, sizeof(int));
+
+		tamanioPaquete += sizeof(int) + tamanioNombre + sizeof(int) + sizeof(int) + sizeof(int);
 
 	}
 
@@ -590,26 +565,30 @@ void enviarMetadatas(t_list* metadatas, int aQuien) {
 
 }
 
-t_list* recibirMetadatas(int deQuien, t_log* logger) {
-	int cantidadMetadatas = recibirInt(deQuien, logger);
+
+t_list* recibirMetadatas (int deQuien, t_log* logger)
+{
+	int cantidadMetadatas = recibirInt (deQuien,logger);
 
 	t_list* metadatas = list_create();
 
-	for (int i = 0; i < cantidadMetadatas; i++) {
+	for (int i = 0; i< cantidadMetadatas; i++)
+	{
 		metadataTablaLFS* metadata = malloc(sizeof(metadataTablaLFS));
 
-		metadata->nombre = recibirString(deQuien, logger);
-		metadata->consistencia = recibirInt(deQuien, logger);
-		metadata->particiones = recibirInt(deQuien, logger);
-		metadata->compactTime = recibirInt(deQuien, logger);
+		metadata->nombre = recibirString(deQuien,logger);
+		metadata->consistencia = recibirInt (deQuien,logger);
+		metadata->particiones = recibirInt (deQuien,logger);
+		metadata->compactTime = recibirInt (deQuien,logger);
 
-		list_add(metadatas, metadata);
+		list_add(metadatas,metadata);
 	}
 
 	return metadatas;
 }
 
-void enviarRequest(int aQuien, request* requestAEnviar) {
+void enviarRequest (int aQuien, request* requestAEnviar)
+{
 	char* stringAEnviar = requestStructAString(requestAEnviar);
 
 	enviarString(stringAEnviar, aQuien);
@@ -617,118 +596,38 @@ void enviarRequest(int aQuien, request* requestAEnviar) {
 	free(stringAEnviar);
 }
 
-request* recibirRequest(int deQuien, t_log* logger) {
-	char* requestEnString = recibirString(deQuien, logger);
+request* recibirRequest(int deQuien,t_log* logger)
+{
+	char* requestEnString = recibirString(deQuien,logger);
 
-	request* requestNuevo = crearStructRequest(requestEnString);
+    request* requestNuevo = crearStructRequest(requestEnString);
 
-	free(requestEnString);
+    free(requestEnString);
 
-	return requestNuevo;
-
-}
-
-int primeraPosicionDelCharEnString(char charBuscado, char* string) {
-
-	for (int i = 0; i < string_length(string); i++) {
-		if (string[i] == charBuscado) {
-			return i;
-		}
-	}
-
-	return -1;
-}
-int ultimaPosicionDelCharEnString(char charBuscado, char* string) {
-
-	int ultima_ocurrencia = -1;
-
-	for (int i = 0; i < string_length(string); i++) {
-		if (string[i] == charBuscado) {
-			ultima_ocurrencia = i;
-		}
-	}
-
-	return ultima_ocurrencia;
-}
-
-int get_timestamp() {
-	struct timeval tv;
-	gettimeofday(&tv, NULL);
-	return (tv.tv_sec) * 1000 + (tv.tv_usec) / 1000;
-}
-
-char* get_value(char* string) {
-	int primera_ocurrencia = primeraPosicionDelCharEnString('"', string);
-	int segunda_ocurrencia = ultimaPosicionDelCharEnString('"', string);
-
-	return string_substring(string, primera_ocurrencia + 1,
-			segunda_ocurrencia - primera_ocurrencia - 1);
-}
-
-
-char* leerLinea(char* direccion, int lineaALeer) {
-
-	//TODO: Semaforo con crearArchivo?
-
-	FILE* archivo;
-	archivo = fopen(direccion, "r");
-	char* resultado = string_new();
-
-	if (archivo == NULL) {
-
-		char* error = string_new();
-
-		string_append(&resultado, "fin");
-
-		return error;
-	}
-
-	for (int i = 0; i <= lineaALeer; i++) {
-
-		char buffer[MAXBUFFER];
-
-		char* resultadoDeLeer = fgets(buffer, MAXBUFFER, archivo);
-
-		if (resultadoDeLeer == NULL) {
-
-			string_append(&resultado, "fin");
-
-			free(resultadoDeLeer);
-
-			break;
-
-		}
-
-		if (i == lineaALeer) {
-			string_append(&resultado, resultadoDeLeer);
-
-			resultadoDeLeer = fgets(buffer, MAXBUFFER, archivo);
-
-			if (resultadoDeLeer == NULL) //Si es el ultimo string, no viene con \n
-			{
-				string_append(&resultado, "\n");
-			}
-		}
-
-		//free(resultadoDeLeer); Seg fault en esta linea wowowo (Y no por el free del if resultadoLeer == NULL)
-
-	}
-
-	fclose(archivo);
-
-	return resultado;
-
-//	int caracteres = charsDeBuffer(buffer);
-//
-//	char* linea = malloc(sizeof(char) * caracteres);
-//
-//	memcpy(linea, buffer, caracteres * sizeof(char));
-//
-//	fclose(archivo);
-//
-//
-//
-//	return linea;
+    return requestNuevo;
 
 }
 
+void enviarIntConHeader(int intAEnviar,int header, int aQuien) {
+	void* paquete = malloc(sizeof(int) + sizeof(int));
+	memcpy(paquete, &header, sizeof(int));
+	memcpy(paquete+sizeof(int), &intAEnviar, sizeof(int));
+	send(aQuien, paquete, sizeof(int)+sizeof(int), 0);
+	free(paquete);
+}
+
+int* recibirIntConHeader(int deQuien, t_log* logger)
+{
+	int header = recibirInt(deQuien, logger);
+
+	int intRecibido = recibirInt(deQuien, logger);
+
+	int* punteroAInts = malloc(sizeof(int)*2);
+
+	memcpy(punteroAInts, &header, sizeof(int));
+
+	memcpy(punteroAInts + sizeof(int), &intRecibido, sizeof(int));
+
+	return punteroAInts;
+
+}

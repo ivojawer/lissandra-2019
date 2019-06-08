@@ -106,6 +106,71 @@ int charsDeBuffer(char* buffer) {
 	return caracteres + 1;
 }
 
+char* leerLinea(char* direccion, int lineaALeer) {
+
+	//TODO: Semaforo con crearArchivo?
+
+	FILE* archivo;
+	archivo = fopen(direccion, "r");
+	char* resultado = string_new();
+
+	if (archivo == NULL) {
+
+		char* error = string_new();
+
+		string_append(&resultado, "fin");
+
+		return error;
+	}
+
+	for (int i = 0; i <= lineaALeer; i++) {
+
+		char buffer[MAXBUFFER];
+
+		char* resultadoDeLeer = fgets(buffer, MAXBUFFER, archivo);
+
+		if (resultadoDeLeer == NULL) {
+
+			string_append(&resultado, "fin");
+
+			free(resultadoDeLeer);
+
+			break;
+
+		}
+
+		if (i == lineaALeer) {
+			string_append(&resultado, resultadoDeLeer);
+
+			resultadoDeLeer = fgets(buffer, MAXBUFFER, archivo);
+
+			if (resultadoDeLeer == NULL) //Si es el ultimo string, no viene con \n
+			{
+				string_append(&resultado, "\n");
+			}
+		}
+
+		//free(resultadoDeLeer); Seg fault en esta linea wowowo (Y no por el free del if resultadoLeer == NULL)
+
+	}
+
+	fclose(archivo);
+
+	return resultado;
+
+//	int caracteres = charsDeBuffer(buffer);
+//
+//	char* linea = malloc(sizeof(char) * caracteres);
+//
+//	memcpy(linea, buffer, caracteres * sizeof(char));
+//
+//	fclose(archivo);
+//
+//
+//
+//	return linea;
+
+}
 
 int crearArchivoParaRequest(script* script, request* requestAArchivo) {
 

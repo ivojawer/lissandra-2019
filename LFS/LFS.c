@@ -6,7 +6,6 @@ t_config*bitMapMetadata;
 t_log* logger;
 t_list* memTable;
 int cantidadBloques;
-int valorMaximoValue;
 char* puntoDeMontaje;
 t_bitarray* bitMap;
 
@@ -18,11 +17,9 @@ int main() {
 
 	memTable = list_create();
 
-	metadataLFS = config_create("/home/utnso/workspace/tp-2019-1c-U-TN-Tecno/LFS/raiz/Metadata/Metadata.bin");
+	metadataLFS = config_create("Metadata/Metadata.bin");
 
 	cantidadBloques = config_get_int_value(metadataLFS,"BLOCKS");
-
-	valorMaximoValue = config_get_int_value(metadataLFS,"TAMAÑO_VALUE");
 
 	puntoDeMontaje = config_get_string_value(config,"PUNTO_MONTAJE");
 

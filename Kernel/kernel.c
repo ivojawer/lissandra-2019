@@ -9,7 +9,6 @@ t_list* listaEXIT;
 t_list* listaTablas;
 t_list* tiemposInsert;
 t_list* tiemposSelect;
-t_list* listaMemorias;
 t_list* memorias;
 int idInicial;
 int quantum;
@@ -21,7 +20,6 @@ sem_t sem_disponibleColaREADY;
 sem_t sem_operacionesTotales;
 sem_t sem_tiemposInsert;
 sem_t sem_tiemposSelect;
-sem_t sem_conexiones;
 
 
 int main() {
@@ -41,7 +39,6 @@ int main() {
 	tiemposInsert = list_create();
 	tiemposSelect = list_create();
 	memorias = list_create();
-	listaMemorias = list_create();
 
 	idInicial = 1000;
 	proximaMemoriaEC = -1;
@@ -56,10 +53,9 @@ int main() {
 	sem_init(&sem_operacionesTotales, 0, 1);
 	sem_init(&sem_tiemposInsert, 0, 1);
 	sem_init(&sem_tiemposSelect, 0, 1);
-	sem_init(&sem_conexiones,0, 1);
 
 	pthread_create(&h_consola, NULL, (void *) consola, NULL);
-	//pthread_create(&h_conexiones, NULL, (void *) conexionPrincipal, NULL);
+	pthread_create(&h_conexiones, NULL, (void *) conexiones, NULL);
 	pthread_create(&h_planificador, NULL, (void *) planificadorREADYAEXEC, NULL);
 
 	pthread_detach(h_planificador);

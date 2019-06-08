@@ -1,7 +1,7 @@
 #ifndef FUNCIONESBASEKERNEL_H_
 #define FUNCIONESBASEKERNEL_H_
 
-
+#define MAXBUFFER 100
 
 #define RAIZSCRIPTS "/home/utnso/workspace/tp-2019-1c-U-TN-Tecno/Kernel/scripts/"
 

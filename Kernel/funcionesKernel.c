@@ -62,40 +62,41 @@ void crearScript(request* nuevaRequest) {
 
 int ejecutarRequest(request* requestAEjecutar) {
 
-//	if (unaMemoriaCualquiera() == -1) //No hay memorias
-//			{
-//		return -1;
-//	}
-//
-//	if (esDescribeGlobal(requestAEjecutar)) {
-//		enviarRequestAMemoria(requestAEjecutar, unaMemoriaCualquiera());
-//	}
-//
-//	int criterio = criterioDeTabla(devolverTablaDeRequest(requestAEjecutar));
-//
-//	if (criterio == -1) //No existe la tabla (TODO: Ver si esto se hace antes o que, tambien lo del CREATE)
-//			{
-//		return -1;
-//	}
-//
-//	int memoria = determinarAQueMemoriaEnviar(criterio);
-//
-//	if (memoria == -1) // No existe la memoria, lo mismo que arriba
-//			{
-//		return -1;
-//	}
+	if (unaMemoriaCualquiera() == -1) //No hay memorias
+			{
+		return -1;
+	}
+	int memoria;
+
+	if (esDescribeGlobal(requestAEjecutar)) {
+		memoria = unaMemoriaCualquiera();
+
+	} else {
+		int criterio = criterioDeTabla(
+				devolverTablaDeRequest(requestAEjecutar));
+
+		if (criterio == -1) //No existe la tabla (TODO: Ver si esto se hace antes o que, tambien lo del CREATE)
+				{
+			return -1;
+		}
+
+		memoria = determinarAQueMemoriaEnviar(criterio);
+	}
+
+	if (memoria == -1) // No existe la memoria, lo mismo que arriba
+			{
+		return -1;
+	}
 
 	time_t tiempoInicial = time(NULL);
 
-//	enviarRequestAMemoria(requestAEjecutar, memoria);
-//
-//
-//	int resultado = recibirRespuestaDeMemoria(memoria);
-	sleep(1);
-//
-//	if (resultado == MEMORIA_ERROR) {
-//		return -1;
-//	}
+	enviarRequestAMemoria(requestAEjecutar, memoria);
+
+	int resultado = recibirRespuestaDeMemoria(memoria);
+
+	if (resultado == MEMORIA_ERROR) {
+		return -1;
+	}
 
 	time_t tiempoFinal = time(NULL);
 
@@ -119,21 +120,19 @@ void metrics(int loggear) //TODO: Faltan los memory loads
 
 		log_info(logger, "\n\n----METRICS----");
 		if (promedioSelect == -1) {
-			log_info(logger,"\n\nRead latency: ---");
+			log_info(logger, "\n\nRead latency: ---");
 		} else {
-			log_info(logger,"%s%i", "\n\nRead latency: ", promedioSelect);
+			log_info(logger, "%s%i", "\n\nRead latency: ", promedioSelect);
 		}
 
 		if (promedioInsert == -1) {
-			log_info(logger,"\n\nWrite latency: ---");
+			log_info(logger, "\n\nWrite latency: ---");
 		} else {
-			log_info(logger,"%s%i", "\n\nWrite latency: ", promedioInsert);
+			log_info(logger, "%s%i", "\n\nWrite latency: ", promedioInsert);
 		}
 
-		log_info(logger,"%s%i", "\n\nReads: ", list_size(tiemposSelectAux));
-		log_info(logger,"%s%i", "\n\nWrites: ", list_size(tiemposInsertAux));
-
-
+		log_info(logger, "%s%i", "\n\nReads: ", list_size(tiemposSelectAux));
+		log_info(logger, "%s%i", "\n\nWrites: ", list_size(tiemposInsertAux));
 
 	} else {
 		printf("\n\n----METRICS----");
@@ -193,10 +192,10 @@ void add(char* consistenciaYMemoriaEnString) {
 
 	memoriaEnLista* memoria = list_get(memorias, posicionMemoria);
 
-	//TODO: Semaforo para cuando se usa?
+//TODO: Semaforo para cuando se usa?
 	memoria->consistencias[consistencia] = consistencia; //La consistencia esta en la misma posicion del numero que lo representa (0,1 o 2);
 
-	//TODO: Semaforo???
+//TODO: Semaforo???
 	if ((consistencia == EC) && (proximaMemoriaEC == -1)) {
 		proximaMemoriaEC = memoria->nombre;
 	}
