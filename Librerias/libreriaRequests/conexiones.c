@@ -97,6 +97,29 @@ void enviarStringConHeader(char* string, int aQuien, int header) {
 	free(paquete);
 }
 
+
+void enviarStringConHeaderEId(char* string, int aQuien, int header, int id) {
+	void* paquete;
+
+	int tamanioString = (strlen(string) + 1) * sizeof(char);
+
+	int tamanioEnvio = sizeof(int) + sizeof(int) + sizeof(int) + tamanioString;
+
+	paquete = malloc(tamanioEnvio);
+
+	memcpy(paquete, &header, sizeof(int));
+
+	memcpy(paquete + sizeof(int), &id, sizeof(int));
+
+	memcpy(paquete + sizeof(int) + sizeof(int), &tamanioString, sizeof(int));
+
+	memcpy(paquete + sizeof(int) + sizeof(int) + sizeof(int), string, tamanioString);
+
+	send(aQuien, paquete, tamanioEnvio, 0);
+
+	free(paquete);
+}
+
 void enviarRequestConHeader(int aQuien, request* requestAEnviar, int header) {
 	char* stringAEnviar = requestStructAString(requestAEnviar);
 
@@ -125,13 +148,70 @@ void enviarRequestConHeaderEId(int aQuien, request* requestAEnviar, int header,
 
 	memcpy(paquete + sizeof(int) + sizeof(int), &tamanioString, sizeof(int));
 
-	memcpy(paquete + sizeof(int) + sizeof(int) + sizeof(int), stringAEnviar, tamanioString);
+	memcpy(paquete + sizeof(int) + sizeof(int) + sizeof(int), stringAEnviar,
+			tamanioString);
 
 	send(aQuien, paquete, tamanioEnvio, 0);
 
 	free(stringAEnviar);
 	free(paquete);
 
+}
+
+void enviarMetadatasConHeaderEId(t_list* metadatas, int aQuien, int header,
+		int id) {
+	int cantidadMetadatas = list_size(metadatas);
+
+	int tamanioPaquete = sizeof(int) + sizeof(int) + sizeof(int); //Se pone "= sizeof(int)" por el int de cantidadMetadatas, el header e id que va a ir al principio
+
+	for (int i = 0; i < list_size(metadatas); i++) {
+		metadataTablaLFS* elemento = list_get(metadatas, i);
+
+		int tamanioNombre = (strlen(elemento->nombre) + 1) * sizeof(char);
+
+		tamanioPaquete += sizeof(int) + tamanioNombre + sizeof(int)
+				+ sizeof(int) + sizeof(int);
+
+	}
+
+	void* paquete = malloc(tamanioPaquete);
+
+	memcpy(paquete, &header, sizeof(int));
+	memcpy(paquete + sizeof(int), &id, sizeof(int));
+	memcpy(paquete + sizeof(int) + sizeof(int), &cantidadMetadatas, sizeof(int));
+
+	int ultimaPosicionDelPaquete = sizeof(int) + sizeof(int) + sizeof(int);
+
+	for (int i = 0; i < list_size(metadatas); i++) {
+		metadataTablaLFS* elemento = list_get(metadatas, i);
+
+		int tamanioNombre = (strlen(elemento->nombre) + 1) * sizeof(char);
+
+		memcpy(paquete + ultimaPosicionDelPaquete, &tamanioNombre, sizeof(int));
+
+		memcpy(paquete + ultimaPosicionDelPaquete + sizeof(int),
+				elemento->nombre, tamanioNombre);
+
+		memcpy(paquete + ultimaPosicionDelPaquete + sizeof(int) + tamanioNombre,
+				&elemento->consistencia, sizeof(int));
+
+		memcpy(
+				paquete + ultimaPosicionDelPaquete + sizeof(int) + tamanioNombre
+						+ sizeof(int), &elemento->particiones, sizeof(int));
+
+		memcpy(
+				paquete + ultimaPosicionDelPaquete + sizeof(int) + tamanioNombre
+						+ sizeof(int) + sizeof(int), &elemento->compactTime,
+				sizeof(int));
+
+		ultimaPosicionDelPaquete += sizeof(int) + tamanioNombre + sizeof(int)
+				+ sizeof(int) + sizeof(int);
+
+	}
+
+	send(aQuien, paquete, tamanioPaquete, 0);
+
+	free(paquete);
 }
 
 void enviarMetadatasConHeader(t_list* metadatas, int aQuien, int header) {

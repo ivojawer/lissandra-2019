@@ -82,10 +82,13 @@ int recibirInt(int deQuien, t_log* logger);
 void enviarStringConHeader(char* string, int aQuien, int header);
 char* recibirString(int deQuien, t_log* logger);
 
-void enviarRequestConHeaderEId(int aQuien, request* requestAEnviar, int header, int id);
+void enviarRequestConHeaderEId(int aQuien, request* requestAEnviar, int header,
+		int id);
 void enviarRequestConHeader(int aQuien, request* requestAEnviar, int header);
 request* recibirRequest(int deQuien, t_log* logger);
 
+void enviarMetadatasConHeaderEId(t_list* metadatas, int aQuien, int header,
+		int id);
 void enviarMetadatasConHeader(t_list* metadatas, int aQuien, int header);
 t_list* recibirMetadatas(int deQuien, t_log* logger);
 

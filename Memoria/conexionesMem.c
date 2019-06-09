@@ -6,7 +6,7 @@ extern t_config* config;
 
 void conexiones() {
 
-	socketALFS= crearConexion(config_get_int_value(config,"PUERTO_FS"));//conexion con LFS
+	//socketALFS= conectarseAServidor(config_get_int_value(config,"PUERTO_FS"));//conexion con LFS
 
 	//        Creo servidor
 	int puerto = config_get_int_value(config,"PUERTO_ESCUCHA");
