@@ -64,7 +64,7 @@ void planificadorEXEC(int IdScript) {
 
 		request* requestAEjecutar = crearStructRequest(linea);
 
-		int resultado = ejecutarRequest(requestAEjecutar);
+		int resultado = ejecutarRequest(requestAEjecutar,scriptEXEC);
 
 		if (resultado == -1) { //TODO: Expandir los errores
 

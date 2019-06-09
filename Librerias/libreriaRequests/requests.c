@@ -292,14 +292,12 @@ int esUnaRequestValida(char* requestEnString) {
 		return 0;
 	}
 
-	if(esUnParametroValido(requestEnInt, requestYParametros[1]))
-	{
+	if (esUnParametroValido(requestEnInt, requestYParametros[1])) {
 		liberarArrayDeStrings(requestYParametros);
 		return 1;
 	}
 
-	else
-	{
+	else {
 		liberarArrayDeStrings(requestYParametros);
 		return 0;
 	}
@@ -328,119 +326,9 @@ request* crearStructRequest(char* requestEnString) {
 
 	return requestNuevo;
 
-
 }
 
-int seRecibioBien(int respuesta, t_log* logger) {
-	if (respuesta < 0) {
 
-		log_error(logger, "Hubo un error recibiendo algo en algun lado");
-
-		return 0;
-	}
-	return 1;
-}
-
-int recibirInt(int deQuien, t_log* logger) {
-	void* bufferInt = malloc(sizeof(int));
-	int respuesta = recv(deQuien, bufferInt, sizeof(int),
-	MSG_WAITALL);
-
-	if (!seRecibioBien(respuesta, logger)) {
-
-		free(bufferInt);
-		return -1;
-	}
-
-	int intRecibido;
-	memcpy(&intRecibido, bufferInt, sizeof(int));
-
-	free(bufferInt);
-	return intRecibido;
-}
-
-void enviarInt (int intAEnviar, int aQuien)
-{
-	void* paquete = malloc(sizeof(int));
-	memcpy(paquete,&intAEnviar,sizeof(int));
-	send(aQuien,paquete,sizeof(int),0);
-	free(paquete);
-}
-
-char* recibirString(int deQuien, t_log* logger) {
-
-	int tamanioString = recibirInt(deQuien, logger);
-
-	if (tamanioString == -1) {
-		return " ";
-	}
-
-	void* bufferString = malloc(tamanioString);
-
-	int respuesta = recv(deQuien, bufferString, tamanioString,
-	MSG_WAITALL);
-
-	if (!seRecibioBien(respuesta, logger)) {
-		return " ";
-	}
-
-	char* stringRecibido = malloc(tamanioString);
-
-	memcpy(stringRecibido, bufferString, tamanioString);
-
-	free(bufferString);
-
-	return stringRecibido;
-}
-
-void enviarString(char* string, int aQuien) {
-	void* paquete;
-
-	int tamanioRequest = (strlen(string) + 1)* sizeof(char);
-
-	int tamanioEnvio = sizeof(int) + tamanioRequest;
-
-	paquete = malloc(tamanioEnvio);
-
-	memcpy(paquete, &tamanioRequest, sizeof(int));
-
-	memcpy(paquete + sizeof(int), string, tamanioRequest);
-
-	send(aQuien, paquete, tamanioEnvio, 0);
-}
-
-void enviarStringConHeader(char* string, int aQuien, int header) {
-	void* paquete;
-
-	int tamanioRequest = (strlen(string) + 1)* sizeof(char);
-
-	int tamanioEnvio = sizeof(int) + sizeof(int) + tamanioRequest;
-
-	paquete = malloc(tamanioEnvio);
-
-	memcpy(paquete, &header, sizeof(int));
-
-	memcpy(paquete + sizeof(int), &tamanioRequest, sizeof(int));
-
-	memcpy(paquete + sizeof(int) + sizeof(int), string, tamanioRequest);
-
-	send(aQuien, paquete, tamanioEnvio, 0);
-}
-
-int crearConexion(int puerto) {
-	struct sockaddr_in direccionServidor;
-	direccionServidor.sin_family = AF_INET;
-	direccionServidor.sin_addr.s_addr = inet_addr("127.0.0.1"); //el ip tiene que salir del config
-	direccionServidor.sin_port = htons(puerto);
-
-	int conexion = socket(AF_INET, SOCK_STREAM, 0);
-	if (connect(conexion, (void*) &direccionServidor, sizeof(direccionServidor))
-			!= 0) {
-		perror("No me pude conectar");
-		return -1;
-	}
-	return conexion;
-}
 
 char* requestStructAString(request* request) {
 	char* requestEnString = string_new();
@@ -502,132 +390,15 @@ char* requestStructAString(request* request) {
 	return requestEnString;
 }
 
-int esDescribeGlobal (request* request)
-{
-	if (request->requestEnInt == DESCRIBE && !strcmp(request->parametros," "))
-	{
+int esDescribeGlobal(request* request) {
+	if (request->requestEnInt == DESCRIBE
+			&& !strcmp(request->parametros, " ")) {
 		return 1;
 	}
 	return 0;
 }
 
-void liberarRequest(request* request)
-{
+void liberarRequest(request* request) {
 	free(request->parametros);
 	free(request);
-}
-
-void enviarMetadatas(t_list* metadatas, int aQuien)
-{
-
-	int cantidadMetadatas = list_size(metadatas);
-
-	int tamanioPaquete = sizeof(int); //Se pone "= sizeof(int)" por el int de cantidadMetadatas que va a ir al principio
-
-	for (int i = 0; i< list_size(metadatas);i++)
-	{
-		metadataTablaLFS* elemento = list_get(metadatas,i);
-
-		int tamanioNombre = (strlen(elemento->nombre) + 1 )* sizeof(char);
-
-		tamanioPaquete += sizeof(int) + tamanioNombre + sizeof(int) + sizeof(int) + sizeof(int);
-
-	}
-
-	void* paquete = malloc(tamanioPaquete);
-
-	memcpy(paquete,&cantidadMetadatas,sizeof(int));
-
-
-	for (int i = 0; i<list_size(metadatas);i++)
-	{
-		metadataTablaLFS* elemento = list_get(metadatas,i);
-
-		int tamanioNombre = (strlen(elemento->nombre) + 1 )* sizeof(char);
-
-		memcpy(paquete+tamanioPaquete , &tamanioNombre , sizeof(int));
-
-		memcpy(paquete+tamanioPaquete+sizeof(int), elemento->nombre,tamanioNombre);
-
-		memcpy(paquete+tamanioPaquete+sizeof(int)+tamanioNombre, &elemento->consistencia, sizeof(int));
-
-		memcpy(paquete+tamanioPaquete+sizeof(int)+tamanioNombre+sizeof(int), &elemento->particiones, sizeof(int));
-
-		memcpy(paquete+tamanioPaquete+sizeof(int)+tamanioNombre+sizeof(int)+sizeof(int), &elemento->compactTime, sizeof(int));
-
-		tamanioPaquete += sizeof(int) + tamanioNombre + sizeof(int) + sizeof(int) + sizeof(int);
-
-	}
-
-	send(aQuien, paquete, tamanioPaquete, 0);
-
-	free(paquete);
-
-}
-
-
-t_list* recibirMetadatas (int deQuien, t_log* logger)
-{
-	int cantidadMetadatas = recibirInt (deQuien,logger);
-
-	t_list* metadatas = list_create();
-
-	for (int i = 0; i< cantidadMetadatas; i++)
-	{
-		metadataTablaLFS* metadata = malloc(sizeof(metadataTablaLFS));
-
-		metadata->nombre = recibirString(deQuien,logger);
-		metadata->consistencia = recibirInt (deQuien,logger);
-		metadata->particiones = recibirInt (deQuien,logger);
-		metadata->compactTime = recibirInt (deQuien,logger);
-
-		list_add(metadatas,metadata);
-	}
-
-	return metadatas;
-}
-
-void enviarRequest (int aQuien, request* requestAEnviar)
-{
-	char* stringAEnviar = requestStructAString(requestAEnviar);
-
-	enviarString(stringAEnviar, aQuien);
-
-	free(stringAEnviar);
-}
-
-request* recibirRequest(int deQuien,t_log* logger)
-{
-	char* requestEnString = recibirString(deQuien,logger);
-
-    request* requestNuevo = crearStructRequest(requestEnString);
-
-    free(requestEnString);
-
-    return requestNuevo;
-
-}
-
-void enviarIntConHeader(int intAEnviar,int header, int aQuien) {
-	void* paquete = malloc(sizeof(int) + sizeof(int));
-	memcpy(paquete, &header, sizeof(int));
-	memcpy(paquete+sizeof(int), &intAEnviar, sizeof(int));
-	send(aQuien, paquete, sizeof(int)+sizeof(int), 0);
-	free(paquete);
-}
-
-int* recibirIntConHeader(int deQuien, t_log* logger)
-{
-	int header = recibirInt(deQuien, logger);
-
-	int intRecibido = recibirInt(deQuien, logger);
-
-	int* punteroAInts = malloc(sizeof(int)*2);
-
-	memcpy(punteroAInts, &header, sizeof(int));
-
-	memcpy(punteroAInts + sizeof(int), &intRecibido, sizeof(int));
-
-	return punteroAInts;
-
 }

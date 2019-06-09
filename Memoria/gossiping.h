@@ -4,10 +4,6 @@
 
 #include "funcionesMemoria.h"
 
-typedef struct{
-	char* ip;
-	int puerto;
-}seed;
 
 void gossiping();
 

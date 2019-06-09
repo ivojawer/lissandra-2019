@@ -20,6 +20,8 @@ sem_t sem_disponibleColaREADY;
 sem_t sem_operacionesTotales;
 sem_t sem_tiemposInsert;
 sem_t sem_tiemposSelect;
+sem_t sem_gossiping;
+sem_t sem_actualizacionMetadatas;
 
 
 int main() {
@@ -44,7 +46,6 @@ int main() {
 	proximaMemoriaEC = -1;
 
 	pthread_t h_consola;
-	pthread_t h_conexiones;
 	pthread_t h_planificador;
 
 	sem_init(&sem_multiprocesamiento, 0, multiprocesamiento);
@@ -53,13 +54,13 @@ int main() {
 	sem_init(&sem_operacionesTotales, 0, 1);
 	sem_init(&sem_tiemposInsert, 0, 1);
 	sem_init(&sem_tiemposSelect, 0, 1);
+	sem_init(&sem_gossiping, 0, 1);
+	sem_init(&sem_actualizacionMetadatas,0,1);
 
 	pthread_create(&h_consola, NULL, (void *) consola, NULL);
-	pthread_create(&h_conexiones, NULL, (void *) conexiones, NULL);
 	pthread_create(&h_planificador, NULL, (void *) planificadorREADYAEXEC, NULL);
 
 	pthread_detach(h_planificador);
-	pthread_detach(h_conexiones);
 	pthread_join(h_consola, NULL);
 
 	//Matar lo que se pueda

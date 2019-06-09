@@ -5,6 +5,7 @@ extern t_list* tiemposInsert;
 extern t_list* tiemposSelect;
 extern sem_t sem_tiemposInsert;
 extern sem_t sem_tiemposSelect;
+extern sem_t sem_actualizacionMetadatas;
 extern t_list* colaNEW;
 extern t_list* colaREADY;
 extern t_list* listaTablas;
@@ -13,6 +14,7 @@ extern t_list* listaEXIT;
 extern t_list* memorias;
 extern int proximaMemoriaEC;
 extern t_log* logger;
+extern t_list* memorias;
 
 int encontrarScriptEnLista(int id, t_list* lista) {
 	for (int i = 0; i < list_size(lista); i++) {
@@ -383,9 +385,11 @@ int encontrarPosicionDeMemoria(int memoriaAEncontrar) {
 
 int memoriaECSiguiente(int memoriaInicialEC) {
 
-	int posicionMemoriaInicialEnLista = encontrarPosicionDeMemoria(memoriaInicialEC);
+	int posicionMemoriaInicialEnLista = encontrarPosicionDeMemoria(
+			memoriaInicialEC);
 
-	for (int i = posicionMemoriaInicialEnLista + 1; i < list_size(memorias); i++) { // De memoriaEC a fin de lista
+	for (int i = posicionMemoriaInicialEnLista + 1; i < list_size(memorias);
+			i++) { // De memoriaEC a fin de lista
 		memoriaEnLista* unaMemoria = list_get(memorias, i);
 
 		if (unaMemoria->consistencias[EC] == EC) {
@@ -404,20 +408,7 @@ int memoriaECSiguiente(int memoriaInicialEC) {
 	return memoriaInicialEC; //Si no encuentra otra devuelve la misma
 }
 
-
-void enviarRequestAMemoria(request* requestAEnviar, int memoria)
-{
-	memoriaEnLista* memoriaALaQueEnviar = list_get(memorias,encontrarPosicionDeMemoria(memoria));
-	enviarRequest(memoriaALaQueEnviar->socket, requestAEnviar);
-}
-
-int recibirRespuestaDeMemoria(int memoria)
-{
-	memoriaEnLista* memoriaDeQuienRecibir = list_get(memorias,encontrarPosicionDeMemoria(memoria));
-	return recibirInt(memoriaDeQuienRecibir->socket,logger);
-}
-
-int determinarAQueMemoriaEnviar(int consistencia) {
+int determinarAQueMemoriaEnviar(int consistencia, int key) {
 	switch (consistencia) {
 
 	case SC: {
@@ -440,11 +431,9 @@ int determinarAQueMemoriaEnviar(int consistencia) {
 
 	}
 
-	case SHC:
-	{
-		return proximaMemoriaEC; //TODO
+	case SHC: {
+		return memoriaHash(key);
 	}
-
 
 	}
 
@@ -454,10 +443,89 @@ int determinarAQueMemoriaEnviar(int consistencia) {
 
 int unaMemoriaCualquiera() //TODO: Ver si tiene que tener criterio o no
 {
-	if (list_size(memorias) == 0)
-	{
+	if (list_size(memorias) == 0) {
 		return -1;
 	}
-	memoriaEnLista* unaMemoria = list_get(memorias,0);
+	memoriaEnLista* unaMemoria = list_get(memorias, 0);
 	return unaMemoria->nombre;
+}
+
+int memoriaHash(int key) {
+	int cantidadMemoriasSHC = 0;
+
+	for (int i = 0; i < list_size(memorias); i++) {
+		memoriaEnLista* unaMemoria = list_get(memorias, i);
+
+		if (unaMemoria->consistencias[SHC] == SHC) {
+			cantidadMemoriasSHC++;
+		}
+	}
+
+	if (cantidadMemoriasSHC == 0) {
+		return -1;
+	}
+
+	return key % cantidadMemoriasSHC;
+}
+
+void matarMemoria(int nombreMemoria) { //TODO: Semaforo?
+
+	for (int i = 0; i < list_size(memorias); i++) {
+		memoriaEnLista* unaMemoria = list_get(memorias, i);
+
+		if (unaMemoria->nombre == nombreMemoria) {
+
+			if(unaMemoria->nombre == proximaMemoriaEC)
+			{
+				proximaMemoriaEC = memoriaECSiguiente(proximaMemoriaEC);
+
+				if (unaMemoria->nombre == proximaMemoriaEC) //Si es la unica EC
+				{
+					proximaMemoriaEC = -1;
+				}
+			}
+
+
+			free(unaMemoria->consistencias);
+			free(unaMemoria->ip);
+			close(unaMemoria->socket);
+
+			list_remove(memorias, i);
+			free(unaMemoria);
+
+			return;
+		}
+	}
+}
+
+int seedYaExiste(seed* unaSeed)
+{
+	for(int i = 0;i<list_size(memorias);i++)
+	{
+		memoriaEnLista* unaMemoria = list_get(memorias,i);
+
+		if( !(strcmp(unaMemoria->ip,unaSeed->ip)) && (unaSeed->puerto == unaMemoria->puerto))
+		{
+			return 1;
+		}
+	}
+	return 0;
+}
+
+void actualizarMetadatas(t_list* metadatas)
+{
+	sem_wait(&sem_actualizacionMetadatas);
+
+	while(list_size(listaTablas != 0))
+	{
+		metadataTablaLFS* unaMetadata = list_remove(listaTablas,0);
+
+		free(unaMetadata->nombre);
+		free(unaMetadata);
+	}
+
+	list_destroy(listaTablas);
+
+	listaTablas = metadatas;
+	sem_post(&sem_actualizacionMetadatas);
 }

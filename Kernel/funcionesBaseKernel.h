@@ -17,12 +17,17 @@
 #include <commons/collections/list.h>
 #include <semaphore.h>
 #include <time.h>
+#include <arpa/inet.h>
+#include <sys/socket.h>
+#include <commons/config.h>
 
 typedef struct {
 	int idScript;
 	int lineasLeidas;
 	char* direccionScript;
 	int esPorConsola;
+	sem_t semaforoDelScript;
+	void* resultadoDeEnvio;
 } script;
 
 typedef struct {
@@ -39,6 +44,8 @@ typedef struct{
 	int nombre;
 	int socket; //Algo asi
 	int* consistencias;
+	char* ip;
+	int puerto;
 } memoriaEnLista;
 
 char* leerLinea(char* direccion,int lineaALeer);
@@ -64,8 +71,14 @@ int encontrarPosicionDeMemoria(int memoriaAEncontrar);
 int memoriaECSiguiente(int memoriaInicialEC);
 void enviarRequestAMemoria(request* requestAEnviar, int memoria);
 int recibirRespuestaDeMemoria(int memoria);
-int determinarAQueMemoriaEnviar(int consistencia);
+int determinarAQueMemoriaEnviar(int consistencia, int key);
 int unaMemoriaCualquiera();
+int memoriaHash(int key);
+void matarMemoria(int nombreMemoria);
+void conectarseAUnaMemoria(seed* unaSeed);
+void comunicacionConMemoria(memoriaEnLista* memoria);
+int seedYaExiste(seed* unaSeed);
+
 
 
 

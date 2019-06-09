@@ -48,6 +48,8 @@ void crearScript(request* nuevaRequest) {
 
 	}
 
+	sem_init(&nuevoScript->semaforoDelScript ,0,0);
+
 	list_add(colaNEW, nuevoScript); //Esto es puramente por formalidad del TP
 
 	log_info(logger, "%i%s", nuevoScript->idScript, ": NEW->READY");
@@ -60,7 +62,9 @@ void crearScript(request* nuevaRequest) {
 
 }
 
-int ejecutarRequest(request* requestAEjecutar) {
+int ejecutarRequest(request* requestAEjecutar, script* elScript) { //TODO: Agregar las que no se mandan
+
+	//TODO: Semaforo con la memoria asi no se rompe si se cae una entre medio?
 
 	if (unaMemoriaCualquiera() == -1) //No hay memorias
 			{
@@ -80,7 +84,7 @@ int ejecutarRequest(request* requestAEjecutar) {
 			return -1;
 		}
 
-		memoria = determinarAQueMemoriaEnviar(criterio);
+		memoria = determinarAQueMemoriaEnviar(criterio,2); //TODO: Agregar key
 	}
 
 	if (memoria == -1) // No existe la memoria, lo mismo que arriba
@@ -88,15 +92,13 @@ int ejecutarRequest(request* requestAEjecutar) {
 		return -1;
 	}
 
+	memoriaEnLista* laMemoria = list_get(memorias,encontrarPosicionDeMemoria(memoria));
+
 	time_t tiempoInicial = time(NULL);
 
-	enviarRequestAMemoria(requestAEjecutar, memoria);
+	enviarRequestConHeaderEId(laMemoria->socket,requestAEjecutar,REQUEST,elScript->idScript);
 
-	int resultado = recibirRespuestaDeMemoria(memoria);
-
-	if (resultado == MEMORIA_ERROR) {
-		return -1;
-	}
+	sem_wait(&elScript->semaforoDelScript);
 
 	time_t tiempoFinal = time(NULL);
 

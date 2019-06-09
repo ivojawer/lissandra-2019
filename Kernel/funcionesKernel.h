@@ -8,7 +8,7 @@ void conexiones();
 void planificadorREADYAEXEC();
 void planificadorEXEC(int IdScript);
 
-int ejecutarRequest(request* requestAEjecutar);
+int ejecutarRequest(request* requestAEjecutar, script* elScript);
 void metrics();
 void crearScript(request* nuevaRequest);
 void status();
