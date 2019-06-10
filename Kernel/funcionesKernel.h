@@ -10,8 +10,8 @@ void planificadorEXEC(int IdScript);
 
 int ejecutarRequest(request* requestAEjecutar, script* elScript);
 void metrics();
-void crearScript(request* nuevaRequest);
+int crearScript(request* nuevaRequest);
 void status();
-void add (char* consistenciaYMemoriaEnString);
+int add(char* chocloDeCosas);
 
 #endif /* FUNCIONESKERNEL_H_ */

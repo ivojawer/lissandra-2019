@@ -23,8 +23,10 @@
 #define REQUEST 2
 #define REGISTRO 3
 #define DATO 4
-#define METADATAS 5
+#define OP_JOURNAL 5
 #define RESPUESTA 6
+#define METADATAS 7
+
 
 //Respuestas:
 #define ERROR 0
@@ -96,6 +98,8 @@ void enviarSeedsConHeader(int aQuien, t_list* seeds, int header);
 t_list* recibirSeeds(int deQuien, t_log* logger);
 
 void enviarVariosIntsConHeader(t_list* intsAEnviar, int header, int aQuien);
+
+void enviarInt(int intAEnviar, int aQuien);
 
 //Sockets:
 int crearServidor(int puerto);

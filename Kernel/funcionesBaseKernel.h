@@ -71,13 +71,15 @@ int encontrarPosicionDeMemoria(int memoriaAEncontrar);
 int memoriaECSiguiente(int memoriaInicialEC);
 void enviarRequestAMemoria(request* requestAEnviar, int memoria);
 int recibirRespuestaDeMemoria(int memoria);
-int determinarAQueMemoriaEnviar(int consistencia, int key);
+int determinarAQueMemoriaEnviar(request* unaRequest);
 int unaMemoriaCualquiera();
 int memoriaHash(int key);
 void matarMemoria(int nombreMemoria);
 void conectarseAUnaMemoria(seed* unaSeed);
 void comunicacionConMemoria(memoriaEnLista* memoria);
 int seedYaExiste(seed* unaSeed);
+void actualizarMetadatas(t_list* metadatas);
+void agregarUnaMetadata (metadataTablaLFS* unaMetadata);
 
 
 

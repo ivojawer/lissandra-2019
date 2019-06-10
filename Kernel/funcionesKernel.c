@@ -13,7 +13,7 @@ extern t_list* tiemposSelect;
 extern t_list* memorias;
 extern int proximaMemoriaEC;
 
-void crearScript(request* nuevaRequest) {
+int crearScript(request* nuevaRequest) {
 
 	//Importante: Si el parametro es enteramente vacio, aca tiene que entrar aca como " ".
 
@@ -42,13 +42,13 @@ void crearScript(request* nuevaRequest) {
 			log_error(logger, "Hubo un error en la creacion del request");
 
 			moverScript(nuevoScript->idScript, colaNEW, listaEXIT);
-			return;
+			return -1;
 
 		}
 
 	}
 
-	sem_init(&nuevoScript->semaforoDelScript ,0,0);
+	sem_init(&nuevoScript->semaforoDelScript, 0, 0);
 
 	list_add(colaNEW, nuevoScript); //Esto es puramente por formalidad del TP
 
@@ -60,51 +60,151 @@ void crearScript(request* nuevaRequest) {
 
 	sem_post(&sem_disponibleColaREADY);
 
+	return 1;
+
 }
 
-int ejecutarRequest(request* requestAEjecutar, script* elScript) { //TODO: Agregar las que no se mandan
+void journal() //TODO: Semaforo?
+{
+	for (int i = 0; i < list_size(memorias); i++) {
+		memoriaEnLista* unaMemoria = list_get(memorias, i);
+		enviarInt(OP_JOURNAL, unaMemoria->socket);
+	}
 
-	//TODO: Semaforo con la memoria asi no se rompe si se cae una entre medio?
+	log_info(logger,
+			"Se ha mandado el JOURNAL a todas las memorias conocidas.");
+}
+
+int ejecutarRequest(request* requestAEjecutar, script* elScript) {
+
+	switch (requestAEjecutar->requestEnInt) {
+
+	case JOURNAL: {
+		journal();
+		return 1;
+	}
+	case RUN: {
+		return crearScript(requestAEjecutar);
+	}
+	case METRICS: {
+		metrics(0);
+		return 1;
+	}
+
+	case ADD: {
+		return add(requestAEjecutar->parametros);
+	}
+
+	}
 
 	if (unaMemoriaCualquiera() == -1) //No hay memorias
 			{
+		log_error(logger,
+				"No hay memorias conectadas para ejecutar la request %i.",
+				requestAEjecutar->requestEnInt);
 		return -1;
 	}
+
 	int memoria;
 
 	if (esDescribeGlobal(requestAEjecutar)) {
 		memoria = unaMemoriaCualquiera();
 
 	} else {
-		int criterio = criterioDeTabla(
-				devolverTablaDeRequest(requestAEjecutar));
 
-		if (criterio == -1) //No existe la tabla (TODO: Ver si esto se hace antes o que, tambien lo del CREATE)
-				{
-			return -1;
-		}
-
-		memoria = determinarAQueMemoriaEnviar(criterio,2); //TODO: Agregar key
+		memoria = determinarAQueMemoriaEnviar(requestAEjecutar);
 	}
 
-	if (memoria == -1) // No existe la memoria, lo mismo que arriba
-			{
+	if (memoria == -1) {
+		log_error(logger,
+				"No se conoce una memoria que pueda ejecutar la request %i.",
+				requestAEjecutar->requestEnInt);
 		return -1;
 	}
 
-	memoriaEnLista* laMemoria = list_get(memorias,encontrarPosicionDeMemoria(memoria));
+	memoriaEnLista* laMemoria = list_get(memorias,
+			encontrarPosicionDeMemoria(memoria));
 
 	time_t tiempoInicial = time(NULL);
 
-	enviarRequestConHeaderEId(laMemoria->socket,requestAEjecutar,REQUEST,elScript->idScript);
+	enviarRequestConHeaderEId(laMemoria->socket, requestAEjecutar, REQUEST,
+			elScript->idScript);
 
 	sem_wait(&elScript->semaforoDelScript);
+
+	int respuesta;
+
+	memcpy(&respuesta, elScript->resultadoDeEnvio, sizeof(int));
+
+	switch (requestAEjecutar->requestEnInt) {
+	case SELECT: {
+		if (respuesta == -1) {
+
+			log_error(logger, "%s: No se encontro. (Enviado a %i)",
+					requestStructAString(requestAEjecutar), memoria);
+
+		} else {
+
+			int tamanioString;
+
+			memcpy(&tamanioString, elScript->resultadoDeEnvio + sizeof(int),
+					sizeof(int));
+
+			char* resultadoSelect = malloc(tamanioString);
+
+			memcpy(&resultadoSelect,
+					elScript->resultadoDeEnvio + sizeof(int) + sizeof(int),
+					tamanioString);
+
+			log_info(logger, "%s: %s (Enviado a %i)", requestStructAString(requestAEjecutar),
+					resultadoSelect, memoria);
+
+		}
+		break;
+	}
+
+	default: {
+		if (respuesta == -1) {
+			log_error(logger, "%s: No se pudo realizar. (Enviado a %i)",
+					requestStructAString(requestAEjecutar),memoria);
+
+		} else {
+
+			if (requestAEjecutar->requestEnInt == DESCRIBE)
+			{
+				t_list* metadatas;
+
+				memcpy(&metadatas, elScript->resultadoDeEnvio + sizeof(int), sizeof(t_list*)); //Esto puede fallar, hay que probar
+
+				if (esDescribeGlobal(requestAEjecutar))
+				{
+					actualizarMetadatas(metadatas);
+				}
+				else
+				{
+					metadataTablaLFS* laMetadata = list_get(metadatas,0);
+					agregarUnaMetadata (laMetadata);
+
+					list_destroy(metadatas);
+				}
+
+			}
+
+			log_error(logger, "%s: Se pudo realizar. (Enviado a %i)",
+					requestStructAString(requestAEjecutar),memoria);
+		}
+
+	}
+
+	}
+
+	free(elScript->resultadoDeEnvio);
 
 	time_t tiempoFinal = time(NULL);
 
 	insertarTiempo(tiempoInicial, tiempoFinal, requestAEjecutar->requestEnInt);
 
-	return 1;
+	return respuesta;
 }
 
 void metrics(int loggear) //TODO: Faltan los memory loads
@@ -174,13 +274,12 @@ void status() {
 	printf("\n\n");
 }
 
-void add(char* consistenciaYMemoriaEnString) {
+int add(char* chocloDeCosas) {
 
-	char** consistenciaYMemoriaEnArray = string_n_split(
-			consistenciaYMemoriaEnString, 2, " ");
+	char** consistenciaYMemoriaEnArray = string_n_split(chocloDeCosas, 4, " ");
 
-	int consistencia = atoi(consistenciaYMemoriaEnArray[0]);
-	int nombreMemoria = atoi(consistenciaYMemoriaEnArray[1]);
+	int consistencia = atoi(consistenciaYMemoriaEnArray[1]);
+	int nombreMemoria = atoi(consistenciaYMemoriaEnArray[3]);
 
 	liberarArrayDeStrings(consistenciaYMemoriaEnArray);
 
@@ -189,9 +288,8 @@ void add(char* consistenciaYMemoriaEnString) {
 	if (posicionMemoria == -1) {
 		printf("%s%i%s", "No se pudo encontrar la memoria ", nombreMemoria,
 				"\n");
-		return;
+		return -1;
 	}
-
 	memoriaEnLista* memoria = list_get(memorias, posicionMemoria);
 
 //TODO: Semaforo para cuando se usa?
@@ -201,6 +299,8 @@ void add(char* consistenciaYMemoriaEnString) {
 	if ((consistencia == EC) && (proximaMemoriaEC == -1)) {
 		proximaMemoriaEC = memoria->nombre;
 	}
+
+	return 1;
 
 }
 

@@ -408,8 +408,18 @@ int memoriaECSiguiente(int memoriaInicialEC) {
 	return memoriaInicialEC; //Si no encuentra otra devuelve la misma
 }
 
-int determinarAQueMemoriaEnviar(int consistencia, int key) {
-	switch (consistencia) {
+int determinarAQueMemoriaEnviar(request* unaRequest) {
+
+	int criterio = criterioDeTabla(devolverTablaDeRequest(unaRequest));
+
+	if (criterio == -1) //No existe la tabla (TODO: Ver si esto se hace antes o que, tambien lo del CREATE)
+			{
+		log_error(logger, "No se encontro la tabla %s en las metadatas.",
+				devolverTablaDeRequest(unaRequest));
+		return -1;
+	}
+
+	switch (criterio) {
 
 	case SC: {
 		for (int i = 0; i < list_size(memorias); i++) {
@@ -432,6 +442,17 @@ int determinarAQueMemoriaEnviar(int consistencia, int key) {
 	}
 
 	case SHC: {
+
+		int key = 0; //Una key random
+
+		if (unaRequest->requestEnInt == SELECT
+				|| unaRequest->requestEnInt == INSERT) {
+			char** keyConBasuras = string_split(unaRequest->parametros, " ");
+			key = atoi(keyConBasuras[1]);
+
+			liberarArrayDeStrings(keyConBasuras);
+		}
+
 		return memoriaHash(key);
 	}
 
@@ -475,16 +496,14 @@ void matarMemoria(int nombreMemoria) { //TODO: Semaforo?
 
 		if (unaMemoria->nombre == nombreMemoria) {
 
-			if(unaMemoria->nombre == proximaMemoriaEC)
-			{
+			if (unaMemoria->nombre == proximaMemoriaEC) {
 				proximaMemoriaEC = memoriaECSiguiente(proximaMemoriaEC);
 
 				if (unaMemoria->nombre == proximaMemoriaEC) //Si es la unica EC
-				{
+						{
 					proximaMemoriaEC = -1;
 				}
 			}
-
 
 			free(unaMemoria->consistencias);
 			free(unaMemoria->ip);
@@ -498,27 +517,36 @@ void matarMemoria(int nombreMemoria) { //TODO: Semaforo?
 	}
 }
 
-int seedYaExiste(seed* unaSeed)
-{
-	for(int i = 0;i<list_size(memorias);i++)
-	{
-		memoriaEnLista* unaMemoria = list_get(memorias,i);
+int seedYaExiste(seed* unaSeed) {
+	for (int i = 0; i < list_size(memorias); i++) {
+		memoriaEnLista* unaMemoria = list_get(memorias, i);
 
-		if( !(strcmp(unaMemoria->ip,unaSeed->ip)) && (unaSeed->puerto == unaMemoria->puerto))
-		{
+		if (!(strcmp(unaMemoria->ip, unaSeed->ip))
+				&& (unaSeed->puerto == unaMemoria->puerto)) {
 			return 1;
 		}
 	}
 	return 0;
 }
 
-void actualizarMetadatas(t_list* metadatas)
+void agregarUnaMetadata (metadataTablaLFS* unaMetadata)
 {
+	if (criterioDeTabla(unaMetadata->nombre) == -1) //Si no existe ya
+	{
+		list_add(listaTablas,unaMetadata);
+	}
+	else
+	{
+		free(unaMetadata->nombre);
+		free(unaMetadata);
+	}
+}
+
+void actualizarMetadatas(t_list* metadatas) {
 	sem_wait(&sem_actualizacionMetadatas);
 
-	while(list_size(listaTablas != 0))
-	{
-		metadataTablaLFS* unaMetadata = list_remove(listaTablas,0);
+	while (list_size(listaTablas) != 0) {
+		metadataTablaLFS* unaMetadata = list_remove(listaTablas, 0);
 
 		free(unaMetadata->nombre);
 		free(unaMetadata);

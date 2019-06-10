@@ -118,23 +118,23 @@ void comunicacionConMemoria(memoriaEnLista* memoria) {
 			switch (tipoDeRespuesta) {
 			case TODO_BIEN: {
 
-				char* respuesta = string_new();
+				int respuesta = 1;
 
-				string_append(&respuesta, "1");
-
-				scriptReceptor->resultadoDeEnvio = respuesta;
+				scriptReceptor->resultadoDeEnvio = malloc(sizeof(int));
+				memcpy(scriptReceptor->resultadoDeEnvio, &respuesta,
+						sizeof(int));
 
 				sem_post(&scriptReceptor->semaforoDelScript);
-
 
 				continue;
 			}
 			case ERROR: {
-				char* respuesta = string_new();
 
-				string_append(&respuesta, "\"");
+				int respuesta = -1;
 
-				scriptReceptor->resultadoDeEnvio = respuesta;
+				scriptReceptor->resultadoDeEnvio = malloc(sizeof(int));
+				memcpy(scriptReceptor->resultadoDeEnvio, &respuesta,
+						sizeof(int));
 
 				sem_post(&scriptReceptor->semaforoDelScript);
 
@@ -173,7 +173,22 @@ void comunicacionConMemoria(memoriaEnLista* memoria) {
 				return;
 			}
 
-			scriptReceptor->resultadoDeEnvio = datoRecibido;
+			int respuesta = 1;
+
+			int tamanioString = strlen(datoRecibido) + 1;
+
+			scriptReceptor->resultadoDeEnvio = malloc(
+					sizeof(int) + sizeof(int) + tamanioString);
+
+			memcpy(scriptReceptor->resultadoDeEnvio, &respuesta, sizeof(int));
+
+			memcpy(scriptReceptor->resultadoDeEnvio + sizeof(int),
+					&tamanioString, sizeof(int));
+
+			memcpy(scriptReceptor->resultadoDeEnvio + sizeof(int) + sizeof(int),
+					datoRecibido, strlen(datoRecibido) + 1);
+
+			free(datoRecibido);
 
 			sem_post(&scriptReceptor->semaforoDelScript);
 
@@ -200,7 +215,7 @@ void comunicacionConMemoria(memoriaEnLista* memoria) {
 
 			int index = encontrarScriptEnLista(idScript, listaEXEC);
 
-			if (idScript == -1 || index == -1) { //  || no existe ese id
+			if (idScript == -1 || index == -1) {
 				manejoErrorMemoria(memoria->nombre);
 				return;
 			}
@@ -209,7 +224,15 @@ void comunicacionConMemoria(memoriaEnLista* memoria) {
 
 			t_list* metadatas = recibirMetadatas(socketMemoria, logger);
 
-			scriptReceptor->resultadoDeEnvio = metadatas;
+			int respuesta = 1;
+
+			scriptReceptor->resultadoDeEnvio = malloc(
+					sizeof(int) + sizeof(t_list*));
+
+
+			memcpy(scriptReceptor->resultadoDeEnvio, &respuesta, sizeof(int));
+
+			memcpy(scriptReceptor->resultadoDeEnvio + sizeof(int), &metadatas,sizeof(t_list*)); //Se pasa el puntero
 
 			sem_post(&scriptReceptor->semaforoDelScript);
 
