@@ -22,6 +22,13 @@ void conectarseAUnaMemoria(seed* unaSeed) {
 		return;
 	}
 
+	int modulo = recibirInt(socketMemoria, logger);
+
+	if (modulo != MEMORIA) {
+		log_error(logger, "Se conecto algo que no es la memoria.");
+		return;
+	}
+
 	int nombreMemoria = recibirInt(socketMemoria, logger);
 
 	if (nombreMemoria == -1) {
@@ -31,9 +38,9 @@ void conectarseAUnaMemoria(seed* unaSeed) {
 	memoriaEnLista* nuevaMemoria = malloc(sizeof(memoriaEnLista));
 
 	int* nuevaConsistencia = malloc(sizeof(int) * 3);
-	nuevaConsistencia[SC] = 0;
-	nuevaConsistencia[SHC] = 0;
-	nuevaConsistencia[EC] = 0;
+	nuevaConsistencia[SC] = -1;
+	nuevaConsistencia[SHC] = -1;
+	nuevaConsistencia[EC] = -1;
 
 	nuevaMemoria->nombre = nombreMemoria;
 	nuevaMemoria->socket = socketMemoria;
@@ -115,22 +122,20 @@ void comunicacionConMemoria(memoriaEnLista* memoria) {
 
 			int tipoDeRespuesta = recibirInt(socketMemoria, logger);
 
+			int respuesta;
+
 			switch (tipoDeRespuesta) {
+
 			case TODO_BIEN: {
 
-				int respuesta = 1;
+				respuesta = 1;
 
-				scriptReceptor->resultadoDeEnvio = malloc(sizeof(int));
-				memcpy(scriptReceptor->resultadoDeEnvio, &respuesta,
-						sizeof(int));
-
-				sem_post(&scriptReceptor->semaforoDelScript);
-
-				continue;
 			}
 			case ERROR: {
 
-				int respuesta = -1;
+				respuesta = -1;
+
+			}
 
 				scriptReceptor->resultadoDeEnvio = malloc(sizeof(int));
 				memcpy(scriptReceptor->resultadoDeEnvio, &respuesta,
@@ -140,7 +145,6 @@ void comunicacionConMemoria(memoriaEnLista* memoria) {
 
 				continue;
 
-			}
 			default: {
 
 				manejoErrorMemoria(memoria->nombre);
@@ -205,7 +209,7 @@ void comunicacionConMemoria(memoriaEnLista* memoria) {
 
 			pthread_detach(h_gossiping);
 
-			return;
+			continue;
 
 		}
 
@@ -229,14 +233,14 @@ void comunicacionConMemoria(memoriaEnLista* memoria) {
 			scriptReceptor->resultadoDeEnvio = malloc(
 					sizeof(int) + sizeof(t_list*));
 
-
 			memcpy(scriptReceptor->resultadoDeEnvio, &respuesta, sizeof(int));
 
-			memcpy(scriptReceptor->resultadoDeEnvio + sizeof(int), &metadatas,sizeof(t_list*)); //Se pasa el puntero
+			memcpy(scriptReceptor->resultadoDeEnvio + sizeof(int), &metadatas,
+					sizeof(t_list*)); //Se pasa el puntero
 
 			sem_post(&scriptReceptor->semaforoDelScript);
 
-			return;
+			continue;
 		}
 
 		default: {

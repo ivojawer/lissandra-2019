@@ -94,3 +94,189 @@
 [INFO] 12:09:10:333 kernel/(11984:11995): 1000: READY->EXEC
 [INFO] 12:31:34:35 kernel/(12541:12556): 1000: NEW->READY
 [INFO] 12:31:34:36 kernel/(12541:12553): 1000: READY->EXEC
+[INFO] 19:13:24:533 kernel/(12328:12340): Se acaba de conectar la memoria 0
+[INFO] 19:13:30:152 kernel/(12328:12372): 1000: NEW->READY
+[INFO] 19:13:30:152 kernel/(12328:12341): 1000: READY->EXEC
+[INFO] 19:15:00:187 kernel/(12459:12472): Se acaba de conectar la memoria 0
+[INFO] 19:15:08:284 kernel/(12459:12476): 1000: NEW->READY
+[INFO] 19:15:08:287 kernel/(12459:12473): 1000: READY->EXEC
+[INFO] 19:17:35:742 kernel/(12588:12603): 1000: NEW->READY
+[INFO] 19:17:35:742 kernel/(12588:12600): 1000: READY->EXEC
+[ERROR] 19:17:35:747 kernel/(12588:12604): No hay memorias conectadas para ejecutar la request 2.
+[ERROR] 19:17:35:747 kernel/(12588:12604): Hubo un error en la ejecucion del script 1000
+[INFO] 19:17:35:747 kernel/(12588:12604): 1000: EXEC->EXIT
+[INFO] 19:18:19:120 kernel/(12630:12640): Se acaba de conectar la memoria 0
+[INFO] 19:18:26:271 kernel/(12630:12655): 1000: NEW->READY
+[INFO] 19:18:26:271 kernel/(12630:12641): 1000: READY->EXEC
+[INFO] 19:55:06:43 kernel/(13954:13967): Se acaba de conectar la memoria 0
+[ERROR] 20:07:26:283 kernel/(14630:14640): Hubo un problema en el recibo de algo
+[ERROR] 20:07:26:283 kernel/(14630:14640): Se envio un handshake y se devolvio otra cosa.
+[INFO] 20:07:38:423 kernel/(14672:14681): Se acaba de conectar la memoria 420
+[INFO] 20:07:45:805 kernel/(14672:14693): 1000: NEW->READY
+[INFO] 20:07:45:806 kernel/(14672:14682): 1000: READY->EXEC
+[INFO] 20:09:02:311 kernel/(14734:14745): Se acaba de conectar la memoria 420
+[INFO] 20:09:07:408 kernel/(14734:14749): 1000: NEW->READY
+[INFO] 20:09:07:408 kernel/(14734:14746): 1000: READY->EXEC
+[INFO] 20:10:11:899 kernel/(14801:14812): Se acaba de conectar la memoria 420
+[INFO] 20:10:15:766 kernel/(14801:14816): 1000: NEW->READY
+[INFO] 20:10:15:767 kernel/(14801:14813): 1000: READY->EXEC
+[INFO] 20:17:22:93 kernel/(14980:14989): Se acaba de conectar la memoria 420
+[INFO] 20:19:01:200 kernel/(14980:15028): 1000: NEW->READY
+[INFO] 20:19:01:200 kernel/(14980:14990): 1000: READY->EXEC
+[INFO] 20:21:33:966 kernel/(15107:15122): Se acaba de conectar la memoria 420
+[INFO] 20:21:55:448 kernel/(15107:15148): 1000: NEW->READY
+[INFO] 20:21:55:448 kernel/(15107:15123): 1000: READY->EXEC
+[INFO] 20:48:03:610 kernel/(16223:16233): Se acaba de conectar la memoria 420
+[INFO] 20:48:07:191 kernel/(16223:16237): 1000: NEW->READY
+[INFO] 20:48:07:191 kernel/(16223:16234): 1000: READY->EXEC
+[INFO] 20:48:17:109 kernel/(16223:16239): Se termino de actualizar las metadatas
+[INFO] 20:48:17:109 kernel/(16223:16239): DESCRIBE: Se pudo realizar. (Enviado a 420)
+[INFO] 20:48:17:109 kernel/(16223:16239): Termino de ejecutar exitosamente el script 1000
+[INFO] 20:48:17:109 kernel/(16223:16239): 1000: EXEC->EXIT
+[INFO] 20:48:28:331 kernel/(16223:16269): 1001: NEW->READY
+[INFO] 20:48:28:331 kernel/(16223:16234): 1001: READY->EXEC
+[INFO] 20:56:04:231 kernel/(16437:16447): Se acaba de conectar la memoria 420
+[INFO] 21:15:04:803 kernel/(16997:17007): Se acaba de conectar la memoria 420
+[INFO] 21:15:15:205 kernel/(16997:17009): Se agrego la memoria 420 al criterio SC
+[INFO] 21:15:19:395 kernel/(16997:17017): 1000: NEW->READY
+[INFO] 21:15:19:395 kernel/(16997:17008): 1000: READY->EXEC
+[INFO] 21:15:20:397 kernel/(16997:17019): Se termino de actualizar las metadatas
+[INFO] 21:15:20:397 kernel/(16997:17019): DESCRIBE: Se pudo realizar. (Enviado a 420)
+[INFO] 21:15:20:397 kernel/(16997:17019): Termino de ejecutar exitosamente el script 1000
+[INFO] 21:15:20:397 kernel/(16997:17019): 1000: EXEC->EXIT
+[INFO] 21:15:28:637 kernel/(16997:17024): 1001: NEW->READY
+[INFO] 21:15:28:643 kernel/(16997:17008): 1001: READY->EXEC
+[INFO] 21:16:46:630 kernel/(17074:17089): Se acaba de conectar la memoria 420
+[INFO] 21:17:09:307 kernel/(17074:17100): Se agrego la memoria 420 al criterio SC
+[INFO] 21:17:15:2 kernel/(17074:17105): 1000: NEW->READY
+[INFO] 21:17:15:2 kernel/(17074:17090): 1000: READY->EXEC
+[INFO] 21:17:19:897 kernel/(17074:17107): Se termino de actualizar las metadatas
+[INFO] 21:17:19:897 kernel/(17074:17107): DESCRIBE: Se pudo realizar. (Enviado a 420)
+[INFO] 21:17:19:897 kernel/(17074:17107): Termino de ejecutar exitosamente el script 1000
+[INFO] 21:17:19:897 kernel/(17074:17107): 1000: EXEC->EXIT
+[INFO] 21:17:35:400 kernel/(17074:17114): 1001: NEW->READY
+[INFO] 21:17:35:400 kernel/(17074:17090): 1001: READY->EXEC
+[INFO] 21:19:33:179 kernel/(17176:17187): Se acaba de conectar la memoria 420
+[INFO] 21:19:39:722 kernel/(17176:17189): Se agrego la memoria 420 al criterio SC
+[INFO] 21:19:47:205 kernel/(17176:17191): 1000: NEW->READY
+[INFO] 21:19:47:205 kernel/(17176:17188): 1000: READY->EXEC
+[INFO] 21:19:54:949 kernel/(17176:17193): Se termino de actualizar las metadatas
+[INFO] 21:19:54:949 kernel/(17176:17193): DESCRIBE: Se pudo realizar. (Enviado a 420)
+[INFO] 21:19:54:949 kernel/(17176:17193): Termino de ejecutar exitosamente el script 1000
+[INFO] 21:19:54:949 kernel/(17176:17193): 1000: EXEC->EXIT
+[INFO] 21:22:54:107 kernel/(17328:17340): Se acaba de conectar la memoria 420
+[INFO] 21:22:59:751 kernel/(17328:17344): 1000: NEW->READY
+[INFO] 21:22:59:751 kernel/(17328:17341): 1000: READY->EXEC
+[INFO] 21:23:27:507 kernel/(17429:17439): Se acaba de conectar la memoria 420
+[INFO] 21:23:34:877 kernel/(17429:17443): 1000: NEW->READY
+[INFO] 21:23:34:877 kernel/(17429:17440): 1000: READY->EXEC
+[INFO] 21:24:33:517 kernel/(17481:17504): Se acaba de conectar la memoria 420
+[INFO] 21:24:45:20 kernel/(17481:17508): 1000: NEW->READY
+[INFO] 21:24:45:20 kernel/(17481:17505): 1000: READY->EXEC
+[INFO] 21:25:11:394 kernel/(17540:17553): 1000: NEW->READY
+[INFO] 21:25:11:394 kernel/(17540:17551): 1000: READY->EXEC
+[ERROR] 21:25:11:397 kernel/(17540:17555): No hay memorias conectadas para ejecutar la request 3.
+[ERROR] 21:25:11:397 kernel/(17540:17555): Hubo un error en la ejecucion del script 1000
+[INFO] 21:25:11:397 kernel/(17540:17555): 1000: EXEC->EXIT
+[INFO] 21:25:39:300 kernel/(17596:17604): Se acaba de conectar la memoria 420
+[INFO] 21:25:45:139 kernel/(17596:17608): 1000: NEW->READY
+[INFO] 21:25:45:139 kernel/(17596:17605): 1000: READY->EXEC
+[INFO] 21:25:46:149 kernel/(17596:17610): Se termino de actualizar las metadatas
+[INFO] 21:25:46:149 kernel/(17596:17610): DESCRIBE: Se pudo realizar. (Enviado a 420)
+[INFO] 21:25:46:149 kernel/(17596:17610): Termino de ejecutar exitosamente el script 1000
+[INFO] 21:25:46:149 kernel/(17596:17610): 1000: EXEC->EXIT
+[INFO] 21:25:49:143 kernel/(17596:17606): Se agrego la memoria 420 al criterio SC
+[INFO] 21:25:53:392 kernel/(17596:17613): 1001: NEW->READY
+[INFO] 21:25:53:395 kernel/(17596:17605): 1001: READY->EXEC
+[INFO] 21:28:06:209 kernel/(17728:17739): Se acaba de conectar la memoria 420
+[INFO] 21:28:10:218 kernel/(17728:17743): 1000: NEW->READY
+[INFO] 21:28:10:219 kernel/(17728:17740): 1000: READY->EXEC
+[INFO] 21:28:13:231 kernel/(17728:17745): Se termino de actualizar las metadatas
+[INFO] 21:28:13:231 kernel/(17728:17745): DESCRIBE: Se pudo realizar. (Enviado a 420)
+[INFO] 21:28:13:231 kernel/(17728:17745): Termino de ejecutar exitosamente el script 1000
+[INFO] 21:28:13:231 kernel/(17728:17745): 1000: EXEC->EXIT
+[INFO] 21:28:23:253 kernel/(17728:17741): Se agrego la memoria 420 al criterio SC
+[INFO] 21:28:30:233 kernel/(17728:17753): 1001: NEW->READY
+[INFO] 21:28:30:233 kernel/(17728:17740): 1001: READY->EXEC
+[INFO] 21:28:57:401 kernel/(17795:17804): Se acaba de conectar la memoria 420
+[INFO] 21:29:00:616 kernel/(17795:17809): 1000: NEW->READY
+[INFO] 21:29:00:616 kernel/(17795:17805): 1000: READY->EXEC
+[INFO] 21:29:04:324 kernel/(17795:17811): Se termino de actualizar las metadatas
+[INFO] 21:29:04:324 kernel/(17795:17811): DESCRIBE: Se pudo realizar. (Enviado a 420)
+[INFO] 21:29:04:324 kernel/(17795:17811): Termino de ejecutar exitosamente el script 1000
+[INFO] 21:29:04:324 kernel/(17795:17811): 1000: EXEC->EXIT
+[INFO] 21:29:15:329 kernel/(17795:17818): 1001: NEW->READY
+[INFO] 21:29:15:330 kernel/(17795:17805): 1001: READY->EXEC
+[INFO] 21:29:18:928 kernel/(17795:17821): Se termino de actualizar las metadatas
+[INFO] 21:29:18:928 kernel/(17795:17821): DESCRIBE: Se pudo realizar. (Enviado a 420)
+[INFO] 21:29:18:928 kernel/(17795:17821): Termino de ejecutar exitosamente el script 1001
+[INFO] 21:29:18:928 kernel/(17795:17821): 1001: EXEC->EXIT
+[INFO] 21:29:25:572 kernel/(17795:17806): Se agrego la memoria 420 al criterio SC
+[INFO] 21:29:37:841 kernel/(17795:17827): 1002: NEW->READY
+[INFO] 21:29:37:842 kernel/(17795:17805): 1002: READY->EXEC
+[INFO] 21:30:30:603 kernel/(17873:17884): Se acaba de conectar la memoria 420
+[INFO] 21:30:35:121 kernel/(17873:17888): 1000: NEW->READY
+[INFO] 21:30:35:122 kernel/(17873:17885): 1000: READY->EXEC
+[INFO] 21:30:40:455 kernel/(17873:17890): Se termino de actualizar las metadatas
+[INFO] 21:30:40:455 kernel/(17873:17890): DESCRIBE: Se pudo realizar. (Enviado a 420)
+[INFO] 21:30:40:455 kernel/(17873:17890): Termino de ejecutar exitosamente el script 1000
+[INFO] 21:30:40:455 kernel/(17873:17890): 1000: EXEC->EXIT
+[INFO] 21:30:45:924 kernel/(17873:17886): Se agrego la memoria 420 al criterio SC
+[INFO] 21:30:54:649 kernel/(17873:17898): 1001: NEW->READY
+[INFO] 21:30:54:649 kernel/(17873:17885): 1001: READY->EXEC
+[INFO] 21:32:40:326 kernel/(18010:18023): Se acaba de conectar la memoria 420
+[INFO] 21:32:50:467 kernel/(18010:18025): Se agrego la memoria 420 al criterio SC
+[INFO] 21:33:15:176 kernel/(18010:18027): 1000: NEW->READY
+[INFO] 21:33:15:176 kernel/(18010:18024): 1000: READY->EXEC
+[INFO] 21:33:16:178 kernel/(18010:18029): Se termino de actualizar las metadatas
+[INFO] 21:33:16:178 kernel/(18010:18029): DESCRIBE: Se pudo realizar. (Enviado a 420)
+[INFO] 21:33:16:178 kernel/(18010:18029): Termino de ejecutar exitosamente el script 1000
+[INFO] 21:33:16:179 kernel/(18010:18029): 1000: EXEC->EXIT
+[INFO] 21:33:21:669 kernel/(18010:18032): 1001: NEW->READY
+[INFO] 21:33:21:669 kernel/(18010:18024): 1001: READY->EXEC
+[INFO] 21:34:04:874 kernel/(18078:18091): Se acaba de conectar la memoria 420
+[INFO] 21:34:10:355 kernel/(18078:18094): Se agrego la memoria 420 al criterio SC
+[INFO] 21:34:14:514 kernel/(18078:18095): 1000: NEW->READY
+[INFO] 21:34:14:514 kernel/(18078:18093): 1000: READY->EXEC
+[INFO] 21:34:15:520 kernel/(18078:18097): Se termino de actualizar las metadatas
+[INFO] 21:34:15:520 kernel/(18078:18097): DESCRIBE: Se pudo realizar. (Enviado a 420)
+[INFO] 21:34:15:520 kernel/(18078:18097): Termino de ejecutar exitosamente el script 1000
+[INFO] 21:34:15:520 kernel/(18078:18097): 1000: EXEC->EXIT
+[INFO] 21:34:20:68 kernel/(18078:18100): 1001: NEW->READY
+[INFO] 21:34:20:68 kernel/(18078:18093): 1001: READY->EXEC
+[INFO] 21:35:11:109 kernel/(18186:18195): Se acaba de conectar la memoria 420
+[INFO] 21:35:17:834 kernel/(18186:18197): Se agrego la memoria 420 al criterio SC
+[INFO] 21:35:21:108 kernel/(18186:18204): 1000: NEW->READY
+[INFO] 21:35:21:109 kernel/(18186:18196): 1000: READY->EXEC
+[INFO] 21:35:22:110 kernel/(18186:18206): Se termino de actualizar las metadatas
+[INFO] 21:35:22:111 kernel/(18186:18206): DESCRIBE: Se pudo realizar. (Enviado a 420)
+[INFO] 21:35:22:111 kernel/(18186:18206): Termino de ejecutar exitosamente el script 1000
+[INFO] 21:35:22:111 kernel/(18186:18206): 1000: EXEC->EXIT
+[INFO] 21:35:29:354 kernel/(18186:18211): 1001: NEW->READY
+[INFO] 21:35:29:354 kernel/(18186:18196): 1001: READY->EXEC
+[INFO] 21:36:29:189 kernel/(18279:18291): Se acaba de conectar la memoria 420
+[INFO] 21:36:34:841 kernel/(18279:18293): Se agrego la memoria 420 al criterio SC
+[INFO] 21:36:42:509 kernel/(18279:18295): 1000: NEW->READY
+[INFO] 21:36:42:509 kernel/(18279:18292): 1000: READY->EXEC
+[INFO] 21:36:43:517 kernel/(18279:18297): Se termino de actualizar las metadatas
+[INFO] 21:36:43:517 kernel/(18279:18297): DESCRIBE: Se pudo realizar. (Enviado a 420)
+[INFO] 21:36:43:517 kernel/(18279:18297): Termino de ejecutar exitosamente el script 1000
+[INFO] 21:36:43:517 kernel/(18279:18297): 1000: EXEC->EXIT
+[INFO] 21:36:48:242 kernel/(18279:18305): 1001: NEW->READY
+[INFO] 21:36:48:242 kernel/(18279:18292): 1001: READY->EXEC
+[INFO] 21:36:49:246 kernel/(18279:18307): Termino de ejecutar exitosamente el script 1001
+[INFO] 21:36:49:246 kernel/(18279:18307): 1001: EXEC->EXIT
+[INFO] 21:36:59:937 kernel/(18279:18308): 1002: NEW->READY
+[INFO] 21:36:59:937 kernel/(18279:18292): 1002: READY->EXEC
+[INFO] 21:37:00:939 kernel/(18279:18311): Termino de ejecutar exitosamente el script 1002
+[INFO] 21:37:00:939 kernel/(18279:18311): 1002: EXEC->EXIT
+[INFO] 21:37:42:988 kernel/(18387:18395): Se acaba de conectar la memoria 420
+[INFO] 21:37:48:608 kernel/(18387:18397): Se agrego la memoria 420 al criterio SC
+[INFO] 21:37:50:156 kernel/(18387:18399): 1000: NEW->READY
+[INFO] 21:37:50:156 kernel/(18387:18396): 1000: READY->EXEC
+[INFO] 21:37:51:169 kernel/(18387:18401): Se termino de actualizar las metadatas
+[INFO] 21:37:51:169 kernel/(18387:18401): DESCRIBE: Se pudo realizar. (Enviado a 420)
+[INFO] 21:37:51:169 kernel/(18387:18401): Termino de ejecutar exitosamente el script 1000
+[INFO] 21:37:51:170 kernel/(18387:18401): 1000: EXEC->EXIT
+[INFO] 21:37:55:872 kernel/(18387:18404): 1001: NEW->READY
+[INFO] 21:37:55:872 kernel/(18387:18396): 1001: READY->EXEC

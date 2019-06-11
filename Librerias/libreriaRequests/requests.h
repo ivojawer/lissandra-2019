@@ -27,7 +27,6 @@
 #define RESPUESTA 6
 #define METADATAS 7
 
-
 //Respuestas:
 #define ERROR 0
 #define TODO_BIEN 1
@@ -81,6 +80,7 @@ void liberarRequest(request* request);
 void enviarIntConHeader(int intAEnviar, int header, int aQuien);
 int recibirInt(int deQuien, t_log* logger);
 
+void enviarStringConHeaderEId(char* string, int aQuien, int header, int id);
 void enviarStringConHeader(char* string, int aQuien, int header);
 char* recibirString(int deQuien, t_log* logger);
 

@@ -23,15 +23,14 @@ sem_t sem_tiemposSelect;
 sem_t sem_gossiping;
 sem_t sem_actualizacionMetadatas;
 
-
 int main() {
 
 	logger = log_create("kernel.log", "kernel", 1, 0);
 	config = config_create(
 			"/home/utnso/workspace/tp-2019-1c-U-TN-Tecno/CONFIG/kernel.config");
 
-	quantum = config_get_int_value(config,"QUANTUM");
-	multiprocesamiento = config_get_int_value(config,"MULTIPROCESAMIENTO");
+	quantum = config_get_int_value(config, "QUANTUM");
+	multiprocesamiento = config_get_int_value(config, "MULTIPROCESAMIENTO");
 
 	colaNEW = list_create();
 	colaREADY = list_create();
@@ -47,6 +46,7 @@ int main() {
 
 	pthread_t h_consola;
 	pthread_t h_planificador;
+	pthread_t h_primeraConexion;
 
 	sem_init(&sem_multiprocesamiento, 0, multiprocesamiento);
 	sem_init(&sem_cambioId, 0, 1);
@@ -55,12 +55,25 @@ int main() {
 	sem_init(&sem_tiemposInsert, 0, 1);
 	sem_init(&sem_tiemposSelect, 0, 1);
 	sem_init(&sem_gossiping, 0, 1);
-	sem_init(&sem_actualizacionMetadatas,0,1);
+	sem_init(&sem_actualizacionMetadatas, 0, 1);
+
+	char* ipMemoriaPrincipal = config_get_string_value(config, "IP_MEMORIA");
+	int puertoMemoriaPrincipal = config_get_int_value(config, "PUERTO_MEMORIA");
+
+	seed* seedPrincipal = malloc(sizeof(seed));
+
+	seedPrincipal->ip = ipMemoriaPrincipal;
+	seedPrincipal->puerto = puertoMemoriaPrincipal;
+
+	pthread_create(&h_primeraConexion, NULL, (void *) conectarseAUnaMemoria,
+			seedPrincipal);
+	pthread_detach(h_primeraConexion);
+
+	pthread_create(&h_planificador, NULL, (void *) planificadorREADYAEXEC,
+			NULL);
+	pthread_detach(h_planificador);
 
 	pthread_create(&h_consola, NULL, (void *) consola, NULL);
-	pthread_create(&h_planificador, NULL, (void *) planificadorREADYAEXEC, NULL);
-
-	pthread_detach(h_planificador);
 	pthread_join(h_consola, NULL);
 
 	//Matar lo que se pueda

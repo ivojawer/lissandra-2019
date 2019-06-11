@@ -146,9 +146,9 @@ char* leerLinea(char* direccion, int lineaALeer) {
 
 			resultadoDeLeer = fgets(buffer, MAXBUFFER, archivo);
 
-			if (resultadoDeLeer == NULL) //Si es el ultimo string, no viene con \n
+			if (resultadoDeLeer == NULL) //TODO: Antes era \n, ver si no rompio nada
 			{
-				string_append(&resultado, "\n");
+				string_append(&resultado, "\0");
 			}
 		}
 
@@ -412,6 +412,8 @@ int determinarAQueMemoriaEnviar(request* unaRequest) {
 
 	int criterio = criterioDeTabla(devolverTablaDeRequest(unaRequest));
 
+
+
 	if (criterio == -1) //No existe la tabla (TODO: Ver si esto se hace antes o que, tambien lo del CREATE)
 			{
 		log_error(logger, "No se encontro la tabla %s en las metadatas.",
@@ -534,6 +536,7 @@ void agregarUnaMetadata (metadataTablaLFS* unaMetadata)
 	if (criterioDeTabla(unaMetadata->nombre) == -1) //Si no existe ya
 	{
 		list_add(listaTablas,unaMetadata);
+		log_info(logger, "Se agrego la tabla a las metadatas%s", unaMetadata->nombre);
 	}
 	else
 	{
@@ -555,5 +558,8 @@ void actualizarMetadatas(t_list* metadatas) {
 	list_destroy(listaTablas);
 
 	listaTablas = metadatas;
+
+	log_info(logger,"Se termino de actualizar las metadatas");
+
 	sem_post(&sem_actualizacionMetadatas);
 }

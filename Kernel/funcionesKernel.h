@@ -13,5 +13,5 @@ void metrics();
 int crearScript(request* nuevaRequest);
 void status();
 int add(char* chocloDeCosas);
-
+void journal();
 #endif /* FUNCIONESKERNEL_H_ */

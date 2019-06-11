@@ -3,7 +3,7 @@
 int seRecibioBien(int respuesta, t_log* logger) {
 	if (respuesta < 0) {
 
-		log_error(logger, "Hubo un problema en el envio de algo");
+		log_error(logger, "Hubo un problema en el recibo de algo");
 
 		return 0;
 	}
@@ -11,6 +11,7 @@ int seRecibioBien(int respuesta, t_log* logger) {
 }
 
 int conectarseAServidor(char* ip, int puerto) {
+
 	struct sockaddr_in direccionServidor;
 	direccionServidor.sin_family = AF_INET;
 	direccionServidor.sin_addr.s_addr = inet_addr(ip);

@@ -107,7 +107,8 @@ int ejecutarRequest(request* requestAEjecutar, script* elScript) {
 
 	int memoria;
 
-	if (esDescribeGlobal(requestAEjecutar)) {
+	if (requestAEjecutar->requestEnInt == CREATE
+			|| requestAEjecutar->requestEnInt == DESCRIBE) { //Preguntar esto
 		memoria = unaMemoriaCualquiera();
 
 	} else {
@@ -126,6 +127,8 @@ int ejecutarRequest(request* requestAEjecutar, script* elScript) {
 			encontrarPosicionDeMemoria(memoria));
 
 	time_t tiempoInicial = time(NULL);
+
+	sleep(1); //No olvidar
 
 	enviarRequestConHeaderEId(laMemoria->socket, requestAEjecutar, REQUEST,
 			elScript->idScript);
@@ -152,12 +155,13 @@ int ejecutarRequest(request* requestAEjecutar, script* elScript) {
 
 			char* resultadoSelect = malloc(tamanioString);
 
-			memcpy(&resultadoSelect,
+			memcpy(resultadoSelect,
 					elScript->resultadoDeEnvio + sizeof(int) + sizeof(int),
 					tamanioString);
 
-			log_info(logger, "%s: %s (Enviado a %i)", requestStructAString(requestAEjecutar),
-					resultadoSelect, memoria);
+			log_info(logger, "%s: %s (Enviado a %i)",
+					requestStructAString(requestAEjecutar), resultadoSelect,
+					memoria);
 
 		}
 		break;
@@ -166,32 +170,29 @@ int ejecutarRequest(request* requestAEjecutar, script* elScript) {
 	default: {
 		if (respuesta == -1) {
 			log_error(logger, "%s: No se pudo realizar. (Enviado a %i)",
-					requestStructAString(requestAEjecutar),memoria);
+					requestStructAString(requestAEjecutar), memoria);
 
 		} else {
 
-			if (requestAEjecutar->requestEnInt == DESCRIBE)
-			{
+			if (requestAEjecutar->requestEnInt == DESCRIBE) {
 				t_list* metadatas;
 
-				memcpy(&metadatas, elScript->resultadoDeEnvio + sizeof(int), sizeof(t_list*)); //Esto puede fallar, hay que probar
+				memcpy(&metadatas, elScript->resultadoDeEnvio + sizeof(int),
+						sizeof(t_list*));
 
-				if (esDescribeGlobal(requestAEjecutar))
-				{
+				if (esDescribeGlobal(requestAEjecutar)) {
 					actualizarMetadatas(metadatas);
-				}
-				else
-				{
-					metadataTablaLFS* laMetadata = list_get(metadatas,0);
-					agregarUnaMetadata (laMetadata);
+				} else {
+					metadataTablaLFS* laMetadata = list_get(metadatas, 0);
+					agregarUnaMetadata(laMetadata);
 
 					list_destroy(metadatas);
 				}
 
 			}
 
-			log_error(logger, "%s: Se pudo realizar. (Enviado a %i)",
-					requestStructAString(requestAEjecutar),memoria);
+			log_info(logger, "%s: Se pudo realizar. (Enviado a %i)",
+					requestStructAString(requestAEjecutar), memoria);
 		}
 
 	}
@@ -278,10 +279,8 @@ int add(char* chocloDeCosas) {
 
 	char** consistenciaYMemoriaEnArray = string_n_split(chocloDeCosas, 4, " ");
 
-	int consistencia = atoi(consistenciaYMemoriaEnArray[1]);
-	int nombreMemoria = atoi(consistenciaYMemoriaEnArray[3]);
-
-	liberarArrayDeStrings(consistenciaYMemoriaEnArray);
+	int nombreMemoria = atoi(consistenciaYMemoriaEnArray[1]);
+	int consistencia = queConsistenciaEs(consistenciaYMemoriaEnArray[3]);
 
 	int posicionMemoria = encontrarPosicionDeMemoria(nombreMemoria);
 
@@ -299,6 +298,11 @@ int add(char* chocloDeCosas) {
 	if ((consistencia == EC) && (proximaMemoriaEC == -1)) {
 		proximaMemoriaEC = memoria->nombre;
 	}
+
+	log_info(logger, "Se agrego la memoria %i al criterio %s", nombreMemoria,
+			consistenciaYMemoriaEnArray[3]);
+
+	liberarArrayDeStrings(consistenciaYMemoriaEnArray);
 
 	return 1;
 
