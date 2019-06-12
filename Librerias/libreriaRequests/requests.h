@@ -28,8 +28,9 @@
 #define METADATAS 7
 
 //Respuestas:
-#define ERROR 0
+#define ERROR -1
 #define TODO_BIEN 1
+#define MEM_LLENA 2
 
 //Identificadores de modulo:
 #define KERNEL 0
@@ -45,6 +46,7 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <commons/collections/list.h>
+#include<readline/history.h>
 
 typedef struct {
 	int requestEnInt;

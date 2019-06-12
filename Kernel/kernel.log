@@ -280,3 +280,39 @@
 [INFO] 21:37:51:170 kernel/(18387:18401): 1000: EXEC->EXIT
 [INFO] 21:37:55:872 kernel/(18387:18404): 1001: NEW->READY
 [INFO] 21:37:55:872 kernel/(18387:18396): 1001: READY->EXEC
+[INFO] 17:50:56:140 kernel/(5535:5548): Se cambio el sleep
+[INFO] 17:51:08:693 kernel/(5535:5548): Se cambio el sleep
+[INFO] 17:52:46:79 kernel/(5655:5667): Se cambio el sleep
+[INFO] 17:52:56:320 kernel/(5655:5667): Se cambio el sleep
+[INFO] 17:53:05:384 kernel/(5655:5667): Se cambio el sleep
+[INFO] 17:53:13:449 kernel/(5655:5667): Se cambio el sleep
+[INFO] 17:53:21:781 kernel/(5655:5667): Se cambio el sleep
+[INFO] 17:53:29:287 kernel/(5655:5667): Se cambio el sleep
+[INFO] 17:53:35:869 kernel/(5655:5667): Se cambio el sleep
+[INFO] 17:53:41:67 kernel/(5655:5667): Se cambio el sleep
+[INFO] 17:53:50:117 kernel/(5655:5667): Se cambio el sleep
+[INFO] 17:53:58:607 kernel/(5655:5667): Se cambio el sleep
+[INFO] 17:54:06:77 kernel/(5655:5667): Se cambio el sleep
+[INFO] 17:54:12:408 kernel/(5655:5667): Se cambio el sleep
+[INFO] 19:20:56:833 kernel/(8171:8182): Se acaba de conectar la memoria 420
+[INFO] 19:21:04:24 kernel/(8171:8195): 1000: NEW->READY
+[INFO] 19:21:04:25 kernel/(8171:8183): 1000: READY->EXEC
+[INFO] 19:35:32:976 kernel/(8426:8438): Se acaba de conectar la memoria 420
+[INFO] 19:35:39:659 kernel/(8426:8444): 1000: NEW->READY
+[INFO] 19:35:39:659 kernel/(8426:8439): 1000: READY->EXEC
+[INFO] 19:36:00:223 kernel/(8478:8486): Se acaba de conectar la memoria 420
+[INFO] 19:36:04:537 kernel/(8478:8493): 1000: NEW->READY
+[INFO] 19:36:04:537 kernel/(8478:8487): 1000: READY->EXEC
+[ERROR] 19:36:24:768 kernel/(8478:8486): Se recibio de la memoria 420 algo incorrecto, se va a cerrar la conexion.
+[INFO] 19:36:41:646 kernel/(8572:8580): Se acaba de conectar la memoria 420
+[INFO] 19:36:47:427 kernel/(8572:8588): 1000: NEW->READY
+[INFO] 19:36:47:427 kernel/(8572:8581): 1000: READY->EXEC
+[INFO] 19:38:56:550 kernel/(8655:8665): Se acaba de conectar la memoria 420
+[INFO] 19:39:01:537 kernel/(8655:8671): 1000: NEW->READY
+[INFO] 19:39:01:537 kernel/(8655:8666): 1000: READY->EXEC
+[INFO] 19:48:11:979 kernel/(9000:9009): Se acaba de conectar la memoria 420
+[INFO] 19:48:14:944 kernel/(9000:9015): 1000: NEW->READY
+[INFO] 19:48:14:944 kernel/(9000:9010): 1000: READY->EXEC
+[INFO] 19:49:09:602 kernel/(9052:9061): Se acaba de conectar la memoria 420
+[INFO] 19:49:55:742 kernel/(9052:9080): 1000: NEW->READY
+[INFO] 19:49:55:743 kernel/(9052:9063): 1000: READY->EXEC

@@ -3,18 +3,19 @@
 extern t_list* listaTablas;
 extern t_list* tiemposInsert;
 extern t_list* tiemposSelect;
-extern sem_t sem_tiemposInsert;
-extern sem_t sem_tiemposSelect;
-extern sem_t sem_actualizacionMetadatas;
 extern t_list* colaNEW;
 extern t_list* colaREADY;
 extern t_list* listaTablas;
 extern t_list* listaEXEC;
 extern t_list* listaEXIT;
 extern t_list* memorias;
+extern sem_t sem_tiemposInsert;
+extern sem_t sem_tiemposSelect;
+extern sem_t sem_actualizacionMetadatas;
+extern sem_t sem_cambioSleepEjecucion;
 extern int proximaMemoriaEC;
+extern int sleepEjecucion;
 extern t_log* logger;
-extern t_list* memorias;
 
 int encontrarScriptEnLista(int id, t_list* lista) {
 	for (int i = 0; i < list_size(lista); i++) {
@@ -142,35 +143,28 @@ char* leerLinea(char* direccion, int lineaALeer) {
 		}
 
 		if (i == lineaALeer) {
-			string_append(&resultado, resultadoDeLeer);
+
+			string_append(&resultado,resultadoDeLeer);
 
 			resultadoDeLeer = fgets(buffer, MAXBUFFER, archivo);
 
-			if (resultadoDeLeer == NULL) //TODO: Antes era \n, ver si no rompio nada
+			if (resultadoDeLeer == NULL)
 			{
 				string_append(&resultado, "\0");
 			}
+			else
+			{
+				char* resultadoAux = resultado;
+				resultado = string_substring_until(resultado,strlen(resultado)-1);
+				free(resultadoAux);
+			}
 		}
-
-		//free(resultadoDeLeer); Seg fault en esta linea wowowo (Y no por el free del if resultadoLeer == NULL)
 
 	}
 
 	fclose(archivo);
 
 	return resultado;
-
-//	int caracteres = charsDeBuffer(buffer);
-//
-//	char* linea = malloc(sizeof(char) * caracteres);
-//
-//	memcpy(linea, buffer, caracteres * sizeof(char));
-//
-//	fclose(archivo);
-//
-//
-//
-//	return linea;
 
 }
 
@@ -412,8 +406,6 @@ int determinarAQueMemoriaEnviar(request* unaRequest) {
 
 	int criterio = criterioDeTabla(devolverTablaDeRequest(unaRequest));
 
-
-
 	if (criterio == -1) //No existe la tabla (TODO: Ver si esto se hace antes o que, tambien lo del CREATE)
 			{
 		log_error(logger, "No se encontro la tabla %s en las metadatas.",
@@ -531,15 +523,13 @@ int seedYaExiste(seed* unaSeed) {
 	return 0;
 }
 
-void agregarUnaMetadata (metadataTablaLFS* unaMetadata)
-{
+void agregarUnaMetadata(metadataTablaLFS* unaMetadata) {
 	if (criterioDeTabla(unaMetadata->nombre) == -1) //Si no existe ya
-	{
-		list_add(listaTablas,unaMetadata);
-		log_info(logger, "Se agrego la tabla a las metadatas%s", unaMetadata->nombre);
-	}
-	else
-	{
+			{
+		list_add(listaTablas, unaMetadata);
+		log_info(logger, "Se agrego la tabla a las metadatas%s",
+				unaMetadata->nombre);
+	} else {
 		free(unaMetadata->nombre);
 		free(unaMetadata);
 	}
@@ -559,7 +549,93 @@ void actualizarMetadatas(t_list* metadatas) {
 
 	listaTablas = metadatas;
 
-	log_info(logger,"Se termino de actualizar las metadatas");
+	log_info(logger, "Se termino de actualizar las metadatas");
 
 	sem_post(&sem_actualizacionMetadatas);
 }
+
+int manejarRespuestaDeMemoria(script* elScript, request* laRequest, int memoria) {
+	int respuesta;
+
+	memcpy(&respuesta, elScript->resultadoDeEnvio, sizeof(int));
+
+	if (respuesta == ERROR) {
+		log_error(logger, "%s: No se pudo realizar. (Enviado a %i)",
+				requestStructAString(laRequest), memoria);
+	}
+
+	else if (respuesta == MEM_LLENA) {
+		log_error(logger,
+				"La memoria %i esta llena, se va a enviar un JOURNAL.");
+
+		journal();
+
+		memoriaEnLista* laMemoria = list_get(memorias,
+				encontrarPosicionDeMemoria(memoria));
+		sem_wait(&sem_cambioSleepEjecucion);
+		int tiempoDeSleep = sleepEjecucion;
+		sem_wait(&sem_cambioSleepEjecucion);
+
+		sleep(tiempoDeSleep);
+
+		enviarRequestConHeaderEId(laMemoria->socket, laRequest, REQUEST,
+				elScript->idScript);
+
+		respuesta = manejarRespuestaDeMemoria(elScript, laRequest, memoria);
+	}
+
+	else {
+
+		switch (laRequest->requestEnInt) {
+		case SELECT: {
+
+			int tamanioString;
+
+			memcpy(&tamanioString, elScript->resultadoDeEnvio + sizeof(int),
+					sizeof(int));
+
+			char* resultadoSelect = malloc(tamanioString);
+
+			memcpy(resultadoSelect,
+					elScript->resultadoDeEnvio + sizeof(int) + sizeof(int),
+					tamanioString);
+
+			log_info(logger, "%s: %s (Enviado a %i)",
+					requestStructAString(laRequest), resultadoSelect, memoria);
+
+			break;
+
+		}
+
+		case DESCRIBE: {
+			t_list* metadatas;
+
+			memcpy(&metadatas, elScript->resultadoDeEnvio + sizeof(int),
+					sizeof(t_list*));
+
+			if (esDescribeGlobal(laRequest)) {
+				actualizarMetadatas(metadatas);
+			} else {
+				metadataTablaLFS* laMetadata = list_get(metadatas, 0);
+				agregarUnaMetadata(laMetadata);
+
+				list_destroy(metadatas);
+			}
+		}
+			/* no break */
+
+		default: {
+
+			log_info(logger, "%s: Se pudo realizar. (Enviado a %i)",
+					requestStructAString(laRequest), memoria);
+		}
+
+		}
+	}
+
+	free(elScript->resultadoDeEnvio);
+
+	return respuesta;
+
+}
+

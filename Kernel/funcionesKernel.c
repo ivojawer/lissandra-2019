@@ -4,14 +4,17 @@ extern t_list* colaNEW;
 extern t_list* colaREADY;
 extern t_list* listaEXEC;
 extern t_list* listaEXIT;
-extern int idInicial;
-extern sem_t sem_cambioId;
-extern sem_t sem_disponibleColaREADY;
-extern t_log* logger;
 extern t_list* tiemposInsert;
 extern t_list* tiemposSelect;
 extern t_list* memorias;
+extern sem_t sem_cambioId;
+extern sem_t sem_disponibleColaREADY;
+extern sem_t sem_cambioSleepEjecucion;
+extern t_log* logger;
+extern int idInicial;
 extern int proximaMemoriaEC;
+extern int sleepEjecucion;
+extern script* scriptRefreshMetadata;
 
 int crearScript(request* nuevaRequest) {
 
@@ -128,78 +131,18 @@ int ejecutarRequest(request* requestAEjecutar, script* elScript) {
 
 	time_t tiempoInicial = time(NULL);
 
-	sleep(1); //No olvidar
+	sem_wait(&sem_cambioSleepEjecucion);
+	int tiempoDeSleep = sleepEjecucion;
+	sem_post(&sem_cambioSleepEjecucion);
+
+	sleep(tiempoDeSleep);
 
 	enviarRequestConHeaderEId(laMemoria->socket, requestAEjecutar, REQUEST,
 			elScript->idScript);
 
 	sem_wait(&elScript->semaforoDelScript);
 
-	int respuesta;
-
-	memcpy(&respuesta, elScript->resultadoDeEnvio, sizeof(int));
-
-	switch (requestAEjecutar->requestEnInt) {
-	case SELECT: {
-		if (respuesta == -1) {
-
-			log_error(logger, "%s: No se encontro. (Enviado a %i)",
-					requestStructAString(requestAEjecutar), memoria);
-
-		} else {
-
-			int tamanioString;
-
-			memcpy(&tamanioString, elScript->resultadoDeEnvio + sizeof(int),
-					sizeof(int));
-
-			char* resultadoSelect = malloc(tamanioString);
-
-			memcpy(resultadoSelect,
-					elScript->resultadoDeEnvio + sizeof(int) + sizeof(int),
-					tamanioString);
-
-			log_info(logger, "%s: %s (Enviado a %i)",
-					requestStructAString(requestAEjecutar), resultadoSelect,
-					memoria);
-
-		}
-		break;
-	}
-
-	default: {
-		if (respuesta == -1) {
-			log_error(logger, "%s: No se pudo realizar. (Enviado a %i)",
-					requestStructAString(requestAEjecutar), memoria);
-
-		} else {
-
-			if (requestAEjecutar->requestEnInt == DESCRIBE) {
-				t_list* metadatas;
-
-				memcpy(&metadatas, elScript->resultadoDeEnvio + sizeof(int),
-						sizeof(t_list*));
-
-				if (esDescribeGlobal(requestAEjecutar)) {
-					actualizarMetadatas(metadatas);
-				} else {
-					metadataTablaLFS* laMetadata = list_get(metadatas, 0);
-					agregarUnaMetadata(laMetadata);
-
-					list_destroy(metadatas);
-				}
-
-			}
-
-			log_info(logger, "%s: Se pudo realizar. (Enviado a %i)",
-					requestStructAString(requestAEjecutar), memoria);
-		}
-
-	}
-
-	}
-
-	free(elScript->resultadoDeEnvio);
+	int respuesta = manejarRespuestaDeMemoria(elScript,requestAEjecutar,memoria);
 
 	time_t tiempoFinal = time(NULL);
 
@@ -305,6 +248,75 @@ int add(char* chocloDeCosas) {
 	liberarArrayDeStrings(consistenciaYMemoriaEnArray);
 
 	return 1;
+
+}
+
+void refreshMetadatas() {
+
+	request* requestMetadata = crearStructRequest("DESCRIBE");
+
+	while (1) {
+		t_config* config = config_create(DIRCONFIG);
+		int intervaloDeRefresh = config_get_int_value(config,
+				"METADATA_REFRESH");
+		config_destroy(config);
+
+		sleep(intervaloDeRefresh);
+
+		int memoria = unaMemoriaCualquiera();
+
+		if (memoria == -1) {
+			continue;
+		}
+
+		memoriaEnLista* laMemoria = list_get(memorias,
+				encontrarPosicionDeMemoria(memoria));
+
+		enviarRequestConHeaderEId(laMemoria->socket, requestMetadata,
+		REQUEST, scriptRefreshMetadata->idScript);
+
+		t_list* metadatas;
+
+		sem_wait(&scriptRefreshMetadata->semaforoDelScript);
+
+		memcpy(&metadatas,
+				scriptRefreshMetadata->resultadoDeEnvio + sizeof(int),
+				sizeof(t_list*));
+
+		actualizarMetadatas(metadatas);
+
+	}
+
+}
+
+void refreshSleep() { //TODO: Arreglar esto
+	int elConfig = inotify_init();
+
+	inotify_add_watch(elConfig, DIRCONFIG, IN_MODIFY);
+
+	int bufferSize = sizeof(struct inotify_event);
+
+	while (1) {
+
+		struct inotify_event* descriptor = malloc(sizeof(struct inotify_event));
+
+		read(elConfig, descriptor, bufferSize);
+
+		t_config* config = config_create(DIRCONFIG);
+
+		sem_wait(&sem_cambioSleepEjecucion);
+
+		sleepEjecucion = config_get_int_value(config, "SLEEP_EJECUCION");
+
+		sem_post(&sem_cambioSleepEjecucion);
+
+		config_destroy(config);
+
+		log_info(logger, "Se cambio el sleep");
+
+		free(descriptor);
+
+	}
 
 }
 

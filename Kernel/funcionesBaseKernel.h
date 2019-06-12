@@ -4,6 +4,7 @@
 #define MAXBUFFER 100
 
 #define RAIZSCRIPTS "/home/utnso/workspace/tp-2019-1c-U-TN-Tecno/Kernel/scripts/"
+#define DIRCONFIG "/home/utnso/workspace/tp-2019-1c-U-TN-Tecno/CONFIG/kernel.config"
 
 #include<stdio.h>
 #include<stdlib.h>
@@ -20,6 +21,7 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <commons/config.h>
+#include <sys/inotify.h>
 
 typedef struct {
 	int idScript;
@@ -47,7 +49,7 @@ typedef struct{
 	char* ip;
 	int puerto;
 } memoriaEnLista;
-
+void journal();
 char* leerLinea(char* direccion,int lineaALeer);
 int removerScriptDeLista(int id, t_list* lista);
 int encontrarScriptEnLista(int id, t_list* lista);
@@ -75,12 +77,10 @@ int determinarAQueMemoriaEnviar(request* unaRequest);
 int unaMemoriaCualquiera();
 int memoriaHash(int key);
 void matarMemoria(int nombreMemoria);
-void conectarseAUnaMemoria(seed* unaSeed);
-void comunicacionConMemoria(memoriaEnLista* memoria);
 int seedYaExiste(seed* unaSeed);
 void actualizarMetadatas(t_list* metadatas);
 void agregarUnaMetadata (metadataTablaLFS* unaMetadata);
-
+int manejarRespuestaDeMemoria(script* elScript, request* laRequest, int memoria);
 
 
 

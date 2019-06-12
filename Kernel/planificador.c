@@ -66,7 +66,7 @@ void planificadorEXEC(int IdScript) {
 
 		int resultado = ejecutarRequest(requestAEjecutar,scriptEXEC);
 
-		if (resultado == -1) { //TODO: Expandir los errores
+		if (resultado == -1) {
 
 			log_error(logger, "%s%i",
 					"Hubo un error en la ejecucion del script ",

@@ -4,6 +4,7 @@ extern t_log* logger;
 extern t_list* memorias;
 extern sem_t sem_gossiping;
 extern t_list* listaEXEC;
+extern script* scriptRefreshMetadata;
 
 void conectarseAUnaMemoria(seed* unaSeed) {
 
@@ -128,13 +129,17 @@ void comunicacionConMemoria(memoriaEnLista* memoria) {
 
 			case TODO_BIEN: {
 
-				respuesta = 1;
+				respuesta = TODO_BIEN;
 
 			}
 			case ERROR: {
 
-				respuesta = -1;
+				respuesta = ERROR;
 
+			}
+			case MEM_LLENA:
+			{
+				respuesta = MEM_LLENA;
 			}
 
 				scriptReceptor->resultadoDeEnvio = malloc(sizeof(int));
@@ -217,14 +222,21 @@ void comunicacionConMemoria(memoriaEnLista* memoria) {
 
 			int idScript = recibirInt(socketMemoria, logger);
 
-			int index = encontrarScriptEnLista(idScript, listaEXEC);
+			script* scriptReceptor;
 
-			if (idScript == -1 || index == -1) {
-				manejoErrorMemoria(memoria->nombre);
-				return;
+			if (idScript == 0) {
+				scriptReceptor = scriptRefreshMetadata;
+			} else {
+
+				int index = encontrarScriptEnLista(idScript, listaEXEC);
+
+				if (idScript == -1 || index == -1) {
+					manejoErrorMemoria(memoria->nombre);
+					return;
+				}
+
+				scriptReceptor = list_get(listaEXEC, index);
 			}
-
-			script* scriptReceptor = list_get(listaEXEC, index);
 
 			t_list* metadatas = recibirMetadatas(socketMemoria, logger);
 
