@@ -3,7 +3,7 @@
 int seRecibioBien(int respuesta, t_log* logger) {
 	if (respuesta < 0) {
 
-		log_error(logger, "Hubo un problema en el recibo de algo");
+		log_error(logger, "Hubo un problema en el recibo de algo.");
 
 		return 0;
 	}
@@ -48,7 +48,7 @@ int crearServidor(int puerto) {
 	return servidor;
 }
 
-void enviarIntConHeader(int intAEnviar, int header, int aQuien) {
+void enviarIntConHeader(int aQuien, int intAEnviar, int header) {
 	void* paquete = malloc(sizeof(int) + sizeof(int));
 	memcpy(paquete, &header, sizeof(int));
 	memcpy(paquete + sizeof(int), &intAEnviar, sizeof(int));
@@ -56,7 +56,7 @@ void enviarIntConHeader(int intAEnviar, int header, int aQuien) {
 	free(paquete);
 }
 
-void enviarVariosIntsConHeader(t_list* intsAEnviar, int header, int aQuien) {
+void enviarVariosIntsConHeader(int aQuien, t_list* intsAEnviar, int header) {
 	int cantidadInts = list_size(intsAEnviar);
 
 	int tamanioPaquete = cantidadInts * sizeof(int) + sizeof(int);
@@ -78,7 +78,7 @@ void enviarVariosIntsConHeader(t_list* intsAEnviar, int header, int aQuien) {
 	free(paquete);
 }
 
-void enviarStringConHeader(char* string, int aQuien, int header) {
+void enviarStringConHeader(int aQuien, char* string, int header) {
 	void* paquete;
 
 	int tamanioString = (strlen(string) + 1) * sizeof(char);
@@ -98,8 +98,7 @@ void enviarStringConHeader(char* string, int aQuien, int header) {
 	free(paquete);
 }
 
-
-void enviarStringConHeaderEId(char* string, int aQuien, int header, int id) {
+void enviarStringConHeaderEId(int aQuien, char* string, int header, int id) {
 	void* paquete;
 
 	int tamanioString = (strlen(string) + 1) * sizeof(char);
@@ -114,7 +113,8 @@ void enviarStringConHeaderEId(char* string, int aQuien, int header, int id) {
 
 	memcpy(paquete + sizeof(int) + sizeof(int), &tamanioString, sizeof(int));
 
-	memcpy(paquete + sizeof(int) + sizeof(int) + sizeof(int), string, tamanioString);
+	memcpy(paquete + sizeof(int) + sizeof(int) + sizeof(int), string,
+			tamanioString);
 
 	send(aQuien, paquete, tamanioEnvio, 0);
 
@@ -124,7 +124,7 @@ void enviarStringConHeaderEId(char* string, int aQuien, int header, int id) {
 void enviarRequestConHeader(int aQuien, request* requestAEnviar, int header) {
 	char* stringAEnviar = requestStructAString(requestAEnviar);
 
-	enviarStringConHeader(stringAEnviar, aQuien, header);
+	enviarStringConHeader(aQuien, stringAEnviar, header);
 
 	free(stringAEnviar);
 
@@ -159,7 +159,7 @@ void enviarRequestConHeaderEId(int aQuien, request* requestAEnviar, int header,
 
 }
 
-void enviarMetadatasConHeaderEId(t_list* metadatas, int aQuien, int header,
+void enviarMetadatasConHeaderEId(int aQuien, t_list* metadatas, int header,
 		int id) {
 	int cantidadMetadatas = list_size(metadatas);
 
@@ -179,7 +179,8 @@ void enviarMetadatasConHeaderEId(t_list* metadatas, int aQuien, int header,
 
 	memcpy(paquete, &header, sizeof(int));
 	memcpy(paquete + sizeof(int), &id, sizeof(int));
-	memcpy(paquete + sizeof(int) + sizeof(int), &cantidadMetadatas, sizeof(int));
+	memcpy(paquete + sizeof(int) + sizeof(int), &cantidadMetadatas,
+			sizeof(int));
 
 	int ultimaPosicionDelPaquete = sizeof(int) + sizeof(int) + sizeof(int);
 
@@ -215,7 +216,7 @@ void enviarMetadatasConHeaderEId(t_list* metadatas, int aQuien, int header,
 	free(paquete);
 }
 
-void enviarMetadatasConHeader(t_list* metadatas, int aQuien, int header) {
+void enviarMetadatasConHeader(int aQuien, t_list* metadatas, int header) {
 
 	int cantidadMetadatas = list_size(metadatas);
 
@@ -317,6 +318,66 @@ void enviarSeedsConHeader(int aQuien, t_list* seeds, int header) {
 
 }
 
+void enviarRegistroConHeaderEId(int aQuien, registro* unRegistro, int header,
+		int id) {
+
+	int tamanioValue = strlen(unRegistro->value) + 1;
+	int tamanioTimestamp = sizeof(typeof(unRegistro->timestamp));
+	int tamanioKey = sizeof(typeof(unRegistro->key));
+
+	int tamanioPaquete = sizeof(int) + sizeof(int) + tamanioTimestamp
+			+ tamanioKey + sizeof(int) + tamanioValue;
+
+	void* paquete = malloc(tamanioPaquete);
+
+	memcpy(paquete, &header, sizeof(int));
+
+	memcpy(paquete+sizeof(int),&id,sizeof(int));
+
+	memcpy(paquete+sizeof(int)+sizeof(int),&unRegistro->timestamp,tamanioTimestamp);
+
+	memcpy(paquete+sizeof(int)+sizeof(int)+tamanioTimestamp,&unRegistro->key,tamanioKey);
+
+	memcpy(paquete+sizeof(int)+sizeof(int)+tamanioTimestamp+tamanioKey,&tamanioValue,sizeof(int));
+
+	memcpy(paquete+sizeof(int)+sizeof(int)+tamanioTimestamp+tamanioKey+sizeof(int),unRegistro->value,tamanioValue);
+
+	send(aQuien, paquete, tamanioPaquete, 0);
+
+	free(paquete);
+
+}
+
+registro* recibirRegistro(int deQuien, t_log* logger) {
+
+	registro* elRegistro = malloc(sizeof(registro));
+
+	int tamanioTimestamp = sizeof(typeof(elRegistro->timestamp));
+
+	void* bufferTimestamp = malloc(tamanioTimestamp);
+
+	recv(deQuien, bufferTimestamp, tamanioTimestamp, MSG_WAITALL);
+
+	memcpy(&elRegistro->timestamp, bufferTimestamp, tamanioTimestamp);
+
+	free(bufferTimestamp);
+
+	int tamanioKey = sizeof(typeof(elRegistro->timestamp));
+
+	void* bufferKey = malloc(tamanioKey);
+
+	recv(deQuien, bufferKey, tamanioKey, MSG_WAITALL);
+
+	memcpy(&elRegistro->key, bufferKey, tamanioKey);
+
+	free(bufferKey);
+
+	elRegistro->value = recibirString(deQuien, logger);
+
+	return elRegistro;
+
+}
+
 request* recibirRequest(int deQuien, t_log* logger) {
 	char* requestEnString = recibirString(deQuien, logger);
 
@@ -412,7 +473,7 @@ t_list* recibirSeeds(int deQuien, t_log* logger) {
 //----------------------------------------------------------------------
 //Funciones sin header, por si alguna razon son necesarias:
 
-void enviarInt(int intAEnviar, int aQuien) {
+void enviarInt(int aQuien, int intAEnviar) {
 	void* paquete = malloc(sizeof(int));
 	memcpy(paquete, &intAEnviar, sizeof(int));
 	send(aQuien, paquete, sizeof(int), 0);

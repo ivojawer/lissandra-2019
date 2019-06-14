@@ -13,8 +13,7 @@ void conectarseAUnaMemoria(seed* unaSeed) {
 	if (socketMemoria == -1) {
 		return;
 	}
-
-	enviarIntConHeader(KERNEL, HANDSHAKE, socketMemoria);
+	enviarIntConHeader(socketMemoria, KERNEL, HANDSHAKE);
 
 	int headerRespuesta = recibirInt(socketMemoria, logger);
 

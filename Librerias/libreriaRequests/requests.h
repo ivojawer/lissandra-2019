@@ -39,6 +39,7 @@
 
 #include<stdio.h>
 #include<stdlib.h>
+#include <string.h>
 #include<commons/log.h>
 #include<commons/string.h>
 #include<commons/config.h>
@@ -67,6 +68,12 @@ typedef struct {
 	int puerto;
 } seed;
 
+typedef struct {
+	int timestamp;
+	int key;
+	char* value;
+} registro;
+
 //Cosas de requests:
 int esUnaRequestValida(char* requestEnString);
 int queRequestEs(char* palabra);
@@ -79,11 +86,13 @@ int esDescribeGlobal(request* request);
 void liberarRequest(request* request);
 
 //Comunicacion:
-void enviarIntConHeader(int intAEnviar, int header, int aQuien);
+void enviarInt(int aQuien,int intAEnviar);
+void enviarIntConHeader(int aQuien,int intAEnviar, int header);
+void enviarVariosIntsConHeader(int aQuien, t_list* intsAEnviar, int header);
 int recibirInt(int deQuien, t_log* logger);
 
-void enviarStringConHeaderEId(char* string, int aQuien, int header, int id);
-void enviarStringConHeader(char* string, int aQuien, int header);
+void enviarStringConHeaderEId(int aQuien,char* string, int header, int id);
+void enviarStringConHeader(int aQuien,char* string , int header);
 char* recibirString(int deQuien, t_log* logger);
 
 void enviarRequestConHeaderEId(int aQuien, request* requestAEnviar, int header,
@@ -91,17 +100,17 @@ void enviarRequestConHeaderEId(int aQuien, request* requestAEnviar, int header,
 void enviarRequestConHeader(int aQuien, request* requestAEnviar, int header);
 request* recibirRequest(int deQuien, t_log* logger);
 
-void enviarMetadatasConHeaderEId(t_list* metadatas, int aQuien, int header,
+void enviarMetadatasConHeaderEId(int aQuien, t_list* metadatas, int header,
 		int id);
-void enviarMetadatasConHeader(t_list* metadatas, int aQuien, int header);
+void enviarMetadatasConHeader(int aQuien, t_list* metadatas, int header);
 t_list* recibirMetadatas(int deQuien, t_log* logger);
 
 void enviarSeedsConHeader(int aQuien, t_list* seeds, int header);
 t_list* recibirSeeds(int deQuien, t_log* logger);
 
-void enviarVariosIntsConHeader(t_list* intsAEnviar, int header, int aQuien);
-
-void enviarInt(int intAEnviar, int aQuien);
+void enviarRegistroConHeaderEId(int aQuien, registro* unRegistro, int header,
+		int id);
+registro* recibirRegistro(int deQuien, t_log* logger);
 
 //Sockets:
 int crearServidor(int puerto);

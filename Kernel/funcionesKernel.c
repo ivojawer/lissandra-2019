@@ -71,7 +71,7 @@ void journal() //TODO: Semaforo?
 {
 	for (int i = 0; i < list_size(memorias); i++) {
 		memoriaEnLista* unaMemoria = list_get(memorias, i);
-		enviarInt(OP_JOURNAL, unaMemoria->socket);
+		enviarInt(unaMemoria->socket, OP_JOURNAL);
 	}
 
 	log_info(logger,
