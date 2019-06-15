@@ -1,4 +1,5 @@
 #include "LFS.h"
+#include <signal.h>
 
 int main() {
 	logger = log_create("LFS.log", "LFS", false, LOG_LEVEL_INFO);
@@ -6,8 +7,9 @@ int main() {
 	iniciar_variables();
 	cargar_configuracion_inicial();
 	cargar_configuracion_FS();
+	pthread_create(&hilo_consola, NULL, (void *)ejecutar_dump, NULL);
 	iniciar_consola();
-	pthread_create(&hilo_consola, NULL, (void *)iniciar_consola, NULL);
+//	pthread_create(&hilo_consola, NULL, (void *)iniciar_consola, NULL);
 
 	log_info(logger, "configuraciones iniciales seteadas");
 
@@ -38,6 +40,7 @@ void iniciar_variables(){
 	particion_encontrada = list_create();
 	FS = malloc(sizeof(struct FS));
 	fp_dump = NULL;
+	memset(array_aux, 0X0, sizeof(array_aux));
 }
 
 
@@ -361,26 +364,26 @@ int contar_comas(char *temp)
 			 if(flag_key_value != 0){
 				if(control == 1 && nr_comas == 2){
 					comparar_key_y_agregar_valor(atoi(tokens_registro[1]), key, strdup(tokens_registro[2]), atoi(tokens_registro[0]), timestamp_valor);
-					flag_key_value = 1;
+					flag_key_value = 0;
 					control = 0;
+					memset(array_aux, 0X0, sizeof(array_aux));
 				}else{
 					string_aux_2 = malloc(strlen(temp)*sizeof(char));
 					strcpy(string_aux_2, temp);
 				 	strcat(array_aux, string_aux_2);
-				 	printf("MOD: %s\n", array_aux);
+//				 	printf("MOD: %s\n", array_aux);
 				 	tokens_registro = string_split(array_aux, ";");
 				 	comparar_key_y_agregar_valor(atoi(tokens_registro[1]), key, strdup(tokens_registro[2]), atoi(tokens_registro[0]), timestamp_valor);
-				 	memset(array_aux, '0', sizeof(array_aux));
-//				 	free(string_aux_2);
+				 	memset(array_aux, 0x0, sizeof(array_aux));
+				 	free(string_aux_2);
 				 	flag_key_value = 0;
 				 	control = 0;
 				 	}
 				 }else{ //Si la flag == 0
 					 if((nr_comas == 2) && ((flag_last_bloque == 1) && (bloque_size == size_bloque))){
-						 //Registro tipo: Timestamp  ó  Timestamp;  ó   Timestamp;Key
 						 comparar_key_y_agregar_valor(atoi(tokens_registro[1]), key, tokens_registro[2], atoi(tokens_registro[0]), timestamp_valor);
 
-					 }else if(nr_comas == 2 && bloque_size < size_bloque){ //Registro tipo: Timestamp;Key;
+					 }else if(nr_comas == 2 && bloque_size < size_bloque){ //En el medio
 						 comparar_key_y_agregar_valor(atoi(tokens_registro[1]), key, tokens_registro[2], atoi(tokens_registro[0]), timestamp_valor);
 					 }else{
 						if(nr_comas == 2)
@@ -490,18 +493,17 @@ int cargar_bloques(char *root, t_list *bloques_buscar)
 void buscar_bloques_particion(char *tabla, int particion_buscar, int type_flag, t_list *bloques_buscar)
 {
 	char root[64] = "../Tablas/";
-	strcat(root, tabla);
+	sprintf(root, "../Tablas/%s", tabla);
 
 	if(type_flag == 1){ //Buscar temporales
-		 DIR * dir;
+		 DIR *dir;
 		 dir = opendir(root);
 		 struct dirent *entrada;
 		 char **entrada_aux;
 		 while ((entrada = readdir(dir)) != NULL){
 			 entrada_aux = string_split(entrada->d_name, ".");
-			 if(entrada_aux[1] != NULL){
+			 if(&(&entrada_aux)[1] != NULL){
 				 if (strcmp(entrada_aux[1],"tmp")==0){
-					 printf("Hay temporales: %s\n", entrada->d_name);
 					 strcat(root, "/");
 					 strcat(root, entrada->d_name);
 					 cargar_bloques(root, bloques_buscar);
@@ -823,7 +825,6 @@ void rutina_insert(char* comando)
 					agregar_particion_en_tabla_nueva(nueva_tabla, nueva_particion);
 					agregar_tabla_memtable(memtable, nueva_tabla);
 				}else if(lista_vacia(lista_particion_encontrada)){ //tabla en memtable pero la particion esta vacia
-					printf("HOLIS\n");
 					t_particion *nueva_particion = crear_particion_memtable(size, particion_buscar);
 					agregar_registro_en_particion_nueva(nueva_particion, registro_nuevo);
 					agregar_particion_en_tabla_existente(tabla, nueva_particion);
@@ -1128,7 +1129,6 @@ void rutina_describe(char* comando)
 
 
 //////↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓DESARROLLO DUMP↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓//////
-
 struct bloques_tmp *crear_bloques_tmp(char *tabla)
 {
 	struct bloques_tmp *new = malloc(sizeof(struct bloques_tmp));
@@ -1268,8 +1268,10 @@ int contar_temporales(char *root)
 	char **entrada_aux;
 	while ((entrada = readdir(dir)) != NULL){
 		entrada_aux = string_split(entrada->d_name, ".");
-		if (strcmp(entrada_aux[1],"tmp")==0){
-			cont++;
+		if(entrada_aux[1] != NULL){
+			if (strcmp(entrada_aux[1],"tmp")==0){
+				cont++;
+			}
 		}
 	}
 	closedir(dir);
@@ -1385,31 +1387,59 @@ void dump()
 		table_change = 0;
 		t_tabla *tabla  = malloc(sizeof(t_tabla));
 		tabla = list_get(memtable,i);
-		printf("TABLE NAME: %s\n", tabla->name_tabla);
-		struct bloques_tmp *bloques_tmp_tabla = malloc(sizeof(struct bloques_tmp));
-		bloques_tmp_tabla = crear_bloques_tmp(tabla->name_tabla);
-		for(j = 0; j < list_size(tabla->lista_particiones); j++){
-			t_particion *particion = malloc(sizeof(t_particion));
-			particion = list_get(tabla->lista_particiones, j);
-			for(k = 0; k < list_size(particion->lista_registros); k++){
-				t_registro *registro = malloc(sizeof(t_registro));
-				registro = list_get(particion->lista_registros, k);
-				if(table_change == 0 && k == 1)
-					table_change = 1;
-				guardar_registros_en_bloques(registro, table_change, bloques_tmp_tabla);
+//		printf("TABLE NAME: %s\n", tabla->name_tabla);
+		if(existe_tabla(tabla->name_tabla)){
+			struct bloques_tmp *bloques_tmp_tabla = malloc(sizeof(struct bloques_tmp));
+			bloques_tmp_tabla = crear_bloques_tmp(tabla->name_tabla);
+			for(j = 0; j < list_size(tabla->lista_particiones); j++){
+				t_particion *particion = malloc(sizeof(t_particion));
+				particion = list_get(tabla->lista_particiones, j);
+				for(k = 0; k < list_size(particion->lista_registros); k++){
+					t_registro *registro = malloc(sizeof(t_registro));
+					registro = list_get(particion->lista_registros, k);
+					if(table_change == 0 && k == 1)
+						table_change = 1;
+					guardar_registros_en_bloques(registro, table_change, bloques_tmp_tabla);
+				}
+			}
+			grabar_registro("NULL", "NULL", 0, 0, 0, 0, bloques_tmp_tabla, 1);//Close fp_dump
+			list_add(lista_bloques_tmp, bloques_tmp_tabla);
 			}
 		}
-		grabar_registro("NULL", "NULL", 0, 0, 0, 0, bloques_tmp_tabla, 1);//Close fp_dump
-		list_add(lista_bloques_tmp, bloques_tmp_tabla);
-	}
 	liberar_memtable();
 	memtable = list_create();
 	guardar_bloques_metadata(lista_bloques_tmp);
 	liberar_lista_bloques(lista_bloques_tmp);
 }
 
-//////↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑DESARROLLO DUMP↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑//////
 
+void ejecutar_dump(){
+
+	struct itimerval initial;
+	struct timeval tiempo_inicial;
+
+	tiempo_inicial.tv_usec = (LFS_config.tiempo_dump)*1000;
+	tiempo_inicial.tv_sec = 0;
+
+	memset(&(initial.it_interval), 0x0, sizeof(initial.it_value));
+	memset(&(initial.it_value), 0x0, sizeof(initial.it_value));
+
+	initial.it_interval = tiempo_inicial;
+	initial.it_value = tiempo_inicial;
+
+	signal(SIGALRM, &dump);
+
+	if (setitimer(ITIMER_REAL, &initial, NULL) == -1) {
+		perror("error calling setitimer()");
+	}
+
+	while(1){
+		pause();
+		sleep(LFS_config.retardo);
+	}
+}
+
+//////↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑DESARROLLO DUMP↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑//////
 
 
 
@@ -1496,7 +1526,6 @@ void rutina_drop(char* comando)
 	if(existe_tabla(tabla)){
 		eliminar_tabla(tabla);
 	}
-	dump();
 }
 
 //////↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑DESARROLLO DROP↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑//////
@@ -1517,7 +1546,6 @@ void cargar_configuracion_inicial() {
 
 	config_destroy(config);
 }
-
 
 void crear_bloques_FS(int nr_blocks)
 {
