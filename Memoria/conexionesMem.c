@@ -1,61 +1,99 @@
 #include "conexionesMem.h"
 
 extern t_log* logger;
-extern t_config* config;
+extern t_list* seeds;
+int socketKernel;
 
+void primeraConexionKernel() {
+	t_config* config = config_create(DIRCONFIG);
+	int puerto = config_get_int_value(config, "PUERTO_ESCUCHA");
 
-void conexiones() {
+	int socketServidor = crearServidor(puerto);
 
-	//socketALFS= conectarseAServidor(config_get_int_value(config,"PUERTO_FS"));//conexion con LFS
+	socketKernel = accept(socketServidor, (void*) NULL, NULL);
 
-	//        Creo servidor
-	int puerto = config_get_int_value(config,"PUERTO_ESCUCHA");
-	struct sockaddr_in direccionServidor;
-	direccionServidor.sin_family = AF_INET;
-	direccionServidor.sin_addr.s_addr = INADDR_ANY;
-	direccionServidor.sin_port = htons(puerto);
+	t_list* listaInts = list_create();
 
-	int servidor = socket(AF_INET, SOCK_STREAM, 0);
+	int nombreModulo = MEMORIA;
 
-	int activado = 1;
-	setsockopt(servidor, SOL_SOCKET, SO_REUSEADDR, &activado, sizeof(activado));
+	int nombreMemoria = config_get_int_value(config, "MEMORY_NUMBER");
 
-	if (bind(servidor, (void*) &direccionServidor, sizeof(direccionServidor))
-			!= 0) {
-		perror("Fallo el bind");
-		return; //se podria cambiar a un int si se necesta manejo de errores.
+	config_destroy(config);
+
+	list_add(listaInts, &nombreModulo);
+	list_add(listaInts, &nombreMemoria);
+
+	enviarVariosIntsConHeader(listaInts, HANDSHAKE, socketKernel);
+
+	list_destroy(listaInts);
+
+	int operacion = recibirInt(socketKernel, logger);
+
+	if (operacion != HANDSHAKE) {
+		log_error(logger,
+				"Se envio un handshake al kernel y se devolvio otra cosa.");
+		return;
 	}
-	log_info(logger, "Estoy escuchando en puerto: %d\n", puerto);
-	listen(servidor, 100);
 
-	//		Acepto Cliente
+	int modulo = recibirInt(socketKernel, logger);
 
-	//struct sockaddr_in direccionCliente;
-	//en el tutorial dice que le pase un puntero a estas cosas pero no funca
-	//unsigned int tamanioDireccion;
-
-	int cliente = accept(servidor, (void*) NULL, NULL);
-	log_info(logger, "Recibi una conexion en %d\n", cliente);
-
-	char* buffer = malloc(1000);
-
-	while (1) {
-		int bytesRecibidos = recv(cliente, buffer, 1000, 0);
-		if (bytesRecibidos <= 0) {
-			perror("Desconexion o error de cliente");
-			return;
-		}
-		buffer[bytesRecibidos] = '\0';
-		//log_info(logger,"Me llegaron %d bytes con %s\n",bytesRecibidos,buffer);z
-
-		messageHandler(buffer,bytesRecibidos); //deberia ser del kernel, no?
+	if (modulo != KERNEL) {
+		log_error(logger, "Se conecto algo que no es el kernel.");
+		return;
 	}
-	free(buffer);
+
+	comunicacionConKernel();
 
 }
 
-void messageHandler(char* mensaje, int tamanioMensaje) {
-	log_info(logger, "Me mandaron algo: %s\n", mensaje);
+void manejoErrorKernel() {
+	log_error(logger,
+			"Se recibio del kernel algo incorrecto, se va a cerrar la conexion.");
+	close(socketKernel);
+}
 
-	//printf("Me mandaron algo!!!");
+void comunicacionConKernel() {
+	while (1) {
+		int operacion = recibirInt(socketKernel, logger);
+
+		switch (operacion) {
+		case REQUEST: {
+			int id = recibirInt(socketKernel, logger);
+
+			if (id == -1) {
+				manejoErrorKernel();
+				return;
+			}
+
+			request* unaRequest = recibirRequest(socketKernel, logger);
+
+			if (unaRequest->requestEnInt == -1) {
+				manejoErrorKernel();
+				return;
+			}
+
+			//Hacer la request
+			break;
+
+		}
+		case GOSSIPING: {
+			enviarSeedsConHeader(socketKernel, seeds, GOSSIPING);
+			continue;
+		}
+		case JOURNAL: {
+			journal();
+			continue;
+		}
+		default: {
+			manejoErrorKernel();
+			return;
+		}
+
+		}
+	}
+
+}
+
+void conexionLFS() {
+
 }

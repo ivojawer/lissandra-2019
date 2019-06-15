@@ -5,6 +5,7 @@ extern t_list* memorias;
 extern sem_t sem_gossiping;
 extern t_list* listaEXEC;
 extern script* scriptRefreshMetadata;
+extern t_list* seeds;
 
 void conectarseAUnaMemoria(seed* unaSeed) {
 
@@ -18,7 +19,7 @@ void conectarseAUnaMemoria(seed* unaSeed) {
 	int headerRespuesta = recibirInt(socketMemoria, logger);
 
 	if (headerRespuesta != HANDSHAKE) {
-		log_error(logger, "Se envio un handshake y se devolvio otra cosa.");
+		log_error(logger, "Se envio un handshake a la memoria y se devolvio otra cosa.");
 		return;
 	}
 

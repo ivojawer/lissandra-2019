@@ -1,20 +1,22 @@
 
 #include "gossiping.h"
 
-extern t_config* config;
-t_list* seeds;
+extern t_list* seeds;
 
 void gossiping(){
 
 	cargarSeedsIniciales();
 
 
+
 	while(1){
 
 
-
+		t_config* config = config_create(DIRCONFIG);
 
 		sleep(config_get_int_value(config,"RETARDO_GOSSIPING"));
+
+		config_destroy(config);
 	}
 }
 
@@ -22,11 +24,13 @@ void gossiping(){
 
 
 void cargarSeedsIniciales(){
+	t_config* config = config_create(DIRCONFIG);
 	seeds= list_create();
 	char** seedsPORTDeConfig = config_get_array_value(config,"PUERTO_SEEDS");
 	char** seedsIPDeConfig = config_get_array_value(config,"IP_SEEDS");
 	agregarIPsYPORTsALista(seedsIPDeConfig,seedsPORTDeConfig);
 	mostrarSeeds();
+	config_destroy(config);
 }
 
 /*decidi recorrer ambos arrays al mismo tiempo sabiendo que si hay un problema en el .config se va a romper
