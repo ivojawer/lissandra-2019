@@ -27,11 +27,11 @@ typedef struct {
 
 typedef struct{
 	bool vacio;
-	bool recentlyUsed;//esto es un bool?
 }disponibilidad;
 
 typedef struct{
 	marco* dato;
+	unsigned long ultimoSelect;
 	int flagModificado;
 }pagina;
 

@@ -33,17 +33,17 @@ int main() {
 	marcos=malloc(sizeof(disponibilidad)*cantMarcos);
 	for(int i = 0; i<cantMarcos;i++){
 		marcos[i].vacio=true;
-		marcos[i].recentlyUsed=false;//ni idea pero le queria poner un valor para acordarme que se setea aca
 	}
 //	creo tabla de segmentos
 	tablaSegmentos = crearTablaSegmentos();
 
 
-//	cargarSeedsIniciales();
+
 
 	pthread_detach(h_conexiones);
 	pthread_join(h_consola, NULL);
 
+	log_destroy(logger);
 	free(comienzoMemoria);
 	return 1;
 }

@@ -43,7 +43,7 @@ t_list* crearTablaPaginas(){
 	return list_create();
 }
 
-pagina* ultimaPagina(t_list* tablaPaginas){
+pagina* ultimaPagina(t_list* tablaPaginas){ //para testear
 	pagina* lastPagina = list_get(tablaPaginas,tablaPaginas->elements_count - 1);
 	return lastPagina ;
 }
@@ -58,7 +58,7 @@ void asignoPaginaEnMarco(int key, int timestamp,char* value, void* comienzoMarco
 
 	void* marcoParaKey=mempcpy(comienzoMarco,&timestamp,sizeof(int));
 	void* marcoParaValue = mempcpy(marcoParaKey,&key,sizeof(int));
-	memcpy(marcoParaValue,value,20);//maximo carac string
+	memcpy(marcoParaValue,value,config_get_int_value(config,"CANT_MAX_CARAC"));//maximo carac string
 //	log_info(logger,"Marco donde asigne: %p",comienzoMarco);
 }
 
@@ -71,6 +71,7 @@ int numeroMarcoDondeAlocar(){
 			return i;
 		}
 	}
+	printf("NO ENCONTRE NINGUN MARCO LIBRE E IVAN TODAVIA NO HIZO EL ALGORITMO DE REEMPLAZO");
 	return -1;//falta aplicar algoritmo LRU si no encontro ninguna libre
 }
 
@@ -86,7 +87,6 @@ pagina* nuevoDato(t_list* tablaPaginas,int flagModificado,int key, int timestamp
 
 	nuevaPagina->dato =marcoDondeAlocar();
 //	printf("marco pagina a asigar en marco:%p\n", nuevaPagina->dato);
-//	printf("marco proxima pagina a asigar en marco:%p\n", nuevaPagina->dato+28);
 
 	asignoPaginaEnMarco(key,timestamp,value,nuevaPagina->dato);
 //	nuevaPagina->dato =comienzoMemoria;
@@ -232,7 +232,7 @@ void Select(char* parametros) {
 	pagina* paginaPedida=getPagina(key,tabla);
 
 	if(paginaPedida!=NULL)	{
-		printf("Registro pedido: %s\n",&paginaPedida->dato->value);
+		printf("Registro pedido: %s\n",&(paginaPedida->dato->value));
 	}
 	else{
 		log_info(logger,"No encontre el dato, mandando request a LFS");
@@ -350,7 +350,6 @@ void drop(char* parametro) {
 		int nroMarco = ((void*)pag->dato - comienzoMemoria) / tamanioMarco;
 		printf("nro de marco a dropear:%d\n", nroMarco);
 		marcos[nroMarco].vacio=true;
-		marcos[nroMarco].recentlyUsed=false; //devuelta, ni idea pero aca va a haber que cambiar esto
 		printf("cambie valores marco\n");
 		free(pag);
 	}
@@ -359,14 +358,11 @@ void drop(char* parametro) {
 	string_to_upper(tabla);
 	segmento* tablaADropear = encuentroTablaPorNombre(tabla);
 	if(tablaADropear !=NULL){
-
 		printf("encontre la tabla a dropear, nombre:%s\n",tablaADropear->nombreDeTabla);
 		list_destroy_and_destroy_elements(tablaADropear->tablaDePaginas,(void*)liberoDato);
-
 		bool comparoNombreTabla(segmento* segmentoAComparar){
 				return strcmp(tablaADropear->nombreDeTabla,segmentoAComparar->nombreDeTabla) == 0;
 		}
-
 		list_remove_by_condition(tablaSegmentos,(void*)comparoNombreTabla);
 		printf("libere los datos y destruyo tabla paginas\n");
 		free(tablaADropear);
