@@ -23,12 +23,6 @@ typedef struct {
 	t_list* datosAInsertar;
 } t_tablaEnMemTable;
 
-typedef struct {
-	int timestamp;
-	int key;
-	char* value;
-} registro;
-
 void consola();
 void conexiones();
 void mandarAEjecutarRequest(request* requestAEjecutar);

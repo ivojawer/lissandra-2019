@@ -8,3 +8,6 @@ int socketALFS;
 void conexiones();
 int crearConexion(int);
 void messageHandler(char*,int);
+void primeraConexionKernel();
+void conexionLFS();
+void comunicacionConKernel();

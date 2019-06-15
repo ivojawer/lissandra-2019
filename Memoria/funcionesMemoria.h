@@ -1,6 +1,8 @@
 #ifndef FUNCIONESMEMORIA_H_
 #define FUNCIONESMEMORIA_H_
 
+#define DIRCONFIG "memoria.config"
+
 #include<stdio.h>
 #include<stdlib.h>
 #include<commons/log.h>
@@ -56,5 +58,6 @@ void insert(char* parametros);
 void create(char* parametros);
 void describe(char* parametro);
 void drop(char* parametro);
+void journal();
 
 #endif /* FUNCIONESMEMORIA_H_ */

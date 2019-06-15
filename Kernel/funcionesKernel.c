@@ -4,16 +4,19 @@ extern t_list* colaNEW;
 extern t_list* colaREADY;
 extern t_list* listaEXEC;
 extern t_list* listaEXIT;
-extern int idInicial;
-extern sem_t sem_cambioId;
-extern sem_t sem_disponibleColaREADY;
-extern t_log* logger;
 extern t_list* tiemposInsert;
 extern t_list* tiemposSelect;
 extern t_list* memorias;
+extern sem_t sem_cambioId;
+extern sem_t sem_disponibleColaREADY;
+extern sem_t sem_cambioSleepEjecucion;
+extern t_log* logger;
+extern int idInicial;
 extern int proximaMemoriaEC;
+extern int sleepEjecucion;
+extern script* scriptRefreshMetadata;
 
-void crearScript(request* nuevaRequest) {
+int crearScript(request* nuevaRequest) {
 
 	//Importante: Si el parametro es enteramente vacio, aca tiene que entrar aca como " ".
 
@@ -42,11 +45,13 @@ void crearScript(request* nuevaRequest) {
 			log_error(logger, "Hubo un error en la creacion del request");
 
 			moverScript(nuevoScript->idScript, colaNEW, listaEXIT);
-			return;
+			return -1;
 
 		}
 
 	}
+
+	sem_init(&nuevoScript->semaforoDelScript, 0, 0);
 
 	list_add(colaNEW, nuevoScript); //Esto es puramente por formalidad del TP
 
@@ -58,48 +63,92 @@ void crearScript(request* nuevaRequest) {
 
 	sem_post(&sem_disponibleColaREADY);
 
+	return 1;
+
 }
 
-int ejecutarRequest(request* requestAEjecutar) {
+void journal() //TODO: Semaforo?
+{
+	for (int i = 0; i < list_size(memorias); i++) {
+		memoriaEnLista* unaMemoria = list_get(memorias, i);
+		enviarInt(unaMemoria->socket, OP_JOURNAL);
+	}
+
+	log_info(logger,
+			"Se ha mandado el JOURNAL a todas las memorias conocidas.");
+}
+
+int ejecutarRequest(request* requestAEjecutar, script* elScript) {
+
+	switch (requestAEjecutar->requestEnInt) {
+
+	case JOURNAL: {
+		journal();
+		return 1;
+	}
+	case RUN: {
+		return crearScript(requestAEjecutar);
+	}
+	case METRICS: {
+		metrics(0);
+		return 1;
+	}
+
+	case ADD: {
+		return add(requestAEjecutar->parametros);
+	}
+
+	}
 
 	if (unaMemoriaCualquiera() == -1) //No hay memorias
 			{
+		log_error(logger,
+				"No hay memorias conectadas para ejecutar la request %i.",
+				requestAEjecutar->requestEnInt);
 		return -1;
 	}
 
-	if (esDescribeGlobal(requestAEjecutar)) {
-		enviarRequestAMemoria(requestAEjecutar, unaMemoriaCualquiera());
+	int memoria;
+
+	if (requestAEjecutar->requestEnInt == CREATE
+			|| requestAEjecutar->requestEnInt == DESCRIBE) { //Preguntar esto
+		memoria = unaMemoriaCualquiera();
+
+	} else {
+
+		memoria = determinarAQueMemoriaEnviar(requestAEjecutar);
 	}
 
-	int criterio = criterioDeTabla(devolverTablaDeRequest(requestAEjecutar));
-
-	if (criterio == -1) //No existe la tabla (TODO: Ver si esto se hace antes o que, tambien lo del CREATE)
-			{
+	if (memoria == -1) {
+		log_error(logger,
+				"No se conoce una memoria que pueda ejecutar la request %i.",
+				requestAEjecutar->requestEnInt);
 		return -1;
 	}
 
-	int memoria = determinarAQueMemoriaEnviar(criterio);
-
-	if (memoria == -1) // No existe la memoria, lo mismo que arriba
-			{
-		return -1;
-	}
+	memoriaEnLista* laMemoria = list_get(memorias,
+			encontrarPosicionDeMemoria(memoria));
 
 	time_t tiempoInicial = time(NULL);
 
-	enviarRequestAMemoria(requestAEjecutar, memoria);
+	sem_wait(&sem_cambioSleepEjecucion);
+	int tiempoDeSleep = sleepEjecucion;
+	sem_post(&sem_cambioSleepEjecucion);
 
-	int resultado = recibirRespuestaDeMemoria(memoria);
+	sleep(tiempoDeSleep);
 
-	if (resultado == MEMORIA_ERROR) {
-		return -1;
-	}
+	enviarRequestConHeaderEId(laMemoria->socket, requestAEjecutar, REQUEST,
+			elScript->idScript);
+
+	sem_wait(&elScript->semaforoDelScript);
+
+	int respuesta = manejarRespuestaDeMemoria(elScript,requestAEjecutar,memoria);
 
 	time_t tiempoFinal = time(NULL);
 
 	insertarTiempo(tiempoInicial, tiempoFinal, requestAEjecutar->requestEnInt);
 
-	return 1;
+	return respuesta;
 }
 
 void metrics(int loggear) //TODO: Faltan los memory loads
@@ -117,21 +166,19 @@ void metrics(int loggear) //TODO: Faltan los memory loads
 
 		log_info(logger, "\n\n----METRICS----");
 		if (promedioSelect == -1) {
-			log_info(logger,"\n\nRead latency: ---");
+			log_info(logger, "\n\nRead latency: ---");
 		} else {
-			log_info(logger,"%s%i", "\n\nRead latency: ", promedioSelect);
+			log_info(logger, "%s%i", "\n\nRead latency: ", promedioSelect);
 		}
 
 		if (promedioInsert == -1) {
-			log_info(logger,"\n\nWrite latency: ---");
+			log_info(logger, "\n\nWrite latency: ---");
 		} else {
-			log_info(logger,"%s%i", "\n\nWrite latency: ", promedioInsert);
+			log_info(logger, "%s%i", "\n\nWrite latency: ", promedioInsert);
 		}
 
-		log_info(logger,"%s%i", "\n\nReads: ", list_size(tiemposSelectAux));
-		log_info(logger,"%s%i", "\n\nWrites: ", list_size(tiemposInsertAux));
-
-
+		log_info(logger, "%s%i", "\n\nReads: ", list_size(tiemposSelectAux));
+		log_info(logger, "%s%i", "\n\nWrites: ", list_size(tiemposInsertAux));
 
 	} else {
 		printf("\n\n----METRICS----");
@@ -171,32 +218,104 @@ void status() {
 	printf("\n\n");
 }
 
-void add(char* consistenciaYMemoriaEnString) {
+int add(char* chocloDeCosas) {
 
-	char** consistenciaYMemoriaEnArray = string_n_split(
-			consistenciaYMemoriaEnString, 2, " ");
+	char** consistenciaYMemoriaEnArray = string_n_split(chocloDeCosas, 4, " ");
 
-	int consistencia = atoi(consistenciaYMemoriaEnArray[0]);
 	int nombreMemoria = atoi(consistenciaYMemoriaEnArray[1]);
-
-	liberarArrayDeStrings(consistenciaYMemoriaEnArray);
+	int consistencia = queConsistenciaEs(consistenciaYMemoriaEnArray[3]);
 
 	int posicionMemoria = encontrarPosicionDeMemoria(nombreMemoria);
 
 	if (posicionMemoria == -1) {
 		printf("%s%i%s", "No se pudo encontrar la memoria ", nombreMemoria,
 				"\n");
-		return;
+		return -1;
 	}
-
 	memoriaEnLista* memoria = list_get(memorias, posicionMemoria);
 
-	//TODO: Semaforo para cuando se usa?
+//TODO: Semaforo para cuando se usa?
 	memoria->consistencias[consistencia] = consistencia; //La consistencia esta en la misma posicion del numero que lo representa (0,1 o 2);
 
-	//TODO: Semaforo???
+//TODO: Semaforo???
 	if ((consistencia == EC) && (proximaMemoriaEC == -1)) {
 		proximaMemoriaEC = memoria->nombre;
+	}
+
+	log_info(logger, "Se agrego la memoria %i al criterio %s", nombreMemoria,
+			consistenciaYMemoriaEnArray[3]);
+
+	liberarArrayDeStrings(consistenciaYMemoriaEnArray);
+
+	return 1;
+
+}
+
+void refreshMetadatas() {
+
+	request* requestMetadata = crearStructRequest("DESCRIBE");
+
+	while (1) {
+		t_config* config = config_create(DIRCONFIG);
+		int intervaloDeRefresh = config_get_int_value(config,
+				"METADATA_REFRESH");
+		config_destroy(config);
+
+		sleep(intervaloDeRefresh);
+
+		int memoria = unaMemoriaCualquiera();
+
+		if (memoria == -1) {
+			continue;
+		}
+
+		memoriaEnLista* laMemoria = list_get(memorias,
+				encontrarPosicionDeMemoria(memoria));
+
+		enviarRequestConHeaderEId(laMemoria->socket, requestMetadata,
+		REQUEST, scriptRefreshMetadata->idScript);
+
+		t_list* metadatas;
+
+		sem_wait(&scriptRefreshMetadata->semaforoDelScript);
+
+		memcpy(&metadatas,
+				scriptRefreshMetadata->resultadoDeEnvio + sizeof(int),
+				sizeof(t_list*));
+
+		actualizarMetadatas(metadatas);
+
+	}
+
+}
+
+void refreshSleep() { //TODO: Arreglar esto
+	int elConfig = inotify_init();
+
+	inotify_add_watch(elConfig, DIRCONFIG, IN_MODIFY);
+
+	int bufferSize = sizeof(struct inotify_event);
+
+	while (1) {
+
+		struct inotify_event* descriptor = malloc(sizeof(struct inotify_event));
+
+		read(elConfig, descriptor, bufferSize);
+
+		t_config* config = config_create(DIRCONFIG);
+
+		sem_wait(&sem_cambioSleepEjecucion);
+
+		sleepEjecucion = config_get_int_value(config, "SLEEP_EJECUCION");
+
+		sem_post(&sem_cambioSleepEjecucion);
+
+		config_destroy(config);
+
+		log_info(logger, "Se cambio el sleep");
+
+		free(descriptor);
+
 	}
 
 }

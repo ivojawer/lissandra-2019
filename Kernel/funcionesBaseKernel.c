@@ -3,15 +3,18 @@
 extern t_list* listaTablas;
 extern t_list* tiemposInsert;
 extern t_list* tiemposSelect;
-extern sem_t sem_tiemposInsert;
-extern sem_t sem_tiemposSelect;
 extern t_list* colaNEW;
 extern t_list* colaREADY;
 extern t_list* listaTablas;
 extern t_list* listaEXEC;
 extern t_list* listaEXIT;
 extern t_list* memorias;
+extern sem_t sem_tiemposInsert;
+extern sem_t sem_tiemposSelect;
+extern sem_t sem_actualizacionMetadatas;
+extern sem_t sem_cambioSleepEjecucion;
 extern int proximaMemoriaEC;
+extern int sleepEjecucion;
 extern t_log* logger;
 
 int encontrarScriptEnLista(int id, t_list* lista) {
@@ -140,35 +143,28 @@ char* leerLinea(char* direccion, int lineaALeer) {
 		}
 
 		if (i == lineaALeer) {
-			string_append(&resultado, resultadoDeLeer);
+
+			string_append(&resultado,resultadoDeLeer);
 
 			resultadoDeLeer = fgets(buffer, MAXBUFFER, archivo);
 
-			if (resultadoDeLeer == NULL) //Si es el ultimo string, no viene con \n
+			if (resultadoDeLeer == NULL)
 			{
-				string_append(&resultado, "\n");
+				string_append(&resultado, "\0");
+			}
+			else
+			{
+				char* resultadoAux = resultado;
+				resultado = string_substring_until(resultado,strlen(resultado)-1);
+				free(resultadoAux);
 			}
 		}
-
-		//free(resultadoDeLeer); Seg fault en esta linea wowowo (Y no por el free del if resultadoLeer == NULL)
 
 	}
 
 	fclose(archivo);
 
 	return resultado;
-
-//	int caracteres = charsDeBuffer(buffer);
-//
-//	char* linea = malloc(sizeof(char) * caracteres);
-//
-//	memcpy(linea, buffer, caracteres * sizeof(char));
-//
-//	fclose(archivo);
-//
-//
-//
-//	return linea;
 
 }
 
@@ -383,9 +379,11 @@ int encontrarPosicionDeMemoria(int memoriaAEncontrar) {
 
 int memoriaECSiguiente(int memoriaInicialEC) {
 
-	int posicionMemoriaInicialEnLista = encontrarPosicionDeMemoria(memoriaInicialEC);
+	int posicionMemoriaInicialEnLista = encontrarPosicionDeMemoria(
+			memoriaInicialEC);
 
-	for (int i = posicionMemoriaInicialEnLista + 1; i < list_size(memorias); i++) { // De memoriaEC a fin de lista
+	for (int i = posicionMemoriaInicialEnLista + 1; i < list_size(memorias);
+			i++) { // De memoriaEC a fin de lista
 		memoriaEnLista* unaMemoria = list_get(memorias, i);
 
 		if (unaMemoria->consistencias[EC] == EC) {
@@ -404,21 +402,18 @@ int memoriaECSiguiente(int memoriaInicialEC) {
 	return memoriaInicialEC; //Si no encuentra otra devuelve la misma
 }
 
+int determinarAQueMemoriaEnviar(request* unaRequest) {
 
-void enviarRequestAMemoria(request* requestAEnviar, int memoria)
-{
-	memoriaEnLista* memoriaALaQueEnviar = list_get(memorias,encontrarPosicionDeMemoria(memoria));
-	enviarRequest(memoriaALaQueEnviar->socket, requestAEnviar);
-}
+	int criterio = criterioDeTabla(devolverTablaDeRequest(unaRequest));
 
-int recibirRespuestaDeMemoria(int memoria)
-{
-	memoriaEnLista* memoriaDeQuienRecibir = list_get(memorias,encontrarPosicionDeMemoria(memoria));
-	return recibirInt(memoriaDeQuienRecibir->socket,logger);
-}
+	if (criterio == -1) //No existe la tabla (TODO: Ver si esto se hace antes o que, tambien lo del CREATE)
+			{
+		log_error(logger, "No se encontro la tabla %s en las metadatas.",
+				devolverTablaDeRequest(unaRequest));
+		return -1;
+	}
 
-int determinarAQueMemoriaEnviar(int consistencia) {
-	switch (consistencia) {
+	switch (criterio) {
 
 	case SC: {
 		for (int i = 0; i < list_size(memorias); i++) {
@@ -440,11 +435,20 @@ int determinarAQueMemoriaEnviar(int consistencia) {
 
 	}
 
-	case SHC:
-	{
-		return proximaMemoriaEC; //TODO
-	}
+	case SHC: {
 
+		int key = 0; //Una key random
+
+		if (unaRequest->requestEnInt == SELECT
+				|| unaRequest->requestEnInt == INSERT) {
+			char** keyConBasuras = string_split(unaRequest->parametros, " ");
+			key = atoi(keyConBasuras[1]);
+
+			liberarArrayDeStrings(keyConBasuras);
+		}
+
+		return memoriaHash(key);
+	}
 
 	}
 
@@ -454,10 +458,184 @@ int determinarAQueMemoriaEnviar(int consistencia) {
 
 int unaMemoriaCualquiera() //TODO: Ver si tiene que tener criterio o no
 {
-	if (list_size(memorias) == 0)
-	{
+	if (list_size(memorias) == 0) {
 		return -1;
 	}
-	memoriaEnLista* unaMemoria = list_get(memorias,0);
+	memoriaEnLista* unaMemoria = list_get(memorias, 0);
 	return unaMemoria->nombre;
 }
+
+int memoriaHash(int key) {
+	int cantidadMemoriasSHC = 0;
+
+	for (int i = 0; i < list_size(memorias); i++) {
+		memoriaEnLista* unaMemoria = list_get(memorias, i);
+
+		if (unaMemoria->consistencias[SHC] == SHC) {
+			cantidadMemoriasSHC++;
+		}
+	}
+
+	if (cantidadMemoriasSHC == 0) {
+		return -1;
+	}
+
+	return key % cantidadMemoriasSHC;
+}
+
+void matarMemoria(int nombreMemoria) { //TODO: Semaforo?
+
+	for (int i = 0; i < list_size(memorias); i++) {
+		memoriaEnLista* unaMemoria = list_get(memorias, i);
+
+		if (unaMemoria->nombre == nombreMemoria) {
+
+			if (unaMemoria->nombre == proximaMemoriaEC) {
+				proximaMemoriaEC = memoriaECSiguiente(proximaMemoriaEC);
+
+				if (unaMemoria->nombre == proximaMemoriaEC) //Si es la unica EC
+						{
+					proximaMemoriaEC = -1;
+				}
+			}
+
+			free(unaMemoria->consistencias);
+			free(unaMemoria->ip);
+			close(unaMemoria->socket);
+
+			list_remove(memorias, i);
+			free(unaMemoria);
+
+			return;
+		}
+	}
+}
+
+int seedYaExiste(seed* unaSeed) {
+	for (int i = 0; i < list_size(memorias); i++) {
+		memoriaEnLista* unaMemoria = list_get(memorias, i);
+
+		if (!(strcmp(unaMemoria->ip, unaSeed->ip))
+				&& (unaSeed->puerto == unaMemoria->puerto)) {
+			return 1;
+		}
+	}
+	return 0;
+}
+
+void agregarUnaMetadata(metadataTablaLFS* unaMetadata) {
+	if (criterioDeTabla(unaMetadata->nombre) == -1) //Si no existe ya
+			{
+		list_add(listaTablas, unaMetadata);
+		log_info(logger, "Se agrego la tabla a las metadatas%s",
+				unaMetadata->nombre);
+	} else {
+		free(unaMetadata->nombre);
+		free(unaMetadata);
+	}
+}
+
+void actualizarMetadatas(t_list* metadatas) {
+	sem_wait(&sem_actualizacionMetadatas);
+
+	while (list_size(listaTablas) != 0) {
+		metadataTablaLFS* unaMetadata = list_remove(listaTablas, 0);
+
+		free(unaMetadata->nombre);
+		free(unaMetadata);
+	}
+
+	list_destroy(listaTablas);
+
+	listaTablas = metadatas;
+
+	log_info(logger, "Se termino de actualizar las metadatas");
+
+	sem_post(&sem_actualizacionMetadatas);
+}
+
+int manejarRespuestaDeMemoria(script* elScript, request* laRequest, int memoria) {
+	int respuesta;
+
+	memcpy(&respuesta, elScript->resultadoDeEnvio, sizeof(int));
+
+	if (respuesta == ERROR) {
+		log_error(logger, "%s: No se pudo realizar. (Enviado a %i)",
+				requestStructAString(laRequest), memoria);
+	}
+
+	else if (respuesta == MEM_LLENA) {
+		log_error(logger,
+				"La memoria %i esta llena, se va a enviar un JOURNAL.");
+
+		journal();
+
+		memoriaEnLista* laMemoria = list_get(memorias,
+				encontrarPosicionDeMemoria(memoria));
+		sem_wait(&sem_cambioSleepEjecucion);
+		int tiempoDeSleep = sleepEjecucion;
+		sem_wait(&sem_cambioSleepEjecucion);
+
+		sleep(tiempoDeSleep);
+
+		enviarRequestConHeaderEId(laMemoria->socket, laRequest, REQUEST,
+				elScript->idScript);
+
+		respuesta = manejarRespuestaDeMemoria(elScript, laRequest, memoria);
+	}
+
+	else {
+
+		switch (laRequest->requestEnInt) {
+		case SELECT: {
+
+			int tamanioString;
+
+			memcpy(&tamanioString, elScript->resultadoDeEnvio + sizeof(int),
+					sizeof(int));
+
+			char* resultadoSelect = malloc(tamanioString);
+
+			memcpy(resultadoSelect,
+					elScript->resultadoDeEnvio + sizeof(int) + sizeof(int),
+					tamanioString);
+
+			log_info(logger, "%s: %s (Enviado a %i)",
+					requestStructAString(laRequest), resultadoSelect, memoria);
+
+			break;
+
+		}
+
+		case DESCRIBE: {
+			t_list* metadatas;
+
+			memcpy(&metadatas, elScript->resultadoDeEnvio + sizeof(int),
+					sizeof(t_list*));
+
+			if (esDescribeGlobal(laRequest)) {
+				actualizarMetadatas(metadatas);
+			} else {
+				metadataTablaLFS* laMetadata = list_get(metadatas, 0);
+				agregarUnaMetadata(laMetadata);
+
+				list_destroy(metadatas);
+			}
+		}
+			/* no break */
+
+		default: {
+
+			log_info(logger, "%s: Se pudo realizar. (Enviado a %i)",
+					requestStructAString(laRequest), memoria);
+		}
+
+		}
+	}
+
+	free(elScript->resultadoDeEnvio);
+
+	return respuesta;
+
+}
+

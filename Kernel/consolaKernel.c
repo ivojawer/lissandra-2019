@@ -28,21 +28,18 @@ void consola() {
 			liberarArrayDeStrings(requestYParametros);
 			free(lectura);
 			return;
-		}
 
-		else if (!strcmp(requestYParametros[0], "STATUS")) {
-
+		} else if (!strcmp(requestYParametros[0], "STATUS")) {
 			status();
-		}
 
-		else if (!strcmp(requestYParametros[0], "METRICS")) {
-
+		} else if (!strcmp(requestYParametros[0], "METRICS")) {
 			metrics(0);
 
 		} else if (!strcmp(requestYParametros[0], "ADD")) {
-
 			add(requestYParametros[1]);
 
+		} else if (!strcmp(requestYParametros[0], "JOURNAL")) { //TODO: Preguntar si se planifica o no
+			journal();
 		}
 
 		else if (!esUnaRequestValida(lectura)) {
