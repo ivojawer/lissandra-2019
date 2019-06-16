@@ -95,6 +95,37 @@ char* requestStructAString(request* request) {
 	return requestEnString;
 }
 
+//retorna el indice de la primera ocurrencia del char o -1 si no aparece nunca
+int str_first_index_of(char c, char* cadena) {
+	int i=0;
+	while(cadena[i] != c && cadena[i] != '\0') {
+		i++;
+	}
+
+	return cadena[i] == '\0'? -1 : i;
+}
+
+//retorna el indice de la ultima ocurrencia del char o -1 si no aparece nunca
+int str_last_index_of(char c, char* cadena) {
+	int ultima_ocurrencia = -1;
+
+	for(int i=0; i < string_length(cadena); i++) {
+		if (cadena[i] == c) {
+			ultima_ocurrencia = i;
+		}
+	}
+
+	return ultima_ocurrencia;
+}
+
+int lista_vacia(t_list *lista)
+{
+	if(list_size(lista)==0){
+		return 1;
+	}else{
+		return 0;
+	}
+}
 
 
 void liberarRequest(request* request) {

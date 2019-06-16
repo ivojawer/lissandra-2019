@@ -16,17 +16,19 @@ char* puntoDeMontaje;
 int retardo; //en milisegundos
 int tamanioValue;
 int tiempoDump; //en milisegundos
+FILE *fp_dump;
+int control = 0;
+int flag_key_value = 0;
+char array_aux[128] = "";
 
 
 int main() {
+
 
 	logger = log_create("LFS.log", "LFS", 1, 0);
 	//logger = log_create("LFS.log", "LFS", false, LOG_LEVEL_INFO);
 
 	iniciar_variables(); //// creo que estan bien las que deje - chequear
-
-	log_info(logger, "configuraciones iniciales seteadas");
-
 
 	pthread_t h_consola;
 	pthread_t h_conexiones;

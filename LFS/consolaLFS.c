@@ -1,5 +1,4 @@
 #include "funcionesLFS.h"
-extern int socketLFSAMEM;
 
 void consola() {
 

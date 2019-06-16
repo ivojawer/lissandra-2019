@@ -85,6 +85,11 @@ char* requestStructAString(request* request);
 int esDescribeGlobal(request* request);
 void liberarRequest(request* request);
 
+//MISC:
+int str_first_index_of(char c, char* cadena);
+int str_last_index_of(char c, char* cadena);
+int lista_vacia(t_list *lista);
+
 //Comunicacion:
 void enviarInt(int aQuien,int intAEnviar);
 void enviarIntConHeader(int aQuien,int intAEnviar, int header);
@@ -115,6 +120,8 @@ registro* recibirRegistro(int deQuien, t_log* logger);
 //Sockets:
 int crearServidor(int puerto);
 int conectarseAServidor(char* ip, int puerto);
+
+
 
 #include "requests.h"
 
