@@ -438,6 +438,11 @@ t_list* recibirMetadatas(int deQuien, t_log* logger) {
 
 	t_list* metadatas = list_create();
 
+	if (cantidadMetadatas == -1)
+	{
+		return metadatas;
+	}
+
 	for (int i = 0; i < cantidadMetadatas; i++) {
 		metadataTablaLFS* metadata = malloc(sizeof(metadataTablaLFS));
 

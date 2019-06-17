@@ -5,7 +5,6 @@ extern t_list* memorias;
 extern sem_t sem_gossiping;
 extern t_list* listaEXEC;
 extern script* scriptRefreshMetadata;
-extern t_list* seeds;
 
 void conectarseAUnaMemoria(seed* unaSeed) {
 
@@ -20,6 +19,7 @@ void conectarseAUnaMemoria(seed* unaSeed) {
 
 	if (headerRespuesta != HANDSHAKE) {
 		log_error(logger, "Se envio un handshake a la memoria y se devolvio otra cosa.");
+		close(socketMemoria);
 		return;
 	}
 
@@ -27,13 +27,15 @@ void conectarseAUnaMemoria(seed* unaSeed) {
 
 	if (modulo != MEMORIA) {
 		log_error(logger, "Se conecto algo que no es la memoria.");
+		close(socketMemoria);
 		return;
 	}
 
 	int nombreMemoria = recibirInt(socketMemoria, logger);
 
-	if (nombreMemoria == -1) {
-		return; //El error ya esta en el recibirInt
+	if (nombreMemoria == -1) { //Log error ya esta en la funcion
+		close(socketMemoria);
+		return;
 	}
 
 	memoriaEnLista* nuevaMemoria = malloc(sizeof(memoriaEnLista));

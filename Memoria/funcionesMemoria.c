@@ -2,6 +2,7 @@
 
 extern t_log* logger;
 extern t_list* tablaSegmentos;
+extern int socketLFS;
 
 //TABLA DE SEGMENTOS
 
@@ -308,7 +309,7 @@ void mandarALFS(int requestAMandar, char* parametros) {
 	nuevaRequest->requestEnInt = requestAMandar;
 	nuevaRequest->parametros = string_duplicate(parametros);
 
-	enviarRequestConHeader(socketALFS, nuevaRequest, REQUEST);
+	enviarRequestConHeader(socketLFS, nuevaRequest, REQUEST);
 }
 void describe(char* parametro) {
 

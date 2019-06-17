@@ -10,8 +10,15 @@ int main() {
 
 	t_config* config = config_create(DIRCONFIG); //DUDA: Si es un config por memoria esto va en la carpeta CONFIG tmb  lo hago una por proyecto como aca
 
+
+
 	int tamanioMemoria = config_get_int_value(config, "TAM_MEM");
-	int caracMaxDeValue = config_get_int_value(config, "CANT_MAX_CARAC");
+	int caracMaxDeValue = primeraConexionLFS();
+
+	if (caracMaxDeValue == -1)
+	{
+		return -1;
+	}
 
 	config_destroy(config);
 
@@ -38,18 +45,14 @@ int main() {
 
 	pthread_t h_consola;
 	pthread_t h_conexionKernel;
-	pthread_t h_conexionLFS;
 	pthread_t h_refreshGossiping;
 
 	pthread_create(&h_consola, NULL, (void *) consola, NULL);
 	pthread_create(&h_conexionKernel, NULL, (void *) primeraConexionKernel, NULL);
-	pthread_create(&h_conexionLFS, NULL, (void *) conexionLFS, NULL);
 	pthread_create(&h_refreshGossiping, NULL, (void *) gossiping, NULL);
 
 	pthread_detach(h_conexionKernel);
-	pthread_detach(h_conexionLFS);
 	pthread_detach(h_refreshGossiping);
-
 	pthread_join(h_consola, NULL);
 
 	free(comienzoMemoria);

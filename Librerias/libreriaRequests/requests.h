@@ -1,41 +1,41 @@
 #ifndef REQUESTS_H_
 #define REQUESTS_H_
 
-#define SELECT 0
-#define INSERT 1
-#define CREATE 2
-#define DESCRIBE 3
-#define DROP 4
-#define JOURNAL 5
-#define ADD 6
-#define RUN 7
-#define METRICS 8
-
 #define SC 0
 #define SHC 1
 #define EC 2
 
+#define SELECT 100
+#define INSERT 101
+#define CREATE 102
+#define DESCRIBE 103
+#define DROP 104
+#define JOURNAL 105
+#define ADD 106
+#define RUN 107
+#define METRICS 108
+
 //Cosos de comunicacion:
 
 //Operaciones:
-#define HANDSHAKE 0
-#define GOSSIPING 1
-#define REQUEST 2
-#define REGISTRO 3
-#define DATO 4
-#define OP_JOURNAL 5
-#define RESPUESTA 6
-#define METADATAS 7
+#define HANDSHAKE 200
+#define GOSSIPING 201
+#define REQUEST 202
+#define REGISTRO 203
+#define DATO 204
+#define OP_JOURNAL 205
+#define RESPUESTA 206
+#define METADATAS 207
 
 //Respuestas:
-#define ERROR -1
-#define TODO_BIEN 1
-#define MEM_LLENA 2
+#define ERROR 300
+#define TODO_BIEN 301
+#define MEM_LLENA 302
 
 //Identificadores de modulo:
-#define KERNEL 0
-#define MEMORIA 1
-#define LFS 2
+#define KERNEL 400
+#define MEMORIA 401
+#define LFS 402
 
 #include<stdio.h>
 #include<stdlib.h>
@@ -74,30 +74,32 @@ typedef struct {
 	char* value;
 } registro;
 
-//Cosas de requests:
+//Analisis de requests:
 int esUnaRequestValida(char* requestEnString);
 int queRequestEs(char* palabra);
 int esUnParametroValido(int request, char* parametro);
 int queConsistenciaEs(char* string);
-void liberarArrayDeStrings(char** array);
+int esDescribeGlobal(request* request);
+
+//Cosas de requests:
 request* crearStructRequest(char* requestEnString);
 char* requestStructAString(request* request);
-int esDescribeGlobal(request* request);
 void liberarRequest(request* request);
 
 //MISC:
 int str_first_index_of(char c, char* cadena);
 int str_last_index_of(char c, char* cadena);
 int lista_vacia(t_list *lista);
+void liberarArrayDeStrings(char** array);
 
 //Comunicacion:
-void enviarInt(int aQuien,int intAEnviar);
-void enviarIntConHeader(int aQuien,int intAEnviar, int header);
+void enviarInt(int aQuien, int intAEnviar);
+void enviarIntConHeader(int aQuien, int intAEnviar, int header);
 void enviarVariosIntsConHeader(int aQuien, t_list* intsAEnviar, int header);
 int recibirInt(int deQuien, t_log* logger);
 
-void enviarStringConHeaderEId(int aQuien,char* string, int header, int id);
-void enviarStringConHeader(int aQuien,char* string , int header);
+void enviarStringConHeaderEId(int aQuien, char* string, int header, int id);
+void enviarStringConHeader(int aQuien, char* string, int header);
 char* recibirString(int deQuien, t_log* logger);
 
 void enviarRequestConHeaderEId(int aQuien, request* requestAEnviar, int header,
@@ -120,8 +122,6 @@ registro* recibirRegistro(int deQuien, t_log* logger);
 //Sockets:
 int crearServidor(int puerto);
 int conectarseAServidor(char* ip, int puerto);
-
-
 
 #include "requests.h"
 
