@@ -128,7 +128,7 @@ void rutina_insert(char* comando)
 	printf("Key: %d\n", key);
 
 	char* value = get_value(comando);
-	if(strlen(value)>tamanioValue){
+	if(strlen(value)+1>tamanioValue){
 		printf("El value ingresado supera el tamaño maximo permitido.\n");
 		return;
 	}else{

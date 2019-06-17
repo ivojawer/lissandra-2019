@@ -137,6 +137,7 @@ void rutina_create(char* comando) {
 	printf("Operacion: CREATE\n");
 
 	char *tabla = strdup(get_tabla(comando));
+
 	printf("Tabla: %s\n", tabla);
 
 	char *consistencia = get_consistencia(comando);

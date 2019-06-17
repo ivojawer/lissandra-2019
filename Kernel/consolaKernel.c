@@ -38,7 +38,7 @@ void consola() {
 		} else if (!strcmp(requestYParametros[0], "ADD")) {
 			add(requestYParametros[1]);
 
-		} else if (!strcmp(requestYParametros[0], "JOURNAL")) { //TODO: Preguntar si se planifica o no
+		} else if (!strcmp(requestYParametros[0], "JOURNAL")) {
 			journal();
 		}
 

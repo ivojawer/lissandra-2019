@@ -251,17 +251,20 @@ int contar_comas(char *temp)
 	 int flag_last_bloque = 0;
 	 int size_bloque;
 	 int cant_bloques = list_size(bloques_buscar);
-	 t_bloque *block = malloc(sizeof(t_bloque));
-
 
 	 for(int i=0; i<cant_bloques;i++){
-		 block = list_get(bloques_buscar, i);
+
+		 t_bloque *block = block = list_get(bloques_buscar, i);
+
 		 if(i == cant_bloques-1)
+		 {
 			 flag_last_bloque = 1;
+		 }
+
 		 size_bloque = size_of_bloque(block);
+
 		 buscar_key_bloques(block->name, key, timestamp_valor, flag_last_bloque, size_bloque);
 	 }
-	 free(block);
  }
 
 
@@ -484,13 +487,13 @@ t_par_valor_timestamp *filtrar_timestamp_mayor(t_list *timestamp_valor, int list
 void rutina_select(char* comando)
 {
 
-	printf("operacion: select\n");
+	printf("Operacion: SELECT\n");
 
 	char *tabla=get_tabla(comando);
-	printf("tabla: %s\n", get_tabla(comando));
+	printf("Tabla: %s\n", get_tabla(comando));
 
 	uint16_t key = get_key(comando);
-	printf("key: %d\n", get_key(comando));
+	printf("Key: %d\n", get_key(comando));
 
 	if(existe_tabla(tabla)){
 		int nr_particiones_metadata = obtener_particiones_metadata(tabla);

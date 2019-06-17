@@ -32,8 +32,7 @@ char *consistency;
 
 void mandarAEjecutarRequest(request* requestAEjecutar) {
 
-
-	char* parametros = string_duplicate(requestAEjecutar->parametros); //Esto es para que se pueda hacer un free() en consola.c sin que rompa
+	char* parametros = requestStructAString(requestAEjecutar);
 	switch (requestAEjecutar->requestEnInt) {
 	case SELECT:
 		;
@@ -43,8 +42,6 @@ void mandarAEjecutarRequest(request* requestAEjecutar) {
 			pthread_create(&h_select, NULL, (void *) rutina_select, parametros);
 
 			pthread_detach(h_select);
-
-			//enviarString("Me llego un select, ocupate macho", socketLFSAMEM);
 
 			break;
 		}
@@ -84,6 +81,8 @@ void mandarAEjecutarRequest(request* requestAEjecutar) {
 
 			pthread_detach(h_describe);
 
+
+
 			break;
 		}
 
@@ -110,7 +109,7 @@ void mandarAEjecutarRequest(request* requestAEjecutar) {
 void iniciar_variables(){
 
 	//asigno variables globales del LFS.config
-	t_config* config = config_create("../CONFIG/LFS.config");
+	t_config* config = config_create("../../CONFIG/LFS.config");
 	puntoDeMontaje = string_duplicate(config_get_string_value(config,"PUNTO_MONTAJE"));
 	retardo = config_get_int_value(config,"RETARDO");
 	tamanioValue = config_get_int_value(config,"TAMAÑO_VALUE");
@@ -143,13 +142,13 @@ void iniciar_variables(){
 
 char* get_tabla(char* comando) {
 	char **tokens_comando = string_split(comando, " ");
-	char *tabla = tokens_comando[0];
+	char *tabla = tokens_comando[1];
 	return tabla;
 }
 
 int get_key(char* comando) {
 	char **tokens_comando = string_split(comando, " ");
-	char *key = tokens_comando[1];
+	char *key = tokens_comando[2];
 	return atoi(key);
 }
 
@@ -178,7 +177,7 @@ double get_timestamp(char* comando) {
 char *get_consistencia(char *comando)
 {
 	char** tokens_comando = string_split(comando, " ");
-	char *consistencia = tokens_comando[1];
+	char *consistencia = tokens_comando[2];
 	return consistencia;
 }
 
@@ -186,14 +185,14 @@ char *get_consistencia(char *comando)
 int get_particiones(char *comando)
 {
 	char** tokens_comando = string_split(comando, " ");
-	return atoi(tokens_comando[2]);
+	return atoi(tokens_comando[3]);
 }
 
 
 int get_tiempo_compactacion(char *comando)
 {
 	char** tokens_comando = string_split(comando, " ");
-	return atoi(tokens_comando[3]);
+	return atoi(tokens_comando[4]);
 }
 
 
@@ -243,7 +242,7 @@ int obtener_tiempo_compactacion_metadata(char* tabla)
 	string_append(&archivoMetadata,puntoDeMontaje);
 	string_append(&archivoMetadata,"Tablas/");
 	string_append(&archivoMetadata,unaTabla);
-	string_append(&archivoMetadata,"/metadata"); ///// no se si las tenes guardadas como /metadata.config
+	string_append(&archivoMetadata,"/metadata.config");
 
 	t_config* config = config_create(archivoMetadata);
 	int tiempo_compactacion = config_get_int_value(config, "COMPACTION_TIME");

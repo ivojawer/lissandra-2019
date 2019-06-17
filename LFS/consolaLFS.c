@@ -6,6 +6,7 @@ void consola() {
 
 	{
 
+
 		char* lectura = readline("--> ");
 
 		if (lectura) {
@@ -33,17 +34,18 @@ void consola() {
 			continue;
 		}
 
-		if (requestYParametros[1] == NULL) { //Para que no rompa en el string_duplicate de funcionesLFS.c
-			requestYParametros[1] = (char *) malloc(sizeof(" "));
-			strcpy(requestYParametros[1], " ");
-		}
-
 		request* requestParaHilo = crearStructRequest(lectura);
 
 		mandarAEjecutarRequest(requestParaHilo); //Esto podria ser un hilo?
 
+
+
 		liberarArrayDeStrings(requestYParametros);
+
+
 		free(lectura);
+
+
 
 	}
 
