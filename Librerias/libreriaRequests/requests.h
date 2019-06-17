@@ -5,37 +5,37 @@
 #define SHC 1
 #define EC 2
 
-#define SELECT 100
-#define INSERT 101
-#define CREATE 102
-#define DESCRIBE 103
-#define DROP 104
-#define JOURNAL 105
-#define ADD 106
-#define RUN 107
-#define METRICS 108
+#define SELECT 0
+#define INSERT 1
+#define CREATE 2
+#define DESCRIBE 3
+#define DROP 4
+#define JOURNAL 5
+#define ADD 6
+#define RUN 7
+#define METRICS 8
 
 //Cosos de comunicacion:
 
 //Operaciones:
-#define HANDSHAKE 200
-#define GOSSIPING 201
-#define REQUEST 202
-#define REGISTRO 203
-#define DATO 204
-#define OP_JOURNAL 205
-#define RESPUESTA 206
-#define METADATAS 207
+#define HANDSHAKE 100
+#define GOSSIPING 101
+#define REQUEST 102
+#define REGISTRO 103
+#define DATO 104
+#define OP_JOURNAL 105
+#define RESPUESTA 106
+#define METADATAS 107
 
 //Respuestas:
-#define ERROR 300
-#define TODO_BIEN 301
-#define MEM_LLENA 302
+#define ERROR 200
+#define TODO_BIEN 201
+#define MEM_LLENA 202
 
 //Identificadores de modulo:
-#define KERNEL 400
-#define MEMORIA 401
-#define LFS 402
+#define KERNEL 300
+#define MEMORIA 301
+#define LFS 302
 
 #include<stdio.h>
 #include<stdlib.h>

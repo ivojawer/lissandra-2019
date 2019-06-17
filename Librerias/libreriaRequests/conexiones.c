@@ -332,15 +332,20 @@ void enviarRegistroConHeaderEId(int aQuien, registro* unRegistro, int header,
 
 	memcpy(paquete, &header, sizeof(int));
 
-	memcpy(paquete+sizeof(int),&id,sizeof(int));
+	memcpy(paquete + sizeof(int), &id, sizeof(int));
 
-	memcpy(paquete+sizeof(int)+sizeof(int),&unRegistro->timestamp,tamanioTimestamp);
+	memcpy(paquete + sizeof(int) + sizeof(int), &unRegistro->timestamp,
+			tamanioTimestamp);
 
-	memcpy(paquete+sizeof(int)+sizeof(int)+tamanioTimestamp,&unRegistro->key,tamanioKey);
+	memcpy(paquete + sizeof(int) + sizeof(int) + tamanioTimestamp,
+			&unRegistro->key, tamanioKey);
 
-	memcpy(paquete+sizeof(int)+sizeof(int)+tamanioTimestamp+tamanioKey,&tamanioValue,sizeof(int));
+	memcpy(paquete + sizeof(int) + sizeof(int) + tamanioTimestamp + tamanioKey,
+			&tamanioValue, sizeof(int));
 
-	memcpy(paquete+sizeof(int)+sizeof(int)+tamanioTimestamp+tamanioKey+sizeof(int),unRegistro->value,tamanioValue);
+	memcpy(
+			paquete + sizeof(int) + sizeof(int) + tamanioTimestamp + tamanioKey
+					+ sizeof(int), unRegistro->value, tamanioValue);
 
 	send(aQuien, paquete, tamanioPaquete, 0);
 
@@ -348,7 +353,7 @@ void enviarRegistroConHeaderEId(int aQuien, registro* unRegistro, int header,
 
 }
 
-registro* recibirRegistro(int deQuien, t_log* logger) {
+registro* recibirRegistro(int deQuien, t_log* logger) { //Si hubo error: registro->value = " "
 
 	registro* elRegistro = malloc(sizeof(registro));
 
@@ -356,7 +361,14 @@ registro* recibirRegistro(int deQuien, t_log* logger) {
 
 	void* bufferTimestamp = malloc(tamanioTimestamp);
 
-	recv(deQuien, bufferTimestamp, tamanioTimestamp, MSG_WAITALL);
+	int respuesta = recv(deQuien, bufferTimestamp, tamanioTimestamp,
+			MSG_WAITALL);
+
+	if (respuesta == -1)
+			{
+		elRegistro->value = string_duplicate(" ");
+		return elRegistro;
+	}
 
 	memcpy(&elRegistro->timestamp, bufferTimestamp, tamanioTimestamp);
 
@@ -366,7 +378,13 @@ registro* recibirRegistro(int deQuien, t_log* logger) {
 
 	void* bufferKey = malloc(tamanioKey);
 
-	recv(deQuien, bufferKey, tamanioKey, MSG_WAITALL);
+	respuesta = recv(deQuien, bufferKey, tamanioKey, MSG_WAITALL);
+
+	if (respuesta == -1)
+			{
+		elRegistro->value = string_duplicate(" ");
+		return elRegistro;
+	}
 
 	memcpy(&elRegistro->key, bufferKey, tamanioKey);
 
@@ -378,10 +396,18 @@ registro* recibirRegistro(int deQuien, t_log* logger) {
 
 }
 
-request* recibirRequest(int deQuien, t_log* logger) {
+request* recibirRequest(int deQuien, t_log* logger) { //Si hubo error: request->requestEnInt = -1
 	char* requestEnString = recibirString(deQuien, logger);
 
-	request* requestNuevo = crearStructRequest(requestEnString);
+	request* requestNuevo;
+
+	if (!strcmp(requestEnString, " ")) {
+		requestNuevo = malloc(sizeof(request));
+		requestNuevo->requestEnInt = -1;
+		requestNuevo->parametros = NULL;
+	} else {
+		requestNuevo = crearStructRequest(requestEnString);
+	}
 
 	free(requestEnString);
 
@@ -389,7 +415,7 @@ request* recibirRequest(int deQuien, t_log* logger) {
 
 }
 
-char* recibirString(int deQuien, t_log* logger) {
+char* recibirString(int deQuien, t_log* logger) { //Si hubo error: string = " "
 
 	int tamanioString = recibirInt(deQuien, logger);
 
@@ -415,7 +441,7 @@ char* recibirString(int deQuien, t_log* logger) {
 	return stringRecibido;
 }
 
-int recibirInt(int deQuien, t_log* logger) {
+int recibirInt(int deQuien, t_log* logger) { //Si hubo error: elInt = -1
 	void* bufferInt = malloc(sizeof(int));
 	int respuesta = recv(deQuien, bufferInt, sizeof(int),
 	MSG_WAITALL);
@@ -433,13 +459,20 @@ int recibirInt(int deQuien, t_log* logger) {
 	return intRecibido;
 }
 
-t_list* recibirMetadatas(int deQuien, t_log* logger) {
+t_list* recibirMetadatas(int deQuien, t_log* logger) { //Si hubo error: lista de una metadata, esa metadata tiene consistencia,particiones y compactTime = -1
 	int cantidadMetadatas = recibirInt(deQuien, logger);
 
 	t_list* metadatas = list_create();
 
-	if (cantidadMetadatas == -1)
-	{
+	if (cantidadMetadatas == -1) {
+		metadataTablaLFS* metadata = malloc(sizeof(metadataTablaLFS));
+		metadata->nombre = NULL;
+		metadata->consistencia = -1;
+		metadata->particiones = -1;
+		metadata->compactTime = -1;
+
+		list_add(metadatas, metadata);
+
 		return metadatas;
 	}
 
@@ -451,23 +484,66 @@ t_list* recibirMetadatas(int deQuien, t_log* logger) {
 		metadata->particiones = recibirInt(deQuien, logger);
 		metadata->compactTime = recibirInt(deQuien, logger);
 
+		if (!strcmp(metadata->nombre, " ") || metadata->consistencia == -1
+				|| metadata->particiones == -1 || metadata->compactTime == -1) {
+
+			free(metadata->nombre);
+			free(metadata);
+
+			while(list_size(metadatas) != 0) {
+				metadataTablaLFS* metadataABorrar = list_remove(metadatas, 0);
+				free(metadataABorrar->nombre);
+				free(metadataABorrar);
+			}
+
+			metadataTablaLFS* metadata = malloc(sizeof(metadataTablaLFS));
+			metadata->nombre = NULL;
+			metadata->consistencia = -1;
+			metadata->particiones = -1;
+			metadata->compactTime = -1;
+
+			list_add(metadatas, metadata);
+
+			return metadatas;
+		}
+
 		list_add(metadatas, metadata);
 	}
 
 	return metadatas;
 }
 
-t_list* recibirSeeds(int deQuien, t_log* logger) {
+t_list* recibirSeeds(int deQuien, t_log* logger) { //Si hubo error: lista vacia
 	int cantidadSeeds = recibirInt(deQuien, logger);
 
 	t_list* seeds = list_create();
+
+	if (cantidadSeeds == -1) {
+		return seeds;
+	}
 
 	for (int i = 0; i < cantidadSeeds; i++) {
 
 		seed* unaSeed = malloc(sizeof(metadataTablaLFS));
 
 		unaSeed->ip = recibirString(deQuien, logger);
+
 		unaSeed->puerto = recibirInt(deQuien, logger);
+
+		if (!strcmp(unaSeed->ip, " ") || unaSeed->puerto == -1) {
+
+			free(unaSeed->ip);
+			free(unaSeed);
+
+			while( list_size(seeds) !=0) {
+				seed* seedABorrar = list_remove(seeds, 0);
+				free(seedABorrar->ip);
+				free(seedABorrar);
+			}
+
+			return seeds;
+
+		}
 
 		list_add(seeds, unaSeed);
 	}

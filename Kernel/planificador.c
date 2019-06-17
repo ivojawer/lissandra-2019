@@ -60,7 +60,16 @@ void planificadorEXEC(int IdScript) {
 			sem_post(&sem_multiprocesamiento);
 
 			if (scriptEXEC->esPorConsola) {
+
+				char* laRequestEnString = leerLinea(
+						scriptEXEC->direccionScript,0);
+
 				remove(scriptEXEC->direccionScript);
+
+				free(scriptEXEC->direccionScript);
+
+				scriptEXEC->direccionScript = laRequestEnString;
+
 			}
 
 			return;
@@ -84,7 +93,15 @@ void planificadorEXEC(int IdScript) {
 			sem_post(&sem_multiprocesamiento);
 
 			if (scriptEXEC->esPorConsola) {
+				char* laRequestEnString = leerLinea(
+						scriptEXEC->direccionScript,0);
+
 				remove(scriptEXEC->direccionScript);
+
+
+				free(scriptEXEC->direccionScript);
+
+				scriptEXEC->direccionScript = laRequestEnString;
 			}
 
 			return;
@@ -108,7 +125,14 @@ void planificadorEXEC(int IdScript) {
 			sem_post(&sem_multiprocesamiento);
 
 			if (scriptEXEC->esPorConsola) {
+				char* laRequestEnString = leerLinea(
+						scriptEXEC->direccionScript,0);
+
 				remove(scriptEXEC->direccionScript);
+
+				free(scriptEXEC->direccionScript);
+
+				scriptEXEC->direccionScript = laRequestEnString;
 			}
 
 			return;

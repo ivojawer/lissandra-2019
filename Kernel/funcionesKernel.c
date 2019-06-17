@@ -11,6 +11,7 @@ extern sem_t sem_cambioId;
 extern sem_t sem_disponibleColaREADY;
 extern sem_t sem_cambioSleepEjecucion;
 extern sem_t sem_cambioMemoriaEC;
+extern sem_t sem_borradoMemoria;
 extern t_log* logger;
 extern int idInicial;
 extern int proximaMemoriaEC;
@@ -68,14 +69,19 @@ int crearScript(request* nuevaRequest) {
 
 }
 
-void journal()
-{
+void journal() {
 	for (int i = 0; i < list_size(memorias); i++) {
 		memoriaEnLista* unaMemoria = list_get(memorias, i);
 
 		if (laMemoriaTieneConsistencias(unaMemoria)) //TODO: Repreguntar esto.
-		{
-			enviarInt(unaMemoria->socket, OP_JOURNAL);
+				{
+			sem_wait(&sem_borradoMemoria);
+
+			if (unaMemoria->estaViva) {
+				enviarInt(unaMemoria->socket, OP_JOURNAL);
+			}
+
+			sem_post(&sem_borradoMemoria);
 		}
 
 	}
@@ -103,8 +109,30 @@ int ejecutarRequest(request* requestAEjecutar, script* elScript) {
 	case ADD: {
 		return add(requestAEjecutar->parametros);
 	}
+	}
+
+	if (requestAEjecutar->requestEnInt == DROP
+			|| requestAEjecutar->requestEnInt == SELECT
+			|| requestAEjecutar->requestEnInt == INSERT) {
+
+		char** parametros = string_split(requestAEjecutar->parametros," ");
+		char* tabla = string_duplicate(parametros[0]);
+
+		liberarArrayDeStrings(parametros);
+
+		if(!existeTabla(tabla))
+		{
+			log_error(logger,"No se encontro la tabla %s.",tabla);
+			free(tabla);
+			return -1;
+		}
+
+		free(tabla);
+
 
 	}
+
+	sem_wait(&sem_borradoMemoria);
 
 	if (unaMemoriaCualquiera() == -1) //No hay memorias
 			{
@@ -141,14 +169,35 @@ int ejecutarRequest(request* requestAEjecutar, script* elScript) {
 	int tiempoDeSleep = sleepEjecucion;
 	sem_post(&sem_cambioSleepEjecucion);
 
+	sem_post(&sem_borradoMemoria);
+
 	sleep(tiempoDeSleep);
+
+	sem_wait(&sem_borradoMemoria);
+
+	if (!laMemoria->estaViva) {
+		time_t tiempoFinal = time(NULL);
+
+		insertarTiempo(tiempoInicial, tiempoFinal,
+				requestAEjecutar->requestEnInt);
+		return -1;
+	}
 
 	enviarRequestConHeaderEId(laMemoria->socket, requestAEjecutar, REQUEST,
 			elScript->idScript);
 
+	list_add(laMemoria->scriptsEsperando, &elScript->idScript);
+
+	sem_post(&sem_borradoMemoria);
+
 	sem_wait(&elScript->semaforoDelScript);
 
-	int respuesta = manejarRespuestaDeMemoria(elScript,requestAEjecutar,memoria);
+	sem_wait(&laMemoria->sem_cambioScriptsEsperando);
+	sacarScriptDeEspera(elScript->idScript, laMemoria);
+	sem_post(&laMemoria->sem_cambioScriptsEsperando);
+
+	int respuesta = manejarRespuestaDeMemoria(elScript, requestAEjecutar,
+			memoria);
 
 	time_t tiempoFinal = time(NULL);
 
@@ -232,6 +281,8 @@ int add(char* chocloDeCosas) {
 	int nombreMemoria = atoi(consistenciaYMemoriaEnArray[1]);
 	int consistencia = queConsistenciaEs(consistenciaYMemoriaEnArray[3]);
 
+	sem_wait(&sem_borradoMemoria);
+
 	int posicionMemoria = encontrarPosicionDeMemoria(nombreMemoria);
 
 	if (posicionMemoria == -1) {
@@ -241,11 +292,7 @@ int add(char* chocloDeCosas) {
 	}
 	memoriaEnLista* memoria = list_get(memorias, posicionMemoria);
 
-	sem_wait(&memoria->semaforoDeLaMemoria);
-
-	if(!memoria->estaViva)
-	{
-		sem_post(&memoria->semaforoDeLaMemoria);
+	if (!memoria->estaViva) {
 		return -1;
 	}
 
@@ -257,12 +304,12 @@ int add(char* chocloDeCosas) {
 		sem_post(&sem_cambioMemoriaEC);
 	}
 
-	sem_post(&memoria->semaforoDeLaMemoria);
-
 	log_info(logger, "Se agrego la memoria %i al criterio %s", nombreMemoria,
 			consistenciaYMemoriaEnArray[3]);
 
 	liberarArrayDeStrings(consistenciaYMemoriaEnArray);
+
+	sem_post(&sem_borradoMemoria);
 
 	return 1;
 

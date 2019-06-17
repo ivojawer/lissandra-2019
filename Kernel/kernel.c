@@ -25,6 +25,7 @@ sem_t sem_actualizacionMetadatas;
 sem_t sem_cambioSleepEjecucion;
 sem_t sem_cambioMemoriaEC;
 sem_t sem_movimientoScripts;
+sem_t sem_borradoMemoria;
 script* scriptRefreshMetadata;
 
 int main() {
@@ -72,6 +73,7 @@ int main() {
 	sem_init(&sem_cambioSleepEjecucion, 0, 1);
 	sem_init(&sem_cambioMemoriaEC,0,1);
 	sem_init(&sem_movimientoScripts,0,1);
+	sem_init(&sem_borradoMemoria,0,1);
 
 	char* ipMemoriaPrincipal = string_duplicate(config_get_string_value(config, "IP_MEMORIA"));
 	int puertoMemoriaPrincipal = config_get_int_value(config, "PUERTO_MEMORIA");

@@ -1,7 +1,7 @@
 #ifndef FUNCIONESBASEKERNEL_H_
 #define FUNCIONESBASEKERNEL_H_
 
-#define MAXBUFFER 100
+#define MAXBUFFER 300
 
 #define RAIZSCRIPTS "/home/utnso/workspace/tp-2019-1c-U-TN-Tecno/Kernel/scripts/"
 #define DIRCONFIG "/home/utnso/workspace/tp-2019-1c-U-TN-Tecno/CONFIG/kernel.config"
@@ -48,8 +48,9 @@ typedef struct {
 	int* consistencias;
 	int nombre;
 	int socket;
-	sem_t semaforoDeLaMemoria;
 	int estaViva;
+	t_list* scriptsEsperando;
+	sem_t sem_cambioScriptsEsperando;
 } memoriaEnLista;
 
 void journal();
@@ -85,5 +86,7 @@ void actualizarMetadatas(t_list* metadatas);
 void agregarUnaMetadata(metadataTablaLFS* unaMetadata);
 int manejarRespuestaDeMemoria(script* elScript, request* laRequest, int memoria);
 int laMemoriaTieneConsistencias(memoriaEnLista* unaMemoria);
+void sacarScriptDeEspera(int nombreScript, memoriaEnLista* laMemoria);
+int existeTabla(char* nombreTabla);
 
 #endif /* FUNCIONESBASEKERNEL_H_ */
