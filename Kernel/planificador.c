@@ -5,7 +5,6 @@ extern sem_t sem_multiprocesamiento;
 extern t_list* colaREADY;
 extern t_list* listaEXEC;
 extern t_list* listaEXIT;
-extern int quantum;
 extern t_log* logger;
 
 void planificadorREADYAEXEC() {
@@ -38,8 +37,13 @@ void planificadorEXEC(int IdScript) {
 
 	script* scriptEXEC = list_get(listaEXEC, index);
 
+	t_config* config = config_create(DIRCONFIG);
 
-	for (int i = 0; i < quantum; i++) { //TODO: Ver el tema del quantum, como sigue planificando cuando cambia
+	int quantum = config_get_int_value(config, "QUANTUM");
+
+	config_destroy(config);
+
+	for (int i = 0; i < quantum; i++) {
 
 		char* linea = leerLinea(scriptEXEC->direccionScript,
 				scriptEXEC->lineasLeidas);
@@ -64,7 +68,7 @@ void planificadorEXEC(int IdScript) {
 
 		request* requestAEjecutar = crearStructRequest(linea);
 
-		int resultado = ejecutarRequest(requestAEjecutar,scriptEXEC);
+		int resultado = ejecutarRequest(requestAEjecutar, scriptEXEC);
 
 		if (resultado == -1) {
 
@@ -115,8 +119,6 @@ void planificadorEXEC(int IdScript) {
 		free(linea);
 
 		liberarRequest(requestAEjecutar);
-
-		//TODO: Semaforo por si cambia el quantum?
 	}
 
 	log_info(logger, "%i%s", scriptEXEC->idScript, ": EXEC->READY");

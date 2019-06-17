@@ -13,6 +13,7 @@ extern sem_t sem_tiemposInsert;
 extern sem_t sem_tiemposSelect;
 extern sem_t sem_actualizacionMetadatas;
 extern sem_t sem_cambioSleepEjecucion;
+extern sem_t sem_movimientoScripts;
 extern int proximaMemoriaEC;
 extern int sleepEjecucion;
 extern t_log* logger;
@@ -110,8 +111,6 @@ int charsDeBuffer(char* buffer) {
 }
 
 char* leerLinea(char* direccion, int lineaALeer) {
-
-	//TODO: Semaforo con crearArchivo?
 
 	FILE* archivo;
 	archivo = fopen(direccion, "r");
@@ -233,7 +232,7 @@ void mostrarListaScripts(t_list* lista) {
 
 int moverScript(int scriptID, t_list* listaOrigen, t_list* listaDestino) {
 
-	//TODO: Poner semaforos?
+
 
 	int index = encontrarScriptEnLista(scriptID, listaOrigen);
 
@@ -241,13 +240,15 @@ int moverScript(int scriptID, t_list* listaOrigen, t_list* listaDestino) {
 		return -1;
 	}
 
+	sem_wait(&sem_movimientoScripts);
 	script* script = list_get(listaOrigen, index);
 
-	if ((removerScriptDeLista(scriptID, listaOrigen)) == 0) {
-		return 0;
+	if ((removerScriptDeLista(scriptID, listaOrigen)) == -1) {
+		return -1;
 	}
 
 	list_add(listaDestino, script);
+	sem_post(&sem_movimientoScripts);
 
 	return 1;
 }
@@ -406,7 +407,7 @@ int determinarAQueMemoriaEnviar(request* unaRequest) {
 
 	int criterio = criterioDeTabla(devolverTablaDeRequest(unaRequest));
 
-	if (criterio == -1) //No existe la tabla (TODO: Ver si esto se hace antes o que, tambien lo del CREATE)
+	if (criterio == -1)
 			{
 		log_error(logger, "No se encontro la tabla %s en las metadatas.",
 				devolverTablaDeRequest(unaRequest));
@@ -418,9 +419,12 @@ int determinarAQueMemoriaEnviar(request* unaRequest) {
 	case SC: {
 		for (int i = 0; i < list_size(memorias); i++) {
 			memoriaEnLista* unaMemoria = list_get(memorias, i);
-			if (unaMemoria->consistencias[SC] == SC) {
+			sem_wait(&unaMemoria->semaforoDeLaMemoria);
+			if (unaMemoria->consistencias[SC] == SC && unaMemoria->estaViva) {
+				sem_post(&unaMemoria->semaforoDeLaMemoria);
 				return unaMemoria->nombre;
 			}
+			sem_post(&unaMemoria->semaforoDeLaMemoria);
 		}
 		return -1;
 	}
@@ -456,13 +460,25 @@ int determinarAQueMemoriaEnviar(request* unaRequest) {
 
 }
 
-int unaMemoriaCualquiera() //TODO: Ver si tiene que tener criterio o no
+int unaMemoriaCualquiera() //TODO: Repreguntar si tiene que tener criterio o no
 {
-	if (list_size(memorias) == 0) {
-		return -1;
+	for(int i = 0;i<list_size(memorias);i++)
+	{
+		memoriaEnLista* unaMemoria = list_get(memorias, 0);
+
+		sem_wait(&unaMemoria->semaforoDeLaMemoria);
+		if (laMemoriaTieneConsistencias(unaMemoria) && unaMemoria->estaViva)
+		{
+			sem_post(&unaMemoria->semaforoDeLaMemoria);
+			return unaMemoria->nombre;
+		}
+		sem_post(&unaMemoria->semaforoDeLaMemoria);
 	}
-	memoriaEnLista* unaMemoria = list_get(memorias, 0);
-	return unaMemoria->nombre;
+
+	return -1;
+
+
+
 }
 
 int memoriaHash(int key) {
@@ -483,12 +499,17 @@ int memoriaHash(int key) {
 	return key % cantidadMemoriasSHC;
 }
 
-void matarMemoria(int nombreMemoria) { //TODO: Semaforo?
+
+void matarMemoria(int nombreMemoria) {
+	//Esto virtualmente borra la memoria del sistema, no la borra completamente para que
+	//las cosas que la estan usando en el momento de borrarla no rompan pero que se enteren que se borro.
 
 	for (int i = 0; i < list_size(memorias); i++) {
 		memoriaEnLista* unaMemoria = list_get(memorias, i);
 
 		if (unaMemoria->nombre == nombreMemoria) {
+
+			sem_wait(&unaMemoria->semaforoDeLaMemoria);
 
 			if (unaMemoria->nombre == proximaMemoriaEC) {
 				proximaMemoriaEC = memoriaECSiguiente(proximaMemoriaEC);
@@ -499,12 +520,14 @@ void matarMemoria(int nombreMemoria) { //TODO: Semaforo?
 				}
 			}
 
-			free(unaMemoria->consistencias);
-			free(unaMemoria->ip);
 			close(unaMemoria->socket);
 
+			unaMemoria->estaViva = 0;
+			free(unaMemoria->ip);
 			list_remove(memorias, i);
-			free(unaMemoria);
+
+			sem_post(&unaMemoria->semaforoDeLaMemoria);
+//			free(unaMemoria);
 
 			return;
 		}
@@ -515,10 +538,21 @@ int seedYaExiste(seed* unaSeed) {
 	for (int i = 0; i < list_size(memorias); i++) {
 		memoriaEnLista* unaMemoria = list_get(memorias, i);
 
+		sem_wait(&unaMemoria->semaforoDeLaMemoria);
+
+		if (!unaMemoria->estaViva)
+		{
+			sem_post(&unaMemoria->semaforoDeLaMemoria);
+			continue;
+		}
+
 		if (!(strcmp(unaMemoria->ip, unaSeed->ip))
 				&& (unaSeed->puerto == unaMemoria->puerto)) {
+
+			sem_post(&unaMemoria->semaforoDeLaMemoria);
 			return 1;
 		}
+		sem_post(&unaMemoria->semaforoDeLaMemoria);
 	}
 	return 0;
 }
@@ -526,8 +560,10 @@ int seedYaExiste(seed* unaSeed) {
 void agregarUnaMetadata(metadataTablaLFS* unaMetadata) {
 	if (criterioDeTabla(unaMetadata->nombre) == -1) //Si no existe ya
 			{
+		sem_wait(&sem_actualizacionMetadatas);
 		list_add(listaTablas, unaMetadata);
-		log_info(logger, "Se agrego la tabla a las metadatas%s",
+		sem_post(&sem_actualizacionMetadatas);
+		log_info(logger, "Se agrego la tabla %s a las metadatas",
 				unaMetadata->nombre);
 	} else {
 		free(unaMetadata->nombre);
@@ -536,6 +572,7 @@ void agregarUnaMetadata(metadataTablaLFS* unaMetadata) {
 }
 
 void actualizarMetadatas(t_list* metadatas) {
+
 	sem_wait(&sem_actualizacionMetadatas);
 
 	while (list_size(listaTablas) != 0) {
@@ -549,7 +586,7 @@ void actualizarMetadatas(t_list* metadatas) {
 
 	listaTablas = metadatas;
 
-	log_info(logger, "Se termino de actualizar las metadatas");
+	log_info(logger, "Se termino de actualizar las metadatas.");
 
 	sem_post(&sem_actualizacionMetadatas);
 }
@@ -617,7 +654,9 @@ int manejarRespuestaDeMemoria(script* elScript, request* laRequest, int memoria)
 				actualizarMetadatas(metadatas);
 			} else {
 				metadataTablaLFS* laMetadata = list_get(metadatas, 0);
+				sem_wait(&sem_actualizacionMetadatas);
 				agregarUnaMetadata(laMetadata);
+				sem_post(&sem_actualizacionMetadatas);
 
 				list_destroy(metadatas);
 			}
@@ -637,5 +676,24 @@ int manejarRespuestaDeMemoria(script* elScript, request* laRequest, int memoria)
 
 	return respuesta;
 
+}
+
+int laMemoriaTieneConsistencias(memoriaEnLista* unaMemoria)
+{
+	sem_wait(&unaMemoria->semaforoDeLaMemoria);
+
+	if(!unaMemoria->estaViva)
+	{
+		sem_post(&unaMemoria->semaforoDeLaMemoria);
+		return -1;
+	}
+
+	if (unaMemoria->consistencias[SC] == -1 && unaMemoria->consistencias[EC] == -1 && unaMemoria->consistencias[SHC] == -1)
+	{
+		sem_post(&unaMemoria->semaforoDeLaMemoria);
+		return 0;
+	}
+	sem_post(&unaMemoria->semaforoDeLaMemoria);
+	return 1;
 }
 

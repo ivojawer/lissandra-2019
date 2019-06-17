@@ -52,6 +52,10 @@ void conectarseAUnaMemoria(seed* unaSeed) {
 	nuevaMemoria->ip = string_duplicate(unaSeed->ip);
 	nuevaMemoria->puerto = unaSeed->puerto;
 
+	sem_init(&nuevaMemoria->semaforoDeLaMemoria,0,1);
+
+	nuevaMemoria->estaViva = 1;
+
 	free(unaSeed->ip);
 
 	free(unaSeed);

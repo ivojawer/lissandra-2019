@@ -10,6 +10,7 @@ extern t_list* memorias;
 extern sem_t sem_cambioId;
 extern sem_t sem_disponibleColaREADY;
 extern sem_t sem_cambioSleepEjecucion;
+extern sem_t sem_cambioMemoriaEC;
 extern t_log* logger;
 extern int idInicial;
 extern int proximaMemoriaEC;
@@ -67,11 +68,16 @@ int crearScript(request* nuevaRequest) {
 
 }
 
-void journal() //TODO: Semaforo?
+void journal()
 {
 	for (int i = 0; i < list_size(memorias); i++) {
 		memoriaEnLista* unaMemoria = list_get(memorias, i);
-		enviarInt(unaMemoria->socket, OP_JOURNAL);
+
+		if (laMemoriaTieneConsistencias(unaMemoria)) //TODO: Repreguntar esto.
+		{
+			enviarInt(unaMemoria->socket, OP_JOURNAL);
+		}
+
 	}
 
 	log_info(logger,
@@ -152,6 +158,7 @@ int ejecutarRequest(request* requestAEjecutar, script* elScript) {
 }
 
 void metrics(int loggear) //TODO: Faltan los memory loads
+//TODO: Agregar inserts selects fallidos
 {
 
 	t_list* tiemposSelectAux = filterCasero_esMasNuevoQue30Segundos(
@@ -234,13 +241,23 @@ int add(char* chocloDeCosas) {
 	}
 	memoriaEnLista* memoria = list_get(memorias, posicionMemoria);
 
-//TODO: Semaforo para cuando se usa?
+	sem_wait(&memoria->semaforoDeLaMemoria);
+
+	if(!memoria->estaViva)
+	{
+		sem_post(&memoria->semaforoDeLaMemoria);
+		return -1;
+	}
+
 	memoria->consistencias[consistencia] = consistencia; //La consistencia esta en la misma posicion del numero que lo representa (0,1 o 2);
 
-//TODO: Semaforo???
 	if ((consistencia == EC) && (proximaMemoriaEC == -1)) {
+		sem_wait(&sem_cambioMemoriaEC);
 		proximaMemoriaEC = memoria->nombre;
+		sem_post(&sem_cambioMemoriaEC);
 	}
+
+	sem_post(&memoria->semaforoDeLaMemoria);
 
 	log_info(logger, "Se agrego la memoria %i al criterio %s", nombreMemoria,
 			consistenciaYMemoriaEnArray[3]);
