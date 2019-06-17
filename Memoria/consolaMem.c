@@ -1,5 +1,6 @@
 #include "funcionesMemoria.h"
-
+extern t_list* colaDeRequests;
+extern sem_t requestsDisponibles;
 void consola() {
 
 	while (1)
@@ -31,7 +32,12 @@ void consola() {
 
 			continue;
 		}
-		mandarAEjecutarRequest(crearStructRequest(lectura));
+		requestConID* requestAEjecutar = malloc(sizeof(requestConID));
+		requestAEjecutar->laRequest = crearStructRequest(lectura);
+		requestAEjecutar->idKernel = 0;
+
+		list_add(colaDeRequests,requestAEjecutar);
+		sem_post(&requestsDisponibles);
 
 		liberarArrayDeStrings(requestYParametros);
 		free(lectura);

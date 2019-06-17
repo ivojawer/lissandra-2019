@@ -52,7 +52,7 @@ int main() {
 	scriptRefreshMetadata = malloc(sizeof(script));
 
 	scriptRefreshMetadata->esPorConsola = 0;
-	scriptRefreshMetadata->idScript = 0;
+	scriptRefreshMetadata->idScript = 1;
 	scriptRefreshMetadata->direccionScript = string_new();
 	sem_init(&scriptRefreshMetadata->semaforoDelScript, 0, 0);
 

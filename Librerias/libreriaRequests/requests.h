@@ -28,9 +28,9 @@
 #define METADATAS 107
 
 //Respuestas:
-#define ERROR 200
-#define TODO_BIEN 201
-#define MEM_LLENA 202
+#define ERROR 0
+#define TODO_BIEN 1
+#define MEM_LLENA 200
 
 //Identificadores de modulo:
 #define KERNEL 300

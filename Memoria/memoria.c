@@ -3,12 +3,19 @@
 t_log* logger;
 t_list* tablaSegmentos;
 t_list* seeds;
+t_list* hilosEnEjecucion;
+t_list* colaDeRequests;
+sem_t requestsDisponibles;
 
 int main() {
 
 	logger = log_create("memoria.log", "memoria", 1, 0); //3er parametro en 1 para mostrarlos en consola. Sino en 0
 
 	t_config* config = config_create(DIRCONFIG); //DUDA: Si es un config por memoria esto va en la carpeta CONFIG tmb  lo hago una por proyecto como aca
+
+	hilosEnEjecucion = list_create();
+	colaDeRequests = list_create();
+	sem_init(&requestsDisponibles,0,0);
 
 
 
@@ -44,13 +51,16 @@ int main() {
 //	cargarSeedsIniciales();
 
 	pthread_t h_consola;
+	pthread_t h_ejecucionRequests;
 	pthread_t h_conexionKernel;
 	pthread_t h_refreshGossiping;
 
+	pthread_create(&h_ejecucionRequests, NULL, (void *) ejecutarRequests, NULL);
 	pthread_create(&h_consola, NULL, (void *) consola, NULL);
 	pthread_create(&h_conexionKernel, NULL, (void *) primeraConexionKernel, NULL);
 	pthread_create(&h_refreshGossiping, NULL, (void *) gossiping, NULL);
 
+	pthread_detach(h_ejecucionRequests);
 	pthread_detach(h_conexionKernel);
 	pthread_detach(h_refreshGossiping);
 	pthread_join(h_consola, NULL);

@@ -2,6 +2,8 @@
 
 extern t_log* logger;
 extern t_list* seeds;
+extern sem_t requestsDisponibles;
+extern t_list* colaDeRequests;
 int socketKernel;
 int socketLFS;
 
@@ -34,10 +36,6 @@ int primeraConexionLFS() {
 	}
 
 	int tamanioMaximoValue = recibirInt(socketLFS, logger);
-
-	pthread_t h_comunicacionLFS;
-	pthread_create(&h_comunicacionLFS, NULL, (void *) comunicacionConLFS, NULL);
-	pthread_detach(h_comunicacionLFS);
 
 	config_destroy(config);
 
@@ -110,7 +108,14 @@ void comunicacionConKernel() {
 				return;
 			}
 
-			//TODO
+			requestConID* requestParaHilo = malloc(sizeof(requestConID));
+
+			requestParaHilo->laRequest = unaRequest;
+			requestParaHilo->idKernel = id;
+
+			list_add(colaDeRequests, requestParaHilo);
+			sem_post(&requestsDisponibles);
+
 			break;
 
 		}
@@ -119,7 +124,18 @@ void comunicacionConKernel() {
 			continue;
 		}
 		case JOURNAL: {
-			journal();
+			request* unaRequest = malloc(sizeof(request));
+			unaRequest->requestEnInt = JOURNAL;
+			unaRequest->parametros = NULL;
+
+			requestConID* requestParaHilo = malloc(sizeof(requestConID));
+
+			requestParaHilo->laRequest = unaRequest;
+			requestParaHilo->idKernel = 0;
+
+			list_add(colaDeRequests, requestParaHilo);
+			sem_post(&requestsDisponibles);
+
 			continue;
 		}
 
@@ -133,92 +149,14 @@ void comunicacionConKernel() {
 
 }
 
-void comunicacionConLFS() {
-	while (1) {
-		int operacion = recibirInt(socketLFS, logger);
+void enviarRespuestaAlKernel(int id, int respuesta) {
+	t_list* intsAEnviar = list_create();
 
-		int id = recibirInt(socketLFS, logger); //Si algun dia se recibe algo sin ID, poner esto adentro de los cases.
+	list_add(intsAEnviar, &id);
+	list_add(intsAEnviar, &respuesta);
 
-		if (id == -1) {
-			manejoErrorLFS();
-			return;
-		}
-
-		switch (operacion) {
-
-		case DATO: {
-
-			char* dato = recibirString(socketLFS, logger);
-
-			if (!strcmp(dato, " ")) {
-				free(dato);
-				manejoErrorLFS();
-				return;
-			}
-
-			//TODO
-
-			continue;
-		}
-
-		case METADATAS: {
-
-			t_list* metadatas = recibirMetadatas(socketLFS, logger);
-
-			if (list_size(metadatas)) {
-
-				manejoErrorLFS();
-				list_destroy(metadatas);
-				return;
-			}
-
-			//TODO
-
-			continue;
-		}
-		case REGISTRO: {
-
-			registro* elRegistro = recibirRegistro(socketLFS, logger);
-
-			//TODO
-
-			continue;
-		}
-		case RESPUESTA: {
-
-			int respuesta = recibirInt(socketLFS, logger);
-
-			switch (respuesta) {
-			case TODO_BIEN: {
-
-				//TODO
-
-				continue;
-			}
-			case ERROR: {
-
-				//TODO
-
-				continue;
-			}
-			default: {
-				manejoErrorLFS();
-
-				return;
-			}
-			}
-
-			manejoErrorLFS(); //Nunca va a llegar a esta linea, pero esta para que no joda eclipse
-			return;
-		}
-
-		default: {
-			manejoErrorLFS();
-			return;
-		}
-
-		}
-	}
+	enviarVariosIntsConHeader(socketKernel, intsAEnviar,
+	RESPUESTA);
 }
 
 void manejoErrorKernel() {

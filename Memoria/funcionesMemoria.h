@@ -19,6 +19,7 @@
 #include <time.h>
 #include <stdbool.h>
 #include "gossiping.h"
+#include <semaphore.h>
 
 
 typedef struct {
@@ -26,6 +27,12 @@ typedef struct {
 	int key;
 	char value;
 }marco;
+
+typedef struct {
+	int id;
+	sem_t semaforoDeHilo;
+	void* punteroARespuesta;
+}hiloDeEjecucion;
 
 typedef struct{
 	bool vacio;
@@ -37,12 +44,19 @@ typedef struct{
 	int flagModificado;
 }pagina;
 
+typedef struct{
+	request* laRequest;
+	int idKernel;
+
+}requestConID;
+
 
 void* comienzoMemoria;
 disponibilidad* marcos;
 int cantMarcos;
 int tamanioMarco;
 
+void ejecutarRequests();
 segmento* encuentroTablaPorNombre(char* nombreTabla);
 bool filtroNombreTabla( char*,segmento*);
 t_list* crearTablaSegmentos();
@@ -52,12 +66,13 @@ pagina* nuevoDato(t_list* tablaPaginas,int flagModificado,int key, int timestamp
 pagina* getPagina(int key, char* nombreTabla);
 void consola();
 void mandarAEjecutarRequest(request* requestAEjecutar);
-void mandarALFS(int,char*);
-void Select(char* parametros);
-void insert(char* parametros);
-void create(char* parametros);
+void mandarRequestALFS(int,char*);
+char* Select(char* parametros);
+int insert(char* parametros);
+int create(char* parametros);
 void describe(char* parametro);
-void drop(char* parametro);
+int drop(char* parametro);
 void journal();
+
 
 #endif /* FUNCIONESMEMORIA_H_ */

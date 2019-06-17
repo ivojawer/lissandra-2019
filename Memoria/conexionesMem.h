@@ -11,3 +11,4 @@ void comunicacionConKernel();
 void comunicacionConLFS();
 void manejoErrorKernel();
 void manejoErrorLFS();
+void enviarRespuestaAlKernel(int id, int respuesta);
