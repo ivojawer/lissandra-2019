@@ -242,7 +242,6 @@ int contar_comas(char *temp)
 	 int file_size = ftell(bf);
 	 fclose(bf);
 	 free(root);
-	 free(bloque);
 	 return file_size;
  }
 
@@ -251,20 +250,16 @@ int contar_comas(char *temp)
 	 int flag_last_bloque = 0;
 	 int size_bloque;
 	 int cant_bloques = list_size(bloques_buscar);
+	 t_bloque *block = malloc(sizeof(t_bloque));
 
-	 for(int i=0; i<cant_bloques;i++){
-
-		 t_bloque *block = block = list_get(bloques_buscar, i);
-
+	 for(int i = 0; i < cant_bloques; i++){
+		 t_bloque *block = list_get(bloques_buscar, i);
 		 if(i == cant_bloques-1)
-		 {
 			 flag_last_bloque = 1;
-		 }
-
 		 size_bloque = size_of_bloque(block);
-
 		 buscar_key_bloques(block->name, key, timestamp_valor, flag_last_bloque, size_bloque);
 	 }
+	 free(block);
  }
 
 
@@ -279,12 +274,12 @@ int existe_tabla(char *tabla)
 	string_append(&pathAbsoluto,"Tablas/");
 	string_append(&pathAbsoluto,nombreTablaGuardado);
 
-	if (access(pathAbsoluto, F_OK) == -1){
-	   free(pathAbsoluto);
-	   free(nombreTablaGuardado);
-	   return 0;
+	if (access(pathAbsoluto, R_OK) == -1){
+		printf("NO EXISTE TABLA\n");
+		free(pathAbsoluto);
+		free(nombreTablaGuardado);
+	    return 0;
 	}
-
 	free(pathAbsoluto);
 	free(nombreTablaGuardado);
 	return 1; // devuelve 1 si existe la tabla, sino devuelve 0.
@@ -296,27 +291,27 @@ int cargar_bloques(char *root, t_list *bloques_buscar)
 	FILE *f;
 	f = fopen(root, "rb");
 	if(f==NULL){
-			printf("El archivo particion no se ha podido abrir correctamente\n");
-			return 0;
+		printf("El archivo particion no se ha podido abrir correctamente\n");
+		return 0;
 	}else{
-		 int i=0, cont=0;
+		 int i = 0, cont = 0;
 		 char temp_helper[4];
-		 char bloque[8]="";
-		 char size[8]="";
-		 int flag_bloque=0;
+		 char bloque[8] = "";
+		 char size[8] = "";
+		 int flag_bloque = 0;
 
-		 while(fread(&temp_helper[0], 1, 1, f)==1){
-			 if(temp_helper[0]>=48 && temp_helper[0]<=57){
-				 flag_bloque=1;
-				 bloque[i]= temp_helper[0];
+		 while(fread(&temp_helper[0], 1, 1, f) == 1){
+			 if(temp_helper[0] >= 48 && temp_helper[0] <= 57){
+				 flag_bloque = 1;
+				 bloque[i] = temp_helper[0];
 				 i++;
 			 }else{
-				 if(flag_bloque==1){
+				 if(flag_bloque == 1){
 					 strcpy(&bloque[i], "\0");
-					 flag_bloque=0;
-					 i=0;
+					 flag_bloque = 0;
+					 i = 0;
 					 cont++;
-					 if(cont==1){
+					 if(cont == 1){
 						 strcpy(size, bloque);
 					 }else{
 						 t_bloque *bloque_creado = crear_bloque_buscar(bloque);
@@ -487,13 +482,13 @@ t_par_valor_timestamp *filtrar_timestamp_mayor(t_list *timestamp_valor, int list
 void rutina_select(char* comando)
 {
 
-	printf("Operacion: SELECT\n");
+	printf("operacion: select\n");
 
 	char *tabla=get_tabla(comando);
-	printf("Tabla: %s\n", get_tabla(comando));
+	printf("tabla: %s\n", get_tabla(comando));
 
 	uint16_t key = get_key(comando);
-	printf("Key: %d\n", get_key(comando));
+	printf("key: %d\n", get_key(comando));
 
 	if(existe_tabla(tabla)){
 		int nr_particiones_metadata = obtener_particiones_metadata(tabla);

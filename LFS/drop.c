@@ -1,6 +1,5 @@
 #include "funcionesLFS.h"
 
-extern t_bitarray* bitarray;
 extern char* puntoDeMontaje;
 
 void iterar_busqueda_de_bloques(void (foo)(char *, int, int, t_list *),

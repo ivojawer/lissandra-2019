@@ -1,10 +1,9 @@
 #include "funcionesLFS.h"
 
-extern t_log* logger;
-extern t_bitarray* bitarray;
+extern t_log *logger;
+//extern t_bitarray *bitarray;
 
 extern int cantidadBloques;
-extern int tamanioBloques;
 
 extern char* puntoDeMontaje;
 
@@ -12,8 +11,7 @@ void agregar_salto_de_linea(char *string) {
 	string_append(&string,"\n");
 }
 
-void guardar_bitarray(t_bitarray *bitarray, long int index) {
-
+void guardar_bitarray(t_bitarray *bitarray, int index) {
 
 	char* root = string_duplicate(puntoDeMontaje);
 
@@ -29,6 +27,13 @@ void guardar_bitarray(t_bitarray *bitarray, long int index) {
 
 int elegir_bloque_libre(int nr_bloques) {
 	int free_block, i, flag_free_block = 0;
+
+	for(i = 0; i < nr_bloques; i++){
+		printf("%d ", bitarray_test_bit(bitarray, i));
+	}
+	printf("\n");
+
+
 	for (i = 0; i < nr_bloques; i++) {
 		if (flag_free_block == 0) {
 			if (bitarray_test_bit(bitarray, i) == 0) {
@@ -52,7 +57,7 @@ void crear_particiones(char *dir, int particiones) {
 
 	char* size_text = string_new();
 	string_append(&size_text, "Size=");
-	string_append(&size_text, string_itoa(tamanioBloques));
+	string_append(&size_text, "0");
 	string_append(&size_text, "\n");
 
 	for (int i = 0; i < particiones; i++) {
@@ -137,7 +142,6 @@ void rutina_create(char* comando) {
 	printf("Operacion: CREATE\n");
 
 	char *tabla = strdup(get_tabla(comando));
-
 	printf("Tabla: %s\n", tabla);
 
 	char *consistencia = get_consistencia(comando);

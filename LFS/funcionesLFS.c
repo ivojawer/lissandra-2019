@@ -3,7 +3,6 @@
 extern t_log* logger;
 
 extern t_list* memtable;
-extern t_bitarray* bitarray;
 
 extern int cantidadBloques;
 extern int tamanioBloques;
@@ -21,7 +20,7 @@ extern char array_aux[128];
 //////////////////////////////////////////////
 
 
-int size_particion=0;           //// de estas no estoy 100% segura si hay alguna obsoleta
+int size_particion = 0;           //// de estas no estoy 100% segura si hay alguna obsoleta
 t_list *particion_encontrada;
 t_list *registros_encontrados;
 t_list *tabla_encontrada;
@@ -32,10 +31,9 @@ char *consistency;
 
 void mandarAEjecutarRequest(request* requestAEjecutar) {
 
-	char* parametros = requestStructAString(requestAEjecutar);
+	char *parametros = string_duplicate(requestAEjecutar->parametros); //Esto es para que se pueda hacer un free() en consola.c sin que rompa
 	switch (requestAEjecutar->requestEnInt) {
 	case SELECT:
-		;
 		{
 			pthread_t h_select;
 
@@ -43,11 +41,12 @@ void mandarAEjecutarRequest(request* requestAEjecutar) {
 
 			pthread_detach(h_select);
 
+			//enviarString("Me llego un select, ocupate macho", socketLFSAMEM);
+
 			break;
 		}
 
 	case INSERT:
-		;
 		{
 			pthread_t h_insert;
 
@@ -59,8 +58,6 @@ void mandarAEjecutarRequest(request* requestAEjecutar) {
 		}
 
 	case CREATE:
-		;
-
 		{
 			pthread_t h_create;
 
@@ -72,7 +69,6 @@ void mandarAEjecutarRequest(request* requestAEjecutar) {
 		}
 
 	case DESCRIBE:
-		;
 		{
 
 			pthread_t h_describe;
@@ -81,13 +77,10 @@ void mandarAEjecutarRequest(request* requestAEjecutar) {
 
 			pthread_detach(h_describe);
 
-
-
 			break;
 		}
 
 	case DROP:
-		;
 		{
 
 			pthread_t h_drop;
@@ -123,7 +116,6 @@ void iniciar_variables(){
 	cantidadBloques = config_get_int_value(metadataLFS,"BLOCKS");
 	tamanioBloques = config_get_int_value(metadataLFS,"BLOCK_SIZE");
 
-	//chequear si de estas hay alguna que no va
 	memtable = list_create();
 	tabla_encontrada = list_create();
 	registros_encontrados = list_create();
@@ -152,7 +144,7 @@ int get_key(char* comando) {
 	return atoi(key);
 }
 
-char* get_value(char* comando) {
+char *get_value(char* comando) {
 	int primera_ocurrencia = str_first_index_of('"', comando);
 	int segunda_ocurrencia = str_last_index_of('"', comando);
 
@@ -177,7 +169,7 @@ double get_timestamp(char* comando) {
 char *get_consistencia(char *comando)
 {
 	char** tokens_comando = string_split(comando, " ");
-	char *consistencia = tokens_comando[2];
+	char *consistencia = tokens_comando[1];
 	return consistencia;
 }
 
@@ -210,7 +202,7 @@ int obtener_particiones_metadata(char* tabla)
 	t_config* config = config_create(archivoMetadata);
 	int nr_particiones_metadata = config_get_int_value(config, "PARTITIONS");
 	config_destroy(config);
-	free(archivoMetadata); //creo
+	free(archivoMetadata);
 	free(unaTabla);
 	return nr_particiones_metadata;
 }
@@ -229,7 +221,7 @@ char *obtener_consistencia_metadata(char* tabla)
 	consistency = malloc(strlen(config_get_string_value(config, "CONSISTENCY")));
 	strcpy(consistency, config_get_string_value(config, "CONSISTENCY"));
 	config_destroy(config);
-	free(archivoMetadata); //creo
+	free(archivoMetadata);
 	free(unaTabla);
 	return consistency;
 }
@@ -247,7 +239,7 @@ int obtener_tiempo_compactacion_metadata(char* tabla)
 	t_config* config = config_create(archivoMetadata);
 	int tiempo_compactacion = config_get_int_value(config, "COMPACTION_TIME");
 	config_destroy(config);
-	free(archivoMetadata); //creo
+	free(archivoMetadata);
 	free(unaTabla);
 	return tiempo_compactacion;
 }
@@ -256,8 +248,6 @@ int obtener_tiempo_compactacion_metadata(char* tabla)
 
 void crear_bloques_FS(int nr_blocks)
 {
-
-
 	for(int i = 0; i < nr_blocks; i++){
 
 		char* root = string_duplicate(puntoDeMontaje);
@@ -279,9 +269,7 @@ void crear_bloques_FS(int nr_blocks)
  * Si el Bitmap tiene datos supongo que ya existe los Bloques y algunos estan lleno y otros no
  */
 
-
-
-void setear_bitarray(t_bitarray *bitarray, int nr_blocks)
+void setear_bitarray(t_bitarray **bitarray, int nr_blocks)
 {
 	long i=0;
 	char c;
@@ -303,8 +291,8 @@ void setear_bitarray(t_bitarray *bitarray, int nr_blocks)
 	if (file_size == 0){	//Bitmap vacio
 		fseek(fp, 0L, SEEK_SET);
 		for(i = 0; i < nr_blocks; i++){
-			bitarray_clean_bit(bitarray, i);
-			fprintf(fp, "%d",  bitarray_test_bit(bitarray, i));
+			bitarray_clean_bit(*bitarray, i);
+			fprintf(fp, "%d",  bitarray_test_bit(*bitarray, i));
 		}
 		crear_bloques_FS(nr_blocks);
 	}else{
@@ -314,9 +302,9 @@ void setear_bitarray(t_bitarray *bitarray, int nr_blocks)
 			c = fgetc(fp);
 			if(!feof(fp)){
 				if(atoi(&c) == 1){
-					bitarray_set_bit(bitarray, i);
+					bitarray_set_bit(*bitarray, i);
 				}else{
-					bitarray_clean_bit(bitarray, i);
+					bitarray_clean_bit(*bitarray, i);
 				}
 				i++;
 			}
@@ -331,9 +319,10 @@ void crear_bitarray(int nr_blocks){
 	memset(&data, '0', sizeof(data));
 
 	bitarray = bitarray_create_with_mode(data, sizeof(data), LSB_FIRST);
-	setear_bitarray(bitarray, nr_blocks);
+	setear_bitarray(&bitarray, nr_blocks);
+	int i;
+	for(i = 0; i < nr_blocks; i++){
+		printf("%d ", bitarray_test_bit(bitarray, i));
+	}
+	printf("\n");
 }
-
-
-
-
