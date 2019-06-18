@@ -84,7 +84,6 @@ int main() {
 
 	seedPrincipal->ip = ipMemoriaPrincipal;
 	seedPrincipal->puerto = puertoMemoriaPrincipal;
-	seedPrincipal->estaConectada = 1;
 
 	pthread_create(&h_primeraConexion, NULL, (void *) conectarseAUnaMemoria,
 			seedPrincipal);

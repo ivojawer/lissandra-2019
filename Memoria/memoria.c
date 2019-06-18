@@ -5,6 +5,7 @@ t_list* tablaSegmentos;
 t_list* hilosEnEjecucion;
 t_list* colaDeRequests;
 sem_t requestsDisponibles;
+sem_t sem_gossiping;
 int nombreMemoria;
 
 int main() {
@@ -16,6 +17,7 @@ int main() {
 	hilosEnEjecucion = list_create();
 	colaDeRequests = list_create();
 	sem_init(&requestsDisponibles,0,0);
+	sem_init(&sem_gossiping,0,1);
 
 
 	int tamanioMemoria = config_get_int_value(config, "TAM_MEM");
@@ -52,16 +54,16 @@ int main() {
 
 	pthread_t h_consola;
 	pthread_t h_ejecucionRequests;
-	pthread_t h_conexionKernel;
+	pthread_t h_conexiones;
 	pthread_t h_refreshGossiping;
 
 	pthread_create(&h_ejecucionRequests, NULL, (void *) ejecutarRequests, NULL);
 	pthread_create(&h_consola, NULL, (void *) consola, NULL);
-	pthread_create(&h_conexionKernel, NULL, (void *) primeraConexionKernel, NULL);
+	pthread_create(&h_conexiones, NULL, (void *) aceptarConexiones, NULL);
 	pthread_create(&h_refreshGossiping, NULL, (void *) gossiping, NULL);
 
 	pthread_detach(h_ejecucionRequests);
-	pthread_detach(h_conexionKernel);
+	pthread_detach(h_conexiones);
 	pthread_detach(h_refreshGossiping);
 	pthread_join(h_consola, NULL);
 

@@ -4,7 +4,7 @@
 #include <commons/config.h>
 
 void messageHandler(char*,int);
-void primeraConexionKernel();
+void aceptarConexiones();
 int primeraConexionLFS();
 void conexionLFS();
 void comunicacionConKernel();

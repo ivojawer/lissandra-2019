@@ -77,6 +77,6 @@ int create(char* parametros);
 t_list* describe(char* parametro);
 int drop(char* parametro);
 void journal();
-int enviarYRecibirSeeds(memoriaGossip* unaMemoria);
+seed* enviarYRecibirSeeds(memoriaGossip* memoriaDestino);
 
 #endif /* FUNCIONESMEMORIA_H_ */

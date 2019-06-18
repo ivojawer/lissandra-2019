@@ -1,5 +1,6 @@
 #include "gossiping.h"
 extern t_log* logger;
+extern sem_t sem_gossiping;
 t_list* seedsConocidas;
 t_list* tablaGossiping;
 
@@ -17,20 +18,25 @@ void gossiping() {
 
 		config_destroy(config);
 
+		sem_wait(&sem_gossiping);
+
 		for (int i = 0; i<list_size(tablaGossiping);i++)
 		{
 			memoriaGossip* unaMemoria = list_get(tablaGossiping,i);
 
-			int resultado = enviarYRecibirSeeds(unaMemoria);
+			seed* resultado = enviarYRecibirSeeds(unaMemoria);
 
-			if(resultado == -1)
+			if(resultado->puerto == -1)
 			{
+				free(resultado);
 				i--; //Se borro la memoria de la lista, por lo que el contador tiene que quedarse en la misma posicion para no saltearse una memoria.
 			}
 
 		}
 
 		tratarDeConectarseASeeds();
+
+		sem_post(&sem_gossiping);
 	}
 }
 
@@ -52,11 +58,11 @@ void sacarMemoriaDeTablaGossip(memoriaGossip* unaMemoria) {
 
 	free(unaMemoria);
 
-	//No liberar la seed, es la misma seed que la de la lista de seedsConocidas.
+	//No liberar la seed, es el mismo seed* que el de la lista de seedsConocidas.
 
 }
 
-int enviarYRecibirSeeds(memoriaGossip* memoriaDestino) {
+seed* enviarYRecibirSeeds(memoriaGossip* memoriaDestino) {
 
 
 	int seedEstaConectada(seed* unaSeed) {
@@ -88,17 +94,23 @@ int enviarYRecibirSeeds(memoriaGossip* memoriaDestino) {
 
 	if (operacion != GOSSIPING || list_size(seedsRecibidas) == 0) {
 		sacarMemoriaDeTablaGossip(memoriaDestino);
-		return -1 ;
+
+		seed* seedFallida = malloc(sizeof(seed));
+		seedFallida->puerto = -1;
+		seedFallida->ip = NULL;
+
+		return seedFallida;
 	}
 
 	t_list* seedsNuevas = list_filter(seedsRecibidas, (void*) seedNoExiste);
 
-	list_destroy(seedsRecibidas); //TODO: Liberar de esta lista las seeds que ya existian.
-
 	list_add_all(seedsConocidas,seedsNuevas);
 
-	return 1;
+	seed* seedDeQuienSeEnvio = list_get(seedsRecibidas,0); //Por convencion la primera es la seed de la memoria misma
 
+	list_destroy(seedsRecibidas); //TODO: Liberar las seeds que no estan en seedsNuevas excepto la primera
+
+	return seedDeQuienSeEnvio; //Esto es para que ande el aceptar conexion memoria
 }
 
 int esLaMismaSeed(seed* unaSeed, seed* otraSeed) {
