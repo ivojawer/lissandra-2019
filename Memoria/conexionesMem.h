@@ -12,3 +12,4 @@ void comunicacionConLFS();
 void manejoErrorKernel();
 void manejoErrorLFS();
 void enviarRespuestaAlKernel(int id, int respuesta);
+void conectarseAOtraMemoria(seed* laSeed);

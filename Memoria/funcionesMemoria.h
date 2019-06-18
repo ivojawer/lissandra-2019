@@ -47,9 +47,13 @@ typedef struct{
 typedef struct{
 	request* laRequest;
 	int idKernel;
-
 }requestConID;
 
+typedef struct{
+	int nombre;
+	int elSocket;
+	seed* laSeed;
+}memoriaGossip;
 
 void* comienzoMemoria;
 disponibilidad* marcos;
@@ -73,6 +77,6 @@ int create(char* parametros);
 t_list* describe(char* parametro);
 int drop(char* parametro);
 void journal();
-
+int enviarYRecibirSeeds(memoriaGossip* unaMemoria);
 
 #endif /* FUNCIONESMEMORIA_H_ */

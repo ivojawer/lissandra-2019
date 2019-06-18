@@ -2,10 +2,10 @@
 
 t_log* logger;
 t_list* tablaSegmentos;
-t_list* seeds;
 t_list* hilosEnEjecucion;
 t_list* colaDeRequests;
 sem_t requestsDisponibles;
+int nombreMemoria;
 
 int main() {
 
@@ -18,9 +18,9 @@ int main() {
 	sem_init(&requestsDisponibles,0,0);
 
 
-
 	int tamanioMemoria = config_get_int_value(config, "TAM_MEM");
 	int caracMaxDeValue = primeraConexionLFS();
+	nombreMemoria = config_get_int_value(config, "MAGIC_NUMBER");
 
 	if (caracMaxDeValue == -1)
 	{

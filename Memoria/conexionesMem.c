@@ -1,9 +1,9 @@
 #include "conexionesMem.h"
 
 extern t_log* logger;
-extern t_list* seeds;
 extern sem_t requestsDisponibles;
 extern t_list* colaDeRequests;
+extern int nombreMemoria;
 int socketKernel;
 int socketLFS;
 
@@ -56,7 +56,6 @@ void primeraConexionKernel() {
 
 	int nombreModulo = MEMORIA;
 
-	int nombreMemoria = config_get_int_value(config, "MEMORY_NUMBER");
 
 	list_add(listaInts, &nombreModulo);
 	list_add(listaInts, &nombreMemoria);
@@ -74,7 +73,7 @@ void primeraConexionKernel() {
 	int modulo = recibirInt(socketKernel, logger);
 
 	if (modulo != KERNEL) {
-		log_error(logger, "Se conecto algo que no es el kernel.");
+		log_error(logger, "Se conecto indebidamente algo que no es el kernel.");
 		return;
 	}
 
@@ -82,6 +81,62 @@ void primeraConexionKernel() {
 	list_destroy(listaInts);
 
 	comunicacionConKernel();
+
+}
+
+void conectarseAOtraMemoria(seed* laSeed) {
+
+
+	int socketMemoria = conectarseAServidor(laSeed->ip, laSeed->puerto);
+
+	if (socketMemoria == -1) {
+		return;
+	}
+
+	t_list* listaInts = list_create();
+
+	int nombreModulo = MEMORIA;
+
+	list_add(listaInts, &nombreModulo);
+	list_add(listaInts, &nombreMemoria);
+
+	enviarVariosIntsConHeader(socketKernel, listaInts, HANDSHAKE); //HANDSHAKE-MEMORIA-NOMBRE
+
+	int operacion = recibirInt(socketKernel, logger);
+
+	if (operacion != HANDSHAKE) {
+		log_error(logger,
+				"Se envio un handshake a una memoria y se devolvio otra cosa.");
+		list_destroy(listaInts);
+		close(socketMemoria);
+		return;
+	}
+
+	int modulo = recibirInt(socketKernel, logger);
+
+	if (modulo != MEMORIA) {
+		log_error(logger,
+				"Se conecto indebidamente algo que no es una memoria.");
+		list_destroy(listaInts);
+		close(socketMemoria);
+		return;
+	}
+
+	int nombre = recibirInt(socketKernel, logger);
+
+	if (nombre == -1) {
+		log_error(logger, "Se recibio algo indebido de una memoria.");
+		list_destroy(listaInts);
+		close(socketMemoria);
+		return;
+	}
+
+	memoriaGossip* nuevaMemoriaConectada = malloc(sizeof(memoriaGossip));
+	nuevaMemoriaConectada->nombre = nombre;
+	nuevaMemoriaConectada->elSocket = socketMemoria;
+	nuevaMemoriaConectada->laSeed = laSeed;
+
+
 
 }
 
@@ -120,7 +175,7 @@ void comunicacionConKernel() {
 
 		}
 		case GOSSIPING: {
-			enviarSeedsConHeader(socketKernel, seeds, GOSSIPING);
+//			enviarSeedsConHeader(socketKernel, seeds, GOSSIPING);
 			continue;
 		}
 		case JOURNAL: {
