@@ -128,7 +128,7 @@ void rutina_insert(char* comando)
 	printf("Key: %d\n", key);
 
 	char* value = get_value(comando);
-	if(strlen(value)>tamanioValue){
+	if(strlen(value) > tamanioValue){
 		printf("El value ingresado supera el tamaño maximo permitido.\n");
 		return;
 	}else{
@@ -141,7 +141,7 @@ void rutina_insert(char* comando)
 			int nr_particiones_metadata = obtener_particiones_metadata(tabla);
 			int particion_buscar = nr_particion_key(key, nr_particiones_metadata);
 			int size = obtener_size_particion(tabla, particion_buscar);
-			if(size>0){
+			if(size >= 0){
 				printf("Particion del registro: %d\n", particion_buscar);
 
 				t_list *tabla_encontrada = list_create();

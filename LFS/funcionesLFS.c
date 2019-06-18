@@ -316,7 +316,6 @@ void setear_bitarray(t_bitarray **bitarray, int nr_blocks)
 
 void crear_bitarray(int nr_blocks){
 	char data[nr_blocks];
-	memset(&data, '0', sizeof(data));
 
 	bitarray = bitarray_create_with_mode(data, sizeof(data), LSB_FIRST);
 	setear_bitarray(&bitarray, nr_blocks);

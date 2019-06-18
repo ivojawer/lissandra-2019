@@ -1,7 +1,6 @@
 #include "funcionesLFS.h"
 
 extern t_log *logger;
-//extern t_bitarray *bitarray;
 
 extern int cantidadBloques;
 
@@ -33,8 +32,7 @@ int elegir_bloque_libre(int nr_bloques) {
 	}
 	printf("\n");
 
-
-	for (i = 0; i < nr_bloques; i++) {
+	for (i = 0; i < nr_bloques; i++){
 		if (flag_free_block == 0) {
 			if (bitarray_test_bit(bitarray, i) == 0) {
 				flag_free_block = 1;
