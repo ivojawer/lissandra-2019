@@ -70,7 +70,7 @@ void mandarRequestALFS(int,char*);
 char* Select(char* parametros);
 int insert(char* parametros);
 int create(char* parametros);
-void describe(char* parametro);
+t_list* describe(char* parametro);
 int drop(char* parametro);
 void journal();
 

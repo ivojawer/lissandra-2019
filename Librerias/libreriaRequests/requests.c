@@ -1,8 +1,6 @@
 #include "requests.h"
 
- //Las palabras estan ordenadas de forma tal que coincide su indice con su macro
-
-
+//Las palabras estan ordenadas de forma tal que coincide su indice con su macro
 
 void liberarArrayDeStrings(char** array) {
 	for (int i = 0; array[i] != NULL; i++) {
@@ -100,19 +98,19 @@ char* requestStructAString(request* request) {
 
 //retorna el indice de la primera ocurrencia del char o -1 si no aparece nunca
 int str_first_index_of(char c, char* cadena) {
-	int i=0;
-	while(cadena[i] != c && cadena[i] != '\0') {
+	int i = 0;
+	while (cadena[i] != c && cadena[i] != '\0') {
 		i++;
 	}
 
-	return cadena[i] == '\0'? -1 : i;
+	return cadena[i] == '\0' ? -1 : i;
 }
 
 //retorna el indice de la ultima ocurrencia del char o -1 si no aparece nunca
 int str_last_index_of(char c, char* cadena) {
 	int ultima_ocurrencia = -1;
 
-	for(int i=0; i < string_length(cadena); i++) {
+	for (int i = 0; i < string_length(cadena); i++) {
 		if (cadena[i] == c) {
 			ultima_ocurrencia = i;
 		}
@@ -121,17 +119,46 @@ int str_last_index_of(char c, char* cadena) {
 	return ultima_ocurrencia;
 }
 
-int lista_vacia(t_list *lista)
-{
-	if(list_size(lista)==0){
+int lista_vacia(t_list *lista) {
+	if (list_size(lista) == 0) {
 		return 1;
-	}else{
+	} else {
 		return 0;
 	}
 }
 
-
 void liberarRequest(request* request) {
 	free(request->parametros);
 	free(request);
+}
+
+char* consistenciaEnString(int consistenciaEnInt) {
+	switch (consistenciaEnInt) {
+	case SC: {
+		return "SC";
+	}
+	case EC:{
+		return "EC";
+	}
+	case SHC:{
+		return "SHC";
+	}
+
+	}
+	return " ";
+}
+
+void describirMetadatas(t_list* metadatas) {
+
+	printf("\n\n--------METADATAS--------\n\n");
+
+	for (int i = 0; i < list_size(metadatas); i++) {
+		metadataTablaLFS* unaMetadata = list_get(metadatas, i);
+
+		printf("Tabla: %s\n", unaMetadata->nombre);
+		printf("Consistencia: %s\n", consistenciaEnString(unaMetadata->consistencia));
+		printf("Particiones: %i\n", unaMetadata->particiones);
+		printf("Compact time: %i\n\n", unaMetadata->compactTime);
+	}
+	printf("-------------------------\n\n");
 }

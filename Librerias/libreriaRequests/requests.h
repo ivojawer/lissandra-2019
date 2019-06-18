@@ -91,6 +91,7 @@ int str_first_index_of(char c, char* cadena);
 int str_last_index_of(char c, char* cadena);
 int lista_vacia(t_list *lista);
 void liberarArrayDeStrings(char** array);
+void describirMetadatas(t_list* metadatas);
 
 //Comunicacion:
 void enviarInt(int aQuien, int intAEnviar);

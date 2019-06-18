@@ -64,11 +64,28 @@ void ejecutarRequests() {
 
 			break;
 		}
-		case DESCRIBE:{
+		case DESCRIBE: {
+
+			t_list* resultado = describe(requestAEjecutar->parametros);
+
+			metadataTablaLFS* metadataPrueba = list_get(resultado,0);
+
+			if (requestEID->idKernel) {
+
+				if(metadataPrueba->consistencia == -1){
+					enviarRespuestaAlKernel(requestEID->idKernel, ERROR);
+				}
+				else
+				{
+					enviarMetadatasConHeaderEId(socketKernel,resultado,METADATAS,requestEID->idKernel);
+				}
+			}
+
 			break;
 		}
-		case JOURNAL:{
+		case JOURNAL: {
 			journal();
+			break;
 		}
 
 		}
@@ -269,9 +286,7 @@ int insert(char* parametros) {
 	value = sacoComillas(value);
 	//value=string_substring_until(value,config_get_int_value(config,"CANT_MAX_CARAC")); //lo corta para que no ocupe mas de 20 caracteres
 
-
 	int timestamp = time(NULL) / 1000; //TODO: Hacer la adquisicion del timestamp consistente con el LFS
-
 
 	log_info(logger, "INSERT: Tabla:%s - key:%d - timestamp:%d - value:%s\n",
 			tabla, key, timestamp, value);
@@ -309,9 +324,9 @@ int create(char* parametros) {
 
 	int header = recibirInt(socketLFS, logger);
 
-	if (header != REQUEST) {
+	if (header != RESPUESTA) {
 		manejoErrorLFS();
-		return 0;
+		return -1;
 	}
 
 	int respuesta = recibirInt(socketLFS, logger);
@@ -331,14 +346,38 @@ void mandarRequestALFS(int requestAMandar, char* parametros) {
 	free(nuevaRequest->parametros);
 	free(nuevaRequest);
 }
-void describe(char* parametro) {
+t_list* describe(char* parametro) {
 
-	if (strcmp(parametro, " ")) //Si hay un parametro
-			{
+	mandarRequestALFS(CREATE, parametro);
 
-		return;
+	int header = recibirInt(socketLFS, logger);
+
+	t_list* metadatas;
+
+	if (header != RESPUESTA) {
+		manejoErrorLFS();
+		metadatas = list_create();
+
+		metadataTablaLFS* metadata = malloc(sizeof(metadataTablaLFS));
+		metadata->nombre = NULL;
+		metadata->consistencia = -1;
+		metadata->particiones = -1;
+		metadata->compactTime = -1;
+
+		list_add(metadatas, metadata);
+
+		return metadatas;
 	}
 
+	metadatas = recibirMetadatas(socketLFS, logger);
+
+	metadataTablaLFS* metadataPrueba = list_get(metadatas, 0);
+
+	if (metadataPrueba->compactTime != -1) {
+		describirMetadatas(metadatas);
+	}
+
+	return metadatas;
 }
 
 int drop(char* parametro) {
