@@ -16,7 +16,6 @@ extern FILE *fp_dump;
 
 extern char array_aux[128];
 
-
 //////////////////////////////////////////////
 
 
@@ -132,32 +131,34 @@ void iniciar_variables(){
 }
 
 
-char* get_tabla(char* comando) {
+char* get_tabla(char* comando)
+{
 	char **tokens_comando = string_split(comando, " ");
 	char *tabla = tokens_comando[1];
 	return tabla;
 }
 
-int get_key(char* comando) {
+int get_key(char* comando)
+{
 	char **tokens_comando = string_split(comando, " ");
 	char *key = tokens_comando[2];
 	return atoi(key);
 }
 
-char *get_value(char* comando) {
+char *get_value(char* comando)
+{
 	int primera_ocurrencia = str_first_index_of('"', comando);
 	int segunda_ocurrencia = str_last_index_of('"', comando);
-
 	return string_substring(comando, primera_ocurrencia + 1, segunda_ocurrencia - primera_ocurrencia - 1);
 }
 
 //retorna el timestamp escrito en la request o el del epoch unix si la request no trae uno
 double get_timestamp(char* comando) {
-	if (comando[string_length(comando) - 1] == '"') { //si no incluyo un timestamp en la request
+	if (comando[string_length(comando) - 1] == '"'){ //si no incluyo un timestamp en la request
 		struct timeval tv;
 		gettimeofday(&tv, NULL);
 		return (tv.tv_sec) * 1000 + (tv.tv_usec) / 1000;
-	} else {
+	}else{
 		int indice_inicial = str_last_index_of('"', comando) + 1;
 		char* str_timestamp = string_substring(comando, indice_inicial,  string_length(comando) - 1 - str_last_index_of('"', comando));
 		double double_timestamp = atol(str_timestamp);
@@ -169,7 +170,7 @@ double get_timestamp(char* comando) {
 char *get_consistencia(char *comando)
 {
 	char** tokens_comando = string_split(comando, " ");
-	char *consistencia = tokens_comando[1];
+	char *consistencia = tokens_comando[2];
 	return consistencia;
 }
 
@@ -269,9 +270,9 @@ void crear_bloques_FS(int nr_blocks)
  * Si el Bitmap tiene datos supongo que ya existe los Bloques y algunos estan lleno y otros no
  */
 
-void setear_bitarray(t_bitarray **bitarray, int nr_blocks)
+void setear_bitarray(int nr_blocks)
 {
-	long i=0;
+	int i=0;
 	char c;
 	char *root = string_duplicate(puntoDeMontaje);
 	string_append(&root,"/Metadata/Bitmap.bin");
@@ -284,15 +285,14 @@ void setear_bitarray(t_bitarray **bitarray, int nr_blocks)
 		return;
 	}
 
-
 	fseek(fp, 0L, SEEK_END);
 	int file_size = ftell(fp);
 
 	if (file_size == 0){	//Bitmap vacio
 		fseek(fp, 0L, SEEK_SET);
 		for(i = 0; i < nr_blocks; i++){
-			bitarray_clean_bit(*bitarray, i);
-			fprintf(fp, "%d",  bitarray_test_bit(*bitarray, i));
+			bitarray_clean_bit(bitarray, i);
+			fprintf(fp, "%d",  bitarray_test_bit(bitarray, i));
 		}
 		crear_bloques_FS(nr_blocks);
 	}else{
@@ -302,9 +302,9 @@ void setear_bitarray(t_bitarray **bitarray, int nr_blocks)
 			c = fgetc(fp);
 			if(!feof(fp)){
 				if(atoi(&c) == 1){
-					bitarray_set_bit(*bitarray, i);
+					bitarray_set_bit(bitarray, i);
 				}else{
-					bitarray_clean_bit(*bitarray, i);
+					bitarray_clean_bit(bitarray, i);
 				}
 				i++;
 			}
@@ -315,11 +315,13 @@ void setear_bitarray(t_bitarray **bitarray, int nr_blocks)
 }
 
 void crear_bitarray(int nr_blocks){
-	char data[nr_blocks];
-
-	bitarray = bitarray_create_with_mode(data, sizeof(data), LSB_FIRST);
-	setear_bitarray(&bitarray, nr_blocks);
 	int i;
+	char data[nr_blocks];
+	memset(data, '0', sizeof(data));
+
+	bitarray = bitarray_create_with_mode(data, nr_blocks, LSB_FIRST);
+	setear_bitarray(nr_blocks);
+
 	for(i = 0; i < nr_blocks; i++){
 		printf("%d ", bitarray_test_bit(bitarray, i));
 	}

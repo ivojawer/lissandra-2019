@@ -84,7 +84,6 @@ void iniciar_variables();
 
 
 //Usadas por varias funciones
-
 t_bitarray *bitarray;
 int obtener_particiones_metadata(char* tabla);
 char *obtener_consistencia_metadata(char* tabla);
@@ -131,7 +130,7 @@ t_tabla *crear_tabla_memtable(char *tabla);
 
 //CREATE
 void agregar_salto_de_linea(char *string);
-void guardar_bitarray(t_bitarray *bitarray, int index);
+void guardar_bitarray(int index);
 int elegir_bloque_libre(int nr_bloques);
 void crear_particiones(char *dir, int particiones);
 int crear_tabla_FS(char *tabla, int particiones, char *consistencia, int compact_time);

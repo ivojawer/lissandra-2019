@@ -1,4 +1,5 @@
 #include "funcionesLFS.h"
+//extern t_bitarray *bitarray;
 
 extern char* puntoDeMontaje;
 
@@ -48,7 +49,7 @@ void desmarcar_bloque_bitmap(t_bloque *elemento) {
 
 	int block = atoi(elemento->name);
 	bitarray_clean_bit(bitarray, block);
-	guardar_bitarray(bitarray, block);
+	guardar_bitarray(block);
 
 	char* block_root = string_new();
 	string_append(&block_root,puntoDeMontaje);

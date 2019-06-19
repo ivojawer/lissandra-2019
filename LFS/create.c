@@ -10,7 +10,7 @@ void agregar_salto_de_linea(char *string) {
 	string_append(&string,"\n");
 }
 
-void guardar_bitarray(t_bitarray *bitarray, int index) {
+void guardar_bitarray(int index){
 
 	char* root = string_duplicate(puntoDeMontaje);
 
@@ -19,12 +19,13 @@ void guardar_bitarray(t_bitarray *bitarray, int index) {
 	FILE *fp = fopen(root, "r+b");
 	fp->_offset = index;
 	fseek(fp, 0l, SEEK_CUR);
-	fprintf(fp, "%d", bitarray_test_bit(bitarray, index));
+	fprintf(fp, "%i", bitarray_test_bit(bitarray, index));
 	fclose(fp);
 	free(root);
 }
 
-int elegir_bloque_libre(int nr_bloques) {
+int elegir_bloque_libre(int nr_bloques)
+{
 	int free_block, i, flag_free_block = 0;
 
 	for(i = 0; i < nr_bloques; i++){
@@ -34,11 +35,11 @@ int elegir_bloque_libre(int nr_bloques) {
 
 	for (i = 0; i < nr_bloques; i++){
 		if (flag_free_block == 0) {
-			if (bitarray_test_bit(bitarray, i) == 0) {
+			if (bitarray_test_bit(bitarray, i) == 0){
 				flag_free_block = 1;
 				free_block = i;
 				bitarray_set_bit(bitarray, i);
-				guardar_bitarray(bitarray, i);
+				guardar_bitarray(i);
 				return free_block;
 			}
 		}
@@ -46,9 +47,8 @@ int elegir_bloque_libre(int nr_bloques) {
 	return -1;
 }
 
-void crear_particiones(char *dir, int particiones) {
-
-
+void crear_particiones(char *dir, int particiones)
+{
 	char *root_aux = string_new();
 	string_append(&root_aux, dir);
 	string_append(&root_aux, "/part");
@@ -86,9 +86,8 @@ void crear_particiones(char *dir, int particiones) {
 	free(root_aux);
 }
 
-int crear_tabla_FS(char *tabla, int particiones, char *consistencia,
-		int compact_time) {
-	//creo que esta es la razon por la que rompe tdo, preguntar que se puede copiar de la mia para no hardcodear path
+int crear_tabla_FS(char *tabla, int particiones, char *consistencia, int compact_time)
+{
 
 	char *tabla_dir = string_new();
 	string_append(&tabla_dir, puntoDeMontaje);
@@ -135,7 +134,8 @@ int crear_tabla_FS(char *tabla, int particiones, char *consistencia,
 	return flag_creacion;
 }
 
-void rutina_create(char* comando) {
+void rutina_create(char* comando)
+{
 	//CREATE [NOMBRE_TABLA] [TIPO_CONSISTENCIA] [NUMERO_PARTICIONES] [COMPACTION_TIME]
 	printf("Operacion: CREATE\n");
 

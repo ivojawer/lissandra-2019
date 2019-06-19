@@ -20,7 +20,6 @@ int control = 0;
 int flag_key_value = 0;
 char array_aux[128] = "";
 
-
 int main() {
 
 	logger = log_create("LFS.log", "LFS", 1, 0);
@@ -30,10 +29,8 @@ int main() {
 	pthread_t h_consola;
 	pthread_t h_conexiones;
 
-
 	pthread_create(&h_consola, NULL, (void *) consola, NULL);
 	pthread_create(&h_conexiones, NULL, (void *) conexiones, NULL);
-
 
 	pthread_detach(h_conexiones);
 	pthread_join(h_consola, NULL);
