@@ -272,7 +272,7 @@ void crear_bloques_FS(int nr_blocks)
 
 void setear_bitarray(int nr_blocks)
 {
-	int i=0;
+	int i = 0;
 	char c;
 	char *root = string_duplicate(puntoDeMontaje);
 	string_append(&root,"/Metadata/Bitmap.bin");
@@ -315,15 +315,10 @@ void setear_bitarray(int nr_blocks)
 }
 
 void crear_bitarray(int nr_blocks){
-	int i;
-	char data[nr_blocks];
-	memset(data, '0', sizeof(data));
+	char *data;
+	data = malloc(nr_blocks);
+	memset(data, '0', nr_blocks);
 
 	bitarray = bitarray_create_with_mode(data, nr_blocks, LSB_FIRST);
 	setear_bitarray(nr_blocks);
-
-	for(i = 0; i < nr_blocks; i++){
-		printf("%d ", bitarray_test_bit(bitarray, i));
-	}
-	printf("\n");
 }

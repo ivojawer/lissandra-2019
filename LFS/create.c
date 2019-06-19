@@ -28,11 +28,6 @@ int elegir_bloque_libre(int nr_bloques)
 {
 	int free_block, i, flag_free_block = 0;
 
-	for(i = 0; i < nr_bloques; i++){
-		printf("%d ", bitarray_test_bit(bitarray, i));
-	}
-	printf("\n");
-
 	for (i = 0; i < nr_bloques; i++){
 		if (flag_free_block == 0) {
 			if (bitarray_test_bit(bitarray, i) == 0){
@@ -88,7 +83,6 @@ void crear_particiones(char *dir, int particiones)
 
 int crear_tabla_FS(char *tabla, int particiones, char *consistencia, int compact_time)
 {
-
 	char *tabla_dir = string_new();
 	string_append(&tabla_dir, puntoDeMontaje);
 	string_append(&tabla_dir,"Tablas/");

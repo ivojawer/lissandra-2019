@@ -1,5 +1,4 @@
 #include "funcionesLFS.h"
-//extern t_bitarray *bitarray;
 
 extern char* puntoDeMontaje;
 
