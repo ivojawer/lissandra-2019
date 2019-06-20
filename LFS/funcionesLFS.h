@@ -155,5 +155,8 @@ void desmarcar_bloque_bitmap(t_bloque *elemento);
 void liberar_bloques(t_list *bloques_buscar);
 void eliminar_tabla(char *tabla);
 
+//DUMP
+void ejecutar_dump();
+
 
 #endif /* FUNCIONESLFS_H_ */

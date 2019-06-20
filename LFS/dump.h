@@ -4,16 +4,16 @@
 #include "funcionesLFS.h"
 
 
-clock_t t_ini_dump, t_fin_dump;
 int bloque_dump;
 int espacio_libre;
 int size;
 int j;
 t_list *lista_bloques_tmp;
+t_list *memtable_aux;
 int space_full;
 extern FILE *fp_dump;
 int suma_size;
-
+char root[128] = "";
 
 
 void ejecutar_dump();
@@ -32,7 +32,7 @@ int archivo_vacio(FILE *fp);
 void agregar_bloque_particion(void *elemento);
 void liberar_elementos_particiones(void *elemento);
 void liberar_tabla(void *elemento);
-void liberar_memtable();
+void liberar_memtable_aux();
 void guardar_bloques_metadata(t_list *lista_bloques_tmp);
 void liberar_lista_bloques(t_list *lista_bloques_tmp);
 void dump();

@@ -166,14 +166,14 @@ int contar_comas(char *temp)
 	 char* nroBloque = string_duplicate(bloque_nr);
 	 char* root = string_new();
 	 string_append(&root,puntoDeMontaje);
-	 string_append(&root,"Bloques/");
+	 string_append(&root,"Bloques/bloque");
 	 string_append(&root,nroBloque);
 	 string_append(&root,".bin");
 
 	 int bloque_size = 0;
 	 FILE *f;
 	 f = fopen(root, "rb");
-	 if(f==NULL){
+	 if(f == NULL){
 		 printf("El bloque %s no se pudo abrir.\n", bloque_nr);
 	 }else{
 		 char temp[32]= "";
@@ -340,13 +340,12 @@ void buscar_bloques_particion(char *tabla, int particion_buscar, int type_flag, 
 		 char **entrada_aux;
 		 while ((entrada = readdir(dir)) != NULL){
 			 entrada_aux = string_split(entrada->d_name, ".");
-			 if(&(&entrada_aux)[1] != NULL){
+			 if(entrada_aux[1] != NULL){
 				 if (strcmp(entrada_aux[1],"tmp")==0){
-					 char* rootAux = string_duplicate(root);
-					 string_append(&rootAux,"/");
-					 string_append(&rootAux, entrada->d_name);
-					 cargar_bloques(rootAux, bloques_buscar);
-					 free(rootAux);
+					 char root_aux[256] = "";
+					 sprintf(root_aux, "%s/%s", root, entrada->d_name);
+					 cargar_bloques(root_aux, bloques_buscar);
+					 memset(root_aux, 0x0, sizeof(root_aux));
 				 }
 			 }
 		 }
@@ -474,8 +473,8 @@ t_par_valor_timestamp *filtrar_timestamp_mayor(t_list *timestamp_valor, int list
 		t_par_valor_timestamp *timestamp_value_max = filtrar_timestamp_mayor(timestamp_valor, list_size(timestamp_valor));
 		printf("El valor de la key ingresada es: %s\n", timestamp_value_max->valor);
 	}
-	liberar_bloques_buscar(bloques_buscar);
-	liberar_timestamp_valor(timestamp_valor);
+//	liberar_bloques_buscar(bloques_buscar);
+//	liberar_timestamp_valor(timestamp_valor);
 }
 
 

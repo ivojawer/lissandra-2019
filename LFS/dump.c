@@ -105,15 +105,14 @@ void grabar_registro(char *root, char *registro_completo, int length_registro,
 }
 
 void guardar_registros_en_bloques(t_registro *registro_recv, int table_change,
-		struct bloques_tmp *bloques_tmp_tabla) {
+								 struct bloques_tmp *bloques_tmp_tabla)
+{
 	/*
 	 * table_change = 0 NUEVA TABLA/CAMBIAR TABLA
 	 * table_change = 1 NO CAMBIAR TABLA
 	 */
-	t_registro *registro = malloc(sizeof(t_registro));
-	registro = registro_recv;
 
-	char* root;
+	t_registro *registro = registro_recv;
 
 	char* registro_completo = string_new();
 	string_append(&registro_completo, string_itoa(registro->timestamp));
@@ -123,17 +122,16 @@ void guardar_registros_en_bloques(t_registro *registro_recv, int table_change,
 	string_append(&registro_completo, registro->value);
 	string_append(&registro_completo, "\n");
 
+
 	if (table_change == 0) {
+		memset(&root[0], 0x0, sizeof(root));
 		bloque_dump = elegir_bloque_libre(cantidadBloques);
 		agregar_bloque_lista_tmp(bloques_tmp_tabla->bloques, bloque_dump); //Para crear el archivo temporal
 
-		string_append(&root, puntoDeMontaje);
-		string_append(&root, "Bloques/bloque");
-		string_append(&root, string_itoa(bloque_dump));
-		string_append(&root, ".bin");
+		sprintf(root, "%s/Bloques/bloque%d.bin", puntoDeMontaje, bloque_dump);
 	}
-	grabar_registro(root, registro_completo, strlen(registro_completo) + 1, 0,
-			0, table_change, bloques_tmp_tabla, 0);
+	grabar_registro(root, registro_completo, strlen(registro_completo), 0,
+					0, table_change, bloques_tmp_tabla, 0);
 }
 
 int contar_temporales(char *root) {
@@ -234,11 +232,11 @@ void liberar_tabla(void *elemento) {
 	tabla_destroy(tabla);
 }
 
-void liberar_memtable() {
+void liberar_memtable_aux() {
 	void liberar_elementos(void *elemento) {
 		return liberar_tabla(elemento);
 	}
-	list_iterate(memtable, liberar_elementos);
+	list_iterate(memtable_aux, liberar_elementos);
 }
 
 void guardar_bloques_metadata(t_list *lista_bloques_tmp) {
@@ -259,13 +257,14 @@ void dump() {
 	int i, j, k;
 	int table_change;
 	lista_bloques_tmp = list_create();
-	for (i = 0; i < list_size(memtable); i++) {
+	memtable_aux = list_duplicate(memtable);
+	memtable = list_create();
+	for (i = 0; i < list_size(memtable_aux); i++) {
 		space_full = 0;
 		fp_dump = NULL;
 		table_change = 0;
 		t_tabla *tabla = malloc(sizeof(t_tabla));
-		tabla = list_get(memtable, i);
-//		printf("TABLE NAME: %s\n", tabla->name_tabla);
+		tabla = list_get(memtable_aux, i);
 		if (existe_tabla(tabla->name_tabla)) {
 			struct bloques_tmp *bloques_tmp_tabla = malloc(
 					sizeof(struct bloques_tmp));
@@ -286,8 +285,7 @@ void dump() {
 			list_add(lista_bloques_tmp, bloques_tmp_tabla);
 		}
 	}
-	liberar_memtable();
-	memtable = list_create();
+	liberar_memtable_aux();
 	guardar_bloques_metadata(lista_bloques_tmp);
 	liberar_lista_bloques(lista_bloques_tmp);
 }
@@ -297,14 +295,15 @@ void ejecutar_dump() {
 	struct itimerval initial;
 	struct timeval tiempo_inicial;
 
-	tiempo_inicial.tv_usec = (tiempoDump) * 1000;
+	tiempo_inicial.tv_usec = 0;
 	tiempo_inicial.tv_sec = 0;
-
-	memset(&(initial.it_interval), 0x0, sizeof(initial.it_value));
-	memset(&(initial.it_value), 0x0, sizeof(initial.it_value));
+	tiempo_inicial.tv_usec = 900000;
 
 	initial.it_interval = tiempo_inicial;
 	initial.it_value = tiempo_inicial;
+
+	initial.it_interval.tv_usec = 800 * 1000;
+	initial.it_interval.tv_sec = 4;
 
 	signal(SIGALRM, &dump);
 
@@ -314,6 +313,5 @@ void ejecutar_dump() {
 
 	while (1) {
 		pause();
-		sleep(retardo);
 	}
 }

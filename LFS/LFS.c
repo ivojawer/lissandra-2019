@@ -28,11 +28,14 @@ int main() {
 
 	pthread_t h_consola;
 	pthread_t h_conexiones;
+	pthread_t h_dump;
 
 	pthread_create(&h_consola, NULL, (void *) consola, NULL);
+	pthread_create(&h_dump, NULL, (void *)ejecutar_dump, NULL);
 	pthread_create(&h_conexiones, NULL, (void *) conexiones, NULL);
 
 	pthread_detach(h_conexiones);
+	pthread_join(h_dump, NULL);
 	pthread_join(h_consola, NULL);
 
 	return 1;
