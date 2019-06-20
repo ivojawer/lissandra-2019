@@ -46,8 +46,9 @@ void agregar_bloque_lista_tmp(t_list *bloques, int bloque_dump) {
 }
 
 void grabar_registro(char *root, char *registro_completo, int length_registro,
-		int space_full, int index, int table_change,
-		struct bloques_tmp *bloques_tmp, int flag_close_file) {
+					 int space_full, int index, int table_change,
+					 struct bloques_tmp *bloques_tmp, int flag_close_file)
+{
 	if (flag_close_file == 1 && fp_dump != NULL) {
 		fclose(fp_dump);
 		fp_dump = NULL;
@@ -256,18 +257,16 @@ void liberar_lista_bloques(t_list *lista_bloques_tmp) {
 void dump() {
 	int i, j, k;
 	int table_change;
+	int siga_siga = 0;
 	lista_bloques_tmp = list_create();
-	memtable_aux = list_duplicate(memtable);
-	memtable = list_create();
-	for (i = 0; i < list_size(memtable_aux); i++) {
+	for (i = 0; i < list_size(memtable); i++) {
 		space_full = 0;
 		fp_dump = NULL;
 		table_change = 0;
 		t_tabla *tabla = malloc(sizeof(t_tabla));
-		tabla = list_get(memtable_aux, i);
+		tabla = list_get(memtable, i);
 		if (existe_tabla(tabla->name_tabla)) {
-			struct bloques_tmp *bloques_tmp_tabla = malloc(
-					sizeof(struct bloques_tmp));
+			struct bloques_tmp *bloques_tmp_tabla = malloc(sizeof(struct bloques_tmp));
 			bloques_tmp_tabla = crear_bloques_tmp(tabla->name_tabla);
 			for (j = 0; j < list_size(tabla->lista_particiones); j++) {
 				t_particion *particion = malloc(sizeof(t_particion));
@@ -275,19 +274,33 @@ void dump() {
 				for (k = 0; k < list_size(particion->lista_registros); k++) {
 					t_registro *registro = malloc(sizeof(t_registro));
 					registro = list_get(particion->lista_registros, k);
-					if (table_change == 0 && k == 1)
-						table_change = 1;
-					guardar_registros_en_bloques(registro, table_change,
-							bloques_tmp_tabla);
+					if(strlen(registro->value) > 1){
+						if (table_change == 0 && k == 1)
+							table_change = 1;
+						guardar_registros_en_bloques(registro, table_change,
+													 bloques_tmp_tabla);
+						siga_siga = 1;
+					}else{
+						free(bloques_tmp_tabla);
+						free(lista_bloques_tmp);
+						siga_siga = 0;
+					}
+					void liberar_elementos_particion(void *elemento) {
+						return registro_destroy((t_registro *) elemento);
+					}
+					list_remove_and_destroy_element(particion->lista_registros, k, liberar_elementos_particion);
 				}
 			}
 			grabar_registro("NULL", "NULL", 0, 0, 0, 0, bloques_tmp_tabla, 1); //Close fp_dump
-			list_add(lista_bloques_tmp, bloques_tmp_tabla);
+			if(siga_siga == 1){
+				list_add(lista_bloques_tmp, bloques_tmp_tabla);
+			}
 		}
 	}
-	liberar_memtable_aux();
-	guardar_bloques_metadata(lista_bloques_tmp);
-	liberar_lista_bloques(lista_bloques_tmp);
+	if(siga_siga == 1){
+		guardar_bloques_metadata(lista_bloques_tmp);
+		liberar_lista_bloques(lista_bloques_tmp);
+	}
 }
 
 void ejecutar_dump() {
@@ -297,13 +310,11 @@ void ejecutar_dump() {
 
 	tiempo_inicial.tv_usec = 0;
 	tiempo_inicial.tv_sec = 0;
-	tiempo_inicial.tv_usec = 900000;
+	tiempo_inicial.tv_usec = 900 * 1000; //Dejar hardcodeado así.
+	tiempo_inicial.tv_sec = 0.3; //Acá iría el tiempo de Dump pasado a segundos.
 
 	initial.it_interval = tiempo_inicial;
 	initial.it_value = tiempo_inicial;
-
-	initial.it_interval.tv_usec = 800 * 1000;
-	initial.it_interval.tv_sec = 4;
 
 	signal(SIGALRM, &dump);
 

@@ -142,7 +142,6 @@ void rutina_insert(char* comando)
 			int particion_buscar = nr_particion_key(key, nr_particiones_metadata);
 			int size = obtener_size_particion(tabla, particion_buscar);
 			if(size >= 0){
-				printf("Particion del registro: %d\n", particion_buscar);
 
 				t_list *tabla_encontrada = list_create();
 				tabla_encontrada = filtrar_tabla_memtable(tabla);
