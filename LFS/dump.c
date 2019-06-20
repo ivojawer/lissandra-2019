@@ -274,7 +274,7 @@ void dump() {
 				for (k = 0; k < list_size(particion->lista_registros); k++) {
 					t_registro *registro = malloc(sizeof(t_registro));
 					registro = list_get(particion->lista_registros, k);
-					if(strlen(registro->value) > 1){
+					if(strlen(registro->value) > 0){
 						if (table_change == 0 && k == 1)
 							table_change = 1;
 						guardar_registros_en_bloques(registro, table_change,

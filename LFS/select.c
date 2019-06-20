@@ -195,7 +195,6 @@ int contar_comas(char *temp)
 					string_aux_2 = malloc(strlen(temp)*sizeof(char));
 					strcpy(string_aux_2, temp);
 				 	strcat(array_aux, string_aux_2);
-//				 	printf("MOD: %s\n", array_aux);
 				 	tokens_registro = string_split(array_aux, ";");
 				 	comparar_key_y_agregar_valor(atoi(tokens_registro[1]), key, strdup(tokens_registro[2]), atoi(tokens_registro[0]), timestamp_valor);
 				 	memset(array_aux, 0x0, sizeof(array_aux));
@@ -434,7 +433,8 @@ t_par_valor_timestamp *filtrar_timestamp_mayor(t_list *timestamp_valor, int list
 	int i;
 	t_par_valor_timestamp *value_aux, *value;
 	value_aux = (t_par_valor_timestamp *)list_get(timestamp_valor, 0);
-	for(i=1; i<list_size; i++){
+	printf("VALUE: %lui\n", value_aux->timestamp);
+	for(i = 1; i < list_size; i++){
 		value = (t_par_valor_timestamp *)list_get(timestamp_valor, i);
 		if(value->timestamp > value_aux->timestamp){
 			value_aux = value;
@@ -473,8 +473,8 @@ t_par_valor_timestamp *filtrar_timestamp_mayor(t_list *timestamp_valor, int list
 		t_par_valor_timestamp *timestamp_value_max = filtrar_timestamp_mayor(timestamp_valor, list_size(timestamp_valor));
 		printf("El valor de la key ingresada es: %s\n", timestamp_value_max->valor);
 	}
-//	liberar_bloques_buscar(bloques_buscar);
-//	liberar_timestamp_valor(timestamp_valor);
+	liberar_bloques_buscar(bloques_buscar);
+	liberar_timestamp_valor(timestamp_valor);
 }
 
 
