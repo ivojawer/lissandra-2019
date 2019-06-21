@@ -84,7 +84,11 @@ void eliminar_tabla(char *tabla) {
 void rutina_drop(char* comando) {
 	printf("Rutina DROP\n");
 	char *tabla = get_tabla(comando);
-	if (existe_tabla(tabla)) {
+	sem_wait(&dump_semaphore);
+	if (existe_tabla(tabla)){
 		eliminar_tabla(tabla);
+	}else{
+		printf("La tabla no se encuentra en el sistema\n");
 	}
+	sem_post(&dump_semaphore);
 }

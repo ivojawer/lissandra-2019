@@ -121,6 +121,7 @@ void iniciar_variables(){
 	particion_encontrada = list_create();
 	fp_dump = NULL;
 	memset(array_aux, 0X0, sizeof(array_aux));
+	sem_init(&dump_semaphore, 0, 1);
 
 	//agrego bitarray de cargar_configuracion_FS()
 	crear_bitarray(cantidadBloques);

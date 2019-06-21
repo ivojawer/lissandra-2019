@@ -17,6 +17,7 @@
 #include <sys/stat.h>
 #include "requests.h"
 #include <signal.h>
+#include <semaphore.h>
 
 #include <commons/log.h>
 #include <commons/config.h>
@@ -157,6 +158,7 @@ void eliminar_tabla(char *tabla);
 
 //DUMP
 void ejecutar_dump();
+sem_t dump_semaphore;
 
 
 #endif /* FUNCIONESLFS_H_ */

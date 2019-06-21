@@ -259,6 +259,7 @@ void dump() {
 	int table_change;
 	int siga_siga = 0;
 	lista_bloques_tmp = list_create();
+	sem_wait(&dump_semaphore);
 	for (i = 0; i < list_size(memtable); i++) {
 		space_full = 0;
 		fp_dump = NULL;
@@ -301,6 +302,7 @@ void dump() {
 		guardar_bloques_metadata(lista_bloques_tmp);
 		liberar_lista_bloques(lista_bloques_tmp);
 	}
+	sem_post(&dump_semaphore);
 }
 
 void ejecutar_dump() {

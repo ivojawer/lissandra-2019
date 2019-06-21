@@ -20,7 +20,7 @@ t_bloque *crear_bloque_buscar(char *bloque)
 }
 
 static void bloque_destroy(t_bloque *self) {
-//    free(self->name);
+    free(self->name);
     free(self);
 }
 
@@ -178,6 +178,7 @@ int contar_comas(char *temp)
 	 }else{
 		 char temp[32]= "";
 		 char **tokens_registro;
+		 char **tokens_registro_2;
 		 char *string_aux_2;
 
 		 while(!feof(f) && bloque_size < size_bloque){
@@ -187,7 +188,11 @@ int contar_comas(char *temp)
 			 tokens_registro = string_split(temp, ";");
 			 if(flag_key_value != 0){
 				if(control == 1 && nr_comas == 2){
-					comparar_key_y_agregar_valor(atoi(tokens_registro[1]), key, strdup(tokens_registro[2]), atoi(tokens_registro[0]), timestamp_valor);
+
+					tokens_registro_2 = string_split(array_aux, ";");
+					comparar_key_y_agregar_valor(atol(tokens_registro_2[1]), key, strdup(tokens_registro_2[2]), atoi(tokens_registro_2[0]), timestamp_valor);
+
+					comparar_key_y_agregar_valor(atol(tokens_registro[1]), key, strdup(tokens_registro[2]), atoi(tokens_registro[0]), timestamp_valor);
 					flag_key_value = 0;
 					control = 0;
 					memset(array_aux, 0X0, sizeof(array_aux));
@@ -196,7 +201,7 @@ int contar_comas(char *temp)
 					strcpy(string_aux_2, temp);
 				 	strcat(array_aux, string_aux_2);
 				 	tokens_registro = string_split(array_aux, ";");
-				 	comparar_key_y_agregar_valor(atoi(tokens_registro[1]), key, strdup(tokens_registro[2]), atoi(tokens_registro[0]), timestamp_valor);
+				 	comparar_key_y_agregar_valor(atol(tokens_registro[1]), key, strdup(tokens_registro[2]), atoi(tokens_registro[0]), timestamp_valor);
 				 	memset(array_aux, 0x0, sizeof(array_aux));
 				 	free(string_aux_2);
 				 	flag_key_value = 0;
@@ -204,10 +209,10 @@ int contar_comas(char *temp)
 				 	}
 				 }else{ //Si la flag == 0
 					 if((nr_comas == 2) && ((flag_last_bloque == 1) && (bloque_size == size_bloque))){
-						 comparar_key_y_agregar_valor(atoi(tokens_registro[1]), key, tokens_registro[2], atoi(tokens_registro[0]), timestamp_valor);
+						 comparar_key_y_agregar_valor(atol(tokens_registro[1]), key, strdup(tokens_registro[2]), atoi(tokens_registro[0]), timestamp_valor);
 
 					 }else if(nr_comas == 2 && bloque_size < size_bloque){ //En el medio
-						 comparar_key_y_agregar_valor(atoi(tokens_registro[1]), key, tokens_registro[2], atoi(tokens_registro[0]), timestamp_valor);
+						 comparar_key_y_agregar_valor(atol(tokens_registro[1]), key, strdup(tokens_registro[2]), atoi(tokens_registro[0]), timestamp_valor);
 					 }else{
 						if(nr_comas == 2)
 							 control = 1;
@@ -274,7 +279,6 @@ int existe_tabla(char *tabla)
 	string_append(&pathAbsoluto,nombreTablaGuardado);
 
 	if (access(pathAbsoluto, R_OK) == -1){
-		printf("NO EXISTE TABLA\n");
 		free(pathAbsoluto);
 		free(nombreTablaGuardado);
 	    return 0;
@@ -427,13 +431,11 @@ t_list *filtrar_registros_particion(t_list *particion_encontrada, uint16_t key)
 
 
 
-
 t_par_valor_timestamp *filtrar_timestamp_mayor(t_list *timestamp_valor, int list_size)
 {
 	int i;
 	t_par_valor_timestamp *value_aux, *value;
 	value_aux = (t_par_valor_timestamp *)list_get(timestamp_valor, 0);
-	printf("VALUE: %lui\n", value_aux->timestamp);
 	for(i = 1; i < list_size; i++){
 		value = (t_par_valor_timestamp *)list_get(timestamp_valor, i);
 		if(value->timestamp > value_aux->timestamp){
@@ -457,7 +459,7 @@ t_par_valor_timestamp *filtrar_timestamp_mayor(t_list *timestamp_valor, int list
 	int cant_registros = list_size(registros_encontrados);
 	int i;
 	if(cant_registros!=0){
-		for(i=0; i<cant_registros; i++){
+		for(i = 0; i < cant_registros; i++){
 			t_registro *registro_extraido = malloc(sizeof(t_registro));
 			registro_extraido = (t_registro *)list_get(registros_encontrados,i);
 			char *valor = strdup(registro_extraido->value);
