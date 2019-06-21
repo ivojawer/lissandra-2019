@@ -333,3 +333,9 @@
 [ERROR] 15:27:56:869 kernel/(12263:12282): No hay memorias conectadas para ejecutar la request 3.
 [ERROR] 15:27:56:871 kernel/(12263:12282): Hubo un error en la ejecucion del script 1000
 [INFO] 15:27:56:871 kernel/(12263:12282): 1000: EXEC->EXIT
+[INFO] 17:40:00:186 kernel/(6467:6488): 1000: NEW->READY
+[INFO] 17:40:22:427 kernel/(6467:6483): 1000: READY->EXEC
+[ERROR] 17:40:22:439 kernel/(6467:6499): No se encontro la tabla TABLA1.
+[ERROR] 17:40:22:439 kernel/(6467:6499): Hubo un error en la ejecucion del script 1000
+[INFO] 17:40:22:439 kernel/(6467:6499): 1000: EXEC->EXIT
+[INFO] 17:40:29:894 kernel/(6467:6501): 1001: NEW->READY

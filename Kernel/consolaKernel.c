@@ -22,6 +22,11 @@ void consola() {
 
 		int requestEnInt = queRequestEs(requestYParametros[0]);
 
+		if (!strcmp(requestYParametros[0],"probar")){
+			enviarPeticionesDeGossip();
+			continue;
+		}
+
 		if (!strcmp(requestYParametros[0], "EXIT")) {
 			//TODO: Aca hay que matar a los hijos, si se puede
 

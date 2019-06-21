@@ -88,5 +88,6 @@ int manejarRespuestaDeMemoria(script* elScript, request* laRequest, int memoria)
 int laMemoriaTieneConsistencias(memoriaEnLista* unaMemoria);
 void sacarScriptDeEspera(int nombreScript, memoriaEnLista* laMemoria);
 int existeTabla(char* nombreTabla);
+void enviarPeticionesDeGossip();
 
 #endif /* FUNCIONESBASEKERNEL_H_ */

@@ -1,7 +1,7 @@
 #ifndef FUNCIONESMEMORIA_H_
 #define FUNCIONESMEMORIA_H_
 
-#define DIRCONFIG "memoria.config"
+#define DIRCONFIG "/home/utnso/workspace/tp-2019-1c-U-TN-Tecno/CONFIG/memoria.config"
 
 #include<stdio.h>
 #include<stdlib.h>

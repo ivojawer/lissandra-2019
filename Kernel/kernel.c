@@ -20,13 +20,14 @@ sem_t sem_disponibleColaREADY;
 sem_t sem_operacionesTotales;
 sem_t sem_tiemposInsert;
 sem_t sem_tiemposSelect;
-sem_t sem_gossiping;
 sem_t sem_actualizacionMetadatas;
 sem_t sem_cambioSleepEjecucion;
 sem_t sem_cambioMemoriaEC;
 sem_t sem_movimientoScripts;
 sem_t sem_borradoMemoria;
 script* scriptRefreshMetadata;
+
+//TODO: sincronizar el gossiping
 
 int main() {
 
@@ -68,7 +69,7 @@ int main() {
 	sem_init(&sem_operacionesTotales, 0, 1);
 	sem_init(&sem_tiemposInsert, 0, 1);
 	sem_init(&sem_tiemposSelect, 0, 1);
-	sem_init(&sem_gossiping, 0, 1);
+//	sem_init(&sem_gossiping, 0, 1);
 	sem_init(&sem_actualizacionMetadatas, 0, 1);
 	sem_init(&sem_cambioSleepEjecucion, 0, 1);
 	sem_init(&sem_cambioMemoriaEC,0,1);

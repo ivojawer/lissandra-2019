@@ -366,6 +366,7 @@ void matarListas() {
 
 int encontrarPosicionDeMemoria(int memoriaAEncontrar) {
 
+
 	for (int i = 0; i < list_size(memorias); i++) {
 		memoriaEnLista* memoria = list_get(memorias, i);
 
@@ -374,21 +375,30 @@ int encontrarPosicionDeMemoria(int memoriaAEncontrar) {
 		}
 	}
 
+
 	return -1;
 }
 
 int memoriaECSiguiente(int memoriaInicialEC) {
+
 
 	int posicionMemoriaInicialEnLista = encontrarPosicionDeMemoria(
 			memoriaInicialEC);
 
 	for (int i = posicionMemoriaInicialEnLista + 1; i < list_size(memorias);
 			i++) { // De memoriaEC a fin de lista
+
 		memoriaEnLista* unaMemoria = list_get(memorias, i);
+
 
 		if (unaMemoria->consistencias[EC] == EC) {
 			return unaMemoria->nombre;
 		}
+	}
+
+	if (posicionMemoriaInicialEnLista == -1) //El for anterior recorre toda la lista
+	{
+		return -1;
 	}
 
 	for (int i = 0; i < posicionMemoriaInicialEnLista; i++) { //De comienzo de lista a memoriaEC

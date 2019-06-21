@@ -76,9 +76,18 @@ void manejoErrorMemoria(int nombreMemoria) {
 	matarMemoria(nombreMemoria);
 }
 
-void agregarMemorias(t_list* seeds) {
+void enviarPeticionesDeGossip()
+{
+	for (int i = 0; i<list_size(memorias);i++)
+	{
 
-	sem_wait(&sem_gossiping);
+		memoriaEnLista* unaMemoria = list_get(memorias,i);
+		enviarInt(unaMemoria->socket,GOSSIPING);
+
+	}
+}
+
+void agregarMemorias(t_list* seeds) {
 
 	while (list_size(seeds) != 0) {
 
@@ -100,8 +109,6 @@ void agregarMemorias(t_list* seeds) {
 	}
 
 	list_destroy(seeds);
-
-	sem_post(&sem_gossiping);
 
 }
 

@@ -21,15 +21,18 @@ int main() {
 
 
 	int tamanioMemoria = config_get_int_value(config, "TAM_MEM");
-	int caracMaxDeValue = primeraConexionLFS();
-	nombreMemoria = config_get_int_value(config, "MAGIC_NUMBER");
+	nombreMemoria = config_get_int_value(config, "MEMORY_NUMBER");
+
+	int caracMaxDeValue = 50;
+
+	config_destroy(config);
 
 	if (caracMaxDeValue == -1)
 	{
 		return -1;
 	}
 
-	config_destroy(config);
+
 
 	//reservo toda la memoria
 

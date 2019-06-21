@@ -4,11 +4,13 @@ extern sem_t sem_gossiping;
 t_list* seedsConocidas;
 t_list* tablaGossiping;
 
-void gossiping() {
+void hacerGossipingAutomatico() {
 
 	cargarSeedsIniciales();
 
 	t_list* tablaGossiping = list_create();
+
+	gossiping();
 
 	while (1) {
 
@@ -18,41 +20,46 @@ void gossiping() {
 
 		config_destroy(config);
 
-		sem_wait(&sem_gossiping);
+		gossiping();
 
-		for (int i = 0; i<list_size(tablaGossiping);i++)
-		{
-			memoriaGossip* unaMemoria = list_get(tablaGossiping,i);
 
-			seed* resultado = enviarYRecibirSeeds(unaMemoria);
 
-			if(resultado->puerto == -1)
-			{
-				free(resultado);
-				i--; //Se borro la memoria de la lista, por lo que el contador tiene que quedarse en la misma posicion para no saltearse una memoria.
-			}
+	}
+}
 
+void gossiping() {
+
+	sem_wait(&sem_gossiping);
+
+	for (int i = 0; i < list_size(tablaGossiping); i++) {
+		memoriaGossip* unaMemoria = list_get(tablaGossiping, i);
+
+		seed* resultado = enviarYRecibirSeeds(unaMemoria);
+
+		if (resultado->puerto == -1) {
+			free(resultado);
+			i--; //Se borro la memoria de la lista, por lo que el contador tiene que quedarse en la misma posicion para no saltearse una memoria.
 		}
 
-		tratarDeConectarseASeeds();
-
-		sem_post(&sem_gossiping);
 	}
+
+	tratarDeConectarseASeeds();
+
+	sem_post(&sem_gossiping);
 }
 
 void sacarMemoriaDeTablaGossip(memoriaGossip* unaMemoria) {
 
-	int esLaMismaMemoria(memoriaGossip* otraMemoria)
-	{
-		if (otraMemoria->nombre == unaMemoria->nombre){
+	int esLaMismaMemoria(memoriaGossip* otraMemoria) {
+		if (otraMemoria->nombre == unaMemoria->nombre) {
 			return 1;
 		}
 		return 0;
 	}
 
-	int* index = list_find(tablaGossiping,(void*) esLaMismaMemoria);
+	int* index = list_find(tablaGossiping, (void*) esLaMismaMemoria);
 
-	list_remove(tablaGossiping,*index);
+	list_remove(tablaGossiping, *index);
 
 	close(unaMemoria->elSocket);
 
@@ -64,22 +71,18 @@ void sacarMemoriaDeTablaGossip(memoriaGossip* unaMemoria) {
 
 seed* enviarYRecibirSeeds(memoriaGossip* memoriaDestino) {
 
-
 	int seedEstaConectada(seed* unaSeed) {
 
 		return !seedNoEstaConectada(unaSeed);
 	}
 
-	int seedNoExiste(seed* unaSeed)
-	{
-		int tienenLaMismaSeed(seed* otraSeed)
-		{
-			return esLaMismaSeed(unaSeed,otraSeed);
+	int seedNoExiste(seed* unaSeed) {
+		int tienenLaMismaSeed(seed* otraSeed) {
+			return esLaMismaSeed(unaSeed, otraSeed);
 		}
 
 		return !list_any_satisfy(seedsConocidas, (void*) tienenLaMismaSeed);
 	}
-
 
 	t_list* seedsConectadas = list_filter(seedsConocidas,
 			(void*) seedEstaConectada);
@@ -104,9 +107,9 @@ seed* enviarYRecibirSeeds(memoriaGossip* memoriaDestino) {
 
 	t_list* seedsNuevas = list_filter(seedsRecibidas, (void*) seedNoExiste);
 
-	list_add_all(seedsConocidas,seedsNuevas);
+	list_add_all(seedsConocidas, seedsNuevas);
 
-	seed* seedDeQuienSeEnvio = list_get(seedsRecibidas,0); //Por convencion la primera es la seed de la memoria misma
+	seed* seedDeQuienSeEnvio = list_get(seedsRecibidas, 0); //Por convencion la primera es la seed de la memoria misma
 
 	list_destroy(seedsRecibidas); //TODO: Liberar las seeds que no estan en seedsNuevas excepto la primera
 
@@ -114,7 +117,7 @@ seed* enviarYRecibirSeeds(memoriaGossip* memoriaDestino) {
 }
 
 int esLaMismaSeed(seed* unaSeed, seed* otraSeed) {
-	if ((unaSeed->puerto == otraSeed-> puerto)
+	if ((unaSeed->puerto == otraSeed->puerto)
 			&& !strcmp(unaSeed->ip, otraSeed->ip)) {
 		return 1;
 	}
@@ -124,7 +127,7 @@ int esLaMismaSeed(seed* unaSeed, seed* otraSeed) {
 int seedNoEstaConectada(seed* unaSeed) {
 
 	int tienenLaMismaSeed(memoriaGossip* memoriaConectada) {
-		return esLaMismaSeed (unaSeed,memoriaConectada->laSeed);
+		return esLaMismaSeed(unaSeed, memoriaConectada->laSeed);
 	}
 
 	return !list_any_satisfy(tablaGossiping, (void*) tienenLaMismaSeed); //Si esta en la tabla de gossiping esta conectada
@@ -136,9 +139,8 @@ void tratarDeConectarseASeeds() {
 	t_list* seedsDesconectadas = list_filter(seedsConocidas,
 			(void*) seedNoEstaConectada);
 
-	while(list_size(seedsDesconectadas) != 0)
-	{
-		seed* seedAConectarse = list_remove(seedsDesconectadas,0);
+	while (list_size(seedsDesconectadas) != 0) {
+		seed* seedAConectarse = list_remove(seedsDesconectadas, 0);
 		conectarseAOtraMemoria(seedAConectarse);
 	}
 
