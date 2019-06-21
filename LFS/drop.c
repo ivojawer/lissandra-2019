@@ -1,7 +1,9 @@
 #include "funcionesLFS.h"
 
 extern void liberar_tabla(void *elemento);
+extern bool comparar_nombre(char *tabla, void *tabla_mt);
 extern char* puntoDeMontaje;
+extern t_list *memtable;
 
 void iterar_busqueda_de_bloques(void (foo)(char *, int, int, t_list *),
 		char *name, int part, int flag, t_list *lista, int cant) {
@@ -92,7 +94,16 @@ void rutina_drop(char* comando) {
 		t_list *tabla_encontrada = list_create();
 		tabla_encontrada = filtrar_tabla_memtable(tabla);
 		if(!lista_vacia(tabla_encontrada)){
-			liberar_tabla(tabla);
+
+			void destruir_tabla(void *elemento){
+				return liberar_tabla(elemento);
+			}
+
+			bool coincide_nombre(void *tabla_mt){
+					return comparar_nombre(tabla, tabla_mt);
+			}
+
+			list_remove_and_destroy_by_condition(memtable, coincide_nombre, destruir_tabla);
 		}
 	}else{
 		printf("La tabla no se encuentra en el sistema\n");
