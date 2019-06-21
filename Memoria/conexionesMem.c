@@ -267,24 +267,54 @@ void comunicacionConKernel() {
 
 }
 
+char* ponerComillas(char* string){
+	printf("hola\n");
+	char* cadenaConComillas = malloc((string_length(string)+2)*sizeof(char));
+	*cadenaConComillas='"';
+	strcpy(&cadenaConComillas[1],string);
+	cadenaConComillas[string_length(string)+1]='"';
+	printf("con comillas:%s\n",cadenaConComillas);
+	return cadenaConComillas;
+}
+
+void enviarInsert(registro reg){
+
+	int lengthKey = snprintf( NULL, 0, "%d", reg.key );
+	char* keyEnString = malloc( lengthKey + 1 );
+	snprintf( keyEnString, lengthKey + 1, "%d", reg.key );
+
+	int lengthTS = snprintf( NULL, 0, "%d", reg.timestamp );
+	char* tsEnString = malloc( lengthTS + 1 );
+	snprintf( tsEnString, lengthTS + 1, "%d", reg.key );
+
+	char* parametros = "";
+	string_append(parametros,keyEnString);
+	string_append_with_format(parametros," ",reg.value);
+	string_append_with_format(parametros," ",tsEnString);
+	printf("insert a enviar:%s",parametros);
+	free(keyEnString);
+	free(tsEnString);
+
+	enviarStringConHeader(socketLFS,parametros,INSERT);
+
+}
+
 void enviarRespuestaAlKernel(int id, int respuesta) {
 	t_list* intsAEnviar = list_create();
 
 	list_add(intsAEnviar, &id);
 	list_add(intsAEnviar, &respuesta);
 
-	enviarVariosIntsConHeader(socketKernel, intsAEnviar,
-	RESPUESTA);
+	enviarVariosIntsConHeader(socketKernel, intsAEnviar,RESPUESTA);
+}
+void manejoErrorLFS() {
+	log_error(logger,"Se recibio del LFS algo incorrecto, se va a cerrar la conexion.");
+	close(socketLFS);
 }
 
+
 void manejoErrorKernel() {
-	log_error(logger,
-			"Se recibio del kernel algo incorrecto, se va a cerrar la conexion.");
+	log_error(logger,"Se recibio del kernel algo incorrecto, se va a cerrar la conexion.");
 	close(socketKernel);
 }
 
-void manejoErrorLFS() {
-	log_error(logger,
-			"Se recibio del LFS algo incorrecto, se va a cerrar la conexion.");
-	close(socketLFS);
-}

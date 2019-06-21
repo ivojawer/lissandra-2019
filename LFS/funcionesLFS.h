@@ -17,6 +17,7 @@
 #include <sys/stat.h>
 #include "requests.h"
 #include <signal.h>
+#include <semaphore.h>
 
 #include <commons/log.h>
 #include <commons/config.h>
@@ -27,7 +28,6 @@
 
 #include <arpa/inet.h>
 #include <sys/socket.h>
-
 
 /*** ESTRUCTURAS ***/
 
@@ -77,7 +77,6 @@ typedef struct{
 
 //↑↑↑↑↑↑↑BUSQUEDA DE TABLAS Y BLOQUES↑↑↑↑↑↑↑//
 
-
 //Generales
 void consola();
 void conexiones();
@@ -86,7 +85,7 @@ void iniciar_variables();
 
 
 //Usadas por varias funciones
-
+t_bitarray *bitarray;
 int obtener_particiones_metadata(char* tabla);
 char *obtener_consistencia_metadata(char* tabla);
 int obtener_tiempo_compactacion_metadata(char* tabla);
@@ -132,7 +131,7 @@ t_tabla *crear_tabla_memtable(char *tabla);
 
 //CREATE
 void agregar_salto_de_linea(char *string);
-void guardar_bitarray(t_bitarray *bitarray, long int index);
+void guardar_bitarray(int index);
 int elegir_bloque_libre(int nr_bloques);
 void crear_particiones(char *dir, int particiones);
 int crear_tabla_FS(char *tabla, int particiones, char *consistencia, int compact_time);
@@ -146,7 +145,7 @@ void cargar_datos_tabla(char *tabla);
 void mostrar_campos_describe(void *element);
 void mostrar_descripciones_metadata(t_list *lista_describe);
 void agregar_tablas_a_describir();
-void describe_full(char *comando);
+void describe_full();
 void describe_particular(char *comando);
 
 //DROP
@@ -156,6 +155,10 @@ void eliminar_tabla_fisicamente(char *tabla);
 void desmarcar_bloque_bitmap(t_bloque *elemento);
 void liberar_bloques(t_list *bloques_buscar);
 void eliminar_tabla(char *tabla);
+
+//DUMP
+void ejecutar_dump();
+sem_t dump_semaphore;
 
 
 #endif /* FUNCIONESLFS_H_ */

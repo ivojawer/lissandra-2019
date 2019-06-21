@@ -36,7 +36,8 @@ void messageHandler(char* lectura) {
 	}
 	log_info(logger, "mando a ejecutar una request");
 
-	request* requestParaHilo = crearStructRequest(lectura);
+	request* requestParaHilo = malloc(sizeof(request));
+	requestParaHilo = crearStructRequest(lectura);
 
 	mandarAEjecutarRequest(requestParaHilo);
 }

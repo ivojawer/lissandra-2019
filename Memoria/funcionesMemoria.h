@@ -18,13 +18,14 @@
 #include "conexionesMem.h"
 #include <time.h>
 #include <stdbool.h>
+#include <math.h>
 #include "gossiping.h"
 #include <semaphore.h>
 
 
 typedef struct {
-	int timestamp;
-	int key;
+	unsigned long timestamp;
+	uint16_t key;
 	char value;
 }marco;
 
@@ -36,11 +37,11 @@ typedef struct {
 
 typedef struct{
 	bool vacio;
-	bool recentlyUsed;//esto es un bool?
 }disponibilidad;
 
 typedef struct{
-	marco* dato;
+	int nroMarco;
+	unsigned long ultimoSelect;
 	int flagModificado;
 }pagina;
 
@@ -62,6 +63,8 @@ int tamanioMarco;
 
 void ejecutarRequests();
 segmento* encuentroTablaPorNombre(char* nombreTabla);
+marco* getMarcoFromPagina(pagina*);
+marco* getMarcoFromIndex(int);
 bool filtroNombreTabla( char*,segmento*);
 t_list* crearTablaSegmentos();
 t_list* crearTablaPaginas();

@@ -3,7 +3,6 @@
 extern t_log* logger;
 
 extern t_list* memtable;
-extern t_bitarray* bitarray;
 
 extern int cantidadBloques;
 extern int tamanioBloques;
@@ -17,11 +16,10 @@ extern FILE *fp_dump;
 
 extern char array_aux[128];
 
-
 //////////////////////////////////////////////
 
 
-int size_particion=0;           //// de estas no estoy 100% segura si hay alguna obsoleta
+int size_particion = 0;           //// de estas no estoy 100% segura si hay alguna obsoleta
 t_list *particion_encontrada;
 t_list *registros_encontrados;
 t_list *tabla_encontrada;
@@ -32,10 +30,9 @@ char *consistency;
 
 void mandarAEjecutarRequest(request* requestAEjecutar) {
 
-	char* parametros = requestStructAString(requestAEjecutar);
+	char *parametros = string_duplicate(requestAEjecutar->parametros); //Esto es para que se pueda hacer un free() en consola.c sin que rompa
 	switch (requestAEjecutar->requestEnInt) {
 	case SELECT:
-		;
 		{
 			pthread_t h_select;
 
@@ -43,11 +40,12 @@ void mandarAEjecutarRequest(request* requestAEjecutar) {
 
 			pthread_detach(h_select);
 
+			//enviarString("Me llego un select, ocupate macho", socketLFSAMEM);
+
 			break;
 		}
 
 	case INSERT:
-		;
 		{
 			pthread_t h_insert;
 
@@ -59,8 +57,6 @@ void mandarAEjecutarRequest(request* requestAEjecutar) {
 		}
 
 	case CREATE:
-		;
-
 		{
 			pthread_t h_create;
 
@@ -72,7 +68,6 @@ void mandarAEjecutarRequest(request* requestAEjecutar) {
 		}
 
 	case DESCRIBE:
-		;
 		{
 
 			pthread_t h_describe;
@@ -81,13 +76,10 @@ void mandarAEjecutarRequest(request* requestAEjecutar) {
 
 			pthread_detach(h_describe);
 
-
-
 			break;
 		}
 
 	case DROP:
-		;
 		{
 
 			pthread_t h_drop;
@@ -123,13 +115,13 @@ void iniciar_variables(){
 	cantidadBloques = config_get_int_value(metadataLFS,"BLOCKS");
 	tamanioBloques = config_get_int_value(metadataLFS,"BLOCK_SIZE");
 
-	//chequear si de estas hay alguna que no va
 	memtable = list_create();
 	tabla_encontrada = list_create();
 	registros_encontrados = list_create();
 	particion_encontrada = list_create();
 	fp_dump = NULL;
 	memset(array_aux, 0X0, sizeof(array_aux));
+	sem_init(&dump_semaphore, 0, 1);
 
 	//agrego bitarray de cargar_configuracion_FS()
 	crear_bitarray(cantidadBloques);
@@ -140,32 +132,34 @@ void iniciar_variables(){
 }
 
 
-char* get_tabla(char* comando) {
+char* get_tabla(char* comando)
+{
 	char **tokens_comando = string_split(comando, " ");
 	char *tabla = tokens_comando[1];
 	return tabla;
 }
 
-int get_key(char* comando) {
+int get_key(char* comando)
+{
 	char **tokens_comando = string_split(comando, " ");
 	char *key = tokens_comando[2];
 	return atoi(key);
 }
 
-char* get_value(char* comando) {
+char *get_value(char* comando)
+{
 	int primera_ocurrencia = str_first_index_of('"', comando);
 	int segunda_ocurrencia = str_last_index_of('"', comando);
-
 	return string_substring(comando, primera_ocurrencia + 1, segunda_ocurrencia - primera_ocurrencia - 1);
 }
 
 //retorna el timestamp escrito en la request o el del epoch unix si la request no trae uno
 double get_timestamp(char* comando) {
-	if (comando[string_length(comando) - 1] == '"') { //si no incluyo un timestamp en la request
+	if (comando[string_length(comando) - 1] == '"'){ //si no incluyo un timestamp en la request
 		struct timeval tv;
 		gettimeofday(&tv, NULL);
 		return (tv.tv_sec) * 1000 + (tv.tv_usec) / 1000;
-	} else {
+	}else{
 		int indice_inicial = str_last_index_of('"', comando) + 1;
 		char* str_timestamp = string_substring(comando, indice_inicial,  string_length(comando) - 1 - str_last_index_of('"', comando));
 		double double_timestamp = atol(str_timestamp);
@@ -210,7 +204,7 @@ int obtener_particiones_metadata(char* tabla)
 	t_config* config = config_create(archivoMetadata);
 	int nr_particiones_metadata = config_get_int_value(config, "PARTITIONS");
 	config_destroy(config);
-	free(archivoMetadata); //creo
+	free(archivoMetadata);
 	free(unaTabla);
 	return nr_particiones_metadata;
 }
@@ -229,7 +223,7 @@ char *obtener_consistencia_metadata(char* tabla)
 	consistency = malloc(strlen(config_get_string_value(config, "CONSISTENCY")));
 	strcpy(consistency, config_get_string_value(config, "CONSISTENCY"));
 	config_destroy(config);
-	free(archivoMetadata); //creo
+	free(archivoMetadata);
 	free(unaTabla);
 	return consistency;
 }
@@ -247,7 +241,7 @@ int obtener_tiempo_compactacion_metadata(char* tabla)
 	t_config* config = config_create(archivoMetadata);
 	int tiempo_compactacion = config_get_int_value(config, "COMPACTION_TIME");
 	config_destroy(config);
-	free(archivoMetadata); //creo
+	free(archivoMetadata);
 	free(unaTabla);
 	return tiempo_compactacion;
 }
@@ -256,8 +250,6 @@ int obtener_tiempo_compactacion_metadata(char* tabla)
 
 void crear_bloques_FS(int nr_blocks)
 {
-
-
 	for(int i = 0; i < nr_blocks; i++){
 
 		char* root = string_duplicate(puntoDeMontaje);
@@ -279,11 +271,9 @@ void crear_bloques_FS(int nr_blocks)
  * Si el Bitmap tiene datos supongo que ya existe los Bloques y algunos estan lleno y otros no
  */
 
-
-
-void setear_bitarray(t_bitarray *bitarray, int nr_blocks)
+void setear_bitarray(int nr_blocks)
 {
-	long i=0;
+	int i = 0;
 	char c;
 	char *root = string_duplicate(puntoDeMontaje);
 	string_append(&root,"/Metadata/Bitmap.bin");
@@ -295,7 +285,6 @@ void setear_bitarray(t_bitarray *bitarray, int nr_blocks)
 		log_error(logger,"Hubo un error abriendo el bitmap.");
 		return;
 	}
-
 
 	fseek(fp, 0L, SEEK_END);
 	int file_size = ftell(fp);
@@ -327,13 +316,10 @@ void setear_bitarray(t_bitarray *bitarray, int nr_blocks)
 }
 
 void crear_bitarray(int nr_blocks){
-	char data[nr_blocks];
-	memset(&data, '0', sizeof(data));
+	char *data;
+	data = malloc(nr_blocks);
+	memset(data, '0', nr_blocks);
 
-	bitarray = bitarray_create_with_mode(data, sizeof(data), LSB_FIRST);
-	setear_bitarray(bitarray, nr_blocks);
+	bitarray = bitarray_create_with_mode(data, nr_blocks, LSB_FIRST);
+	setear_bitarray(nr_blocks);
 }
-
-
-
-

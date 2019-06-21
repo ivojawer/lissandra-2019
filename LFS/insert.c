@@ -16,8 +16,10 @@ t_registro *crear_registro(unsigned long timestamp, uint16_t key, char *value)
 
 void registro_destroy(t_registro *self)
 {
-	free(self->value);
-	free(self);
+	if(self != NULL){
+		free(self->value);
+		free(self);
+	}
 }
 
 
@@ -33,8 +35,11 @@ t_particion *crear_particion_memtable(int size, int particion_buscar)
 
 void particion_destroy(t_particion *self)
 {
-	free(self->lista_registros);
-	free(self);
+	if(self != NULL){
+		if(self->lista_registros != NULL)
+			free(self->lista_registros);
+		free(self);
+	}
 }
 
 t_particion *agregar_registro_en_particion_nueva(t_particion *nueva_particion, t_registro *registro_nuevo)
@@ -128,7 +133,7 @@ void rutina_insert(char* comando)
 	printf("Key: %d\n", key);
 
 	char* value = get_value(comando);
-	if(strlen(value)+1>tamanioValue){
+	if(strlen(value) > tamanioValue){
 		printf("El value ingresado supera el tamaño maximo permitido.\n");
 		return;
 	}else{
@@ -141,8 +146,7 @@ void rutina_insert(char* comando)
 			int nr_particiones_metadata = obtener_particiones_metadata(tabla);
 			int particion_buscar = nr_particion_key(key, nr_particiones_metadata);
 			int size = obtener_size_particion(tabla, particion_buscar);
-			if(size>0){
-				printf("Particion del registro: %d\n", particion_buscar);
+			if(size >= 0){
 
 				t_list *tabla_encontrada = list_create();
 				tabla_encontrada = filtrar_tabla_memtable(tabla);

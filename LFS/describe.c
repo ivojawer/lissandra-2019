@@ -13,7 +13,6 @@ int tipo_describe(char *comando) {
 
 struct describe *crear_descripcion(char *name, char *consistencia,
 		int particiones, int tiempo_compactacion) {
-
 	struct describe *new = malloc(sizeof(struct describe));
 	new->compaction_time = tiempo_compactacion;
 	new->consistency = strdup(consistencia);
@@ -37,7 +36,10 @@ void liberar_descripcion(t_list *lista_describe) {
 }
 
 void cargar_datos_tabla(char *tabla) {
-	struct describe *descripcion = crear_descripcion(tabla, obtener_consistencia_metadata(tabla), obtener_particiones_metadata(tabla),obtener_tiempo_compactacion_metadata(tabla));
+	struct describe *descripcion = crear_descripcion(tabla,
+			obtener_consistencia_metadata(tabla),
+			obtener_particiones_metadata(tabla),
+			obtener_tiempo_compactacion_metadata(tabla));
 	list_add(lista_describe, descripcion);
 }
 
@@ -71,7 +73,7 @@ void agregar_tablas_a_describir() {
 	free(tablas);
 }
 
-void describe_full(char *comando) {
+void describe_full() {
 	lista_describe = list_create();
 	agregar_tablas_a_describir();
 	mostrar_descripciones_metadata(lista_describe);
@@ -90,12 +92,11 @@ void describe_particular(char *comando) {
 }
 
 void rutina_describe(char* comando) {
-
 	printf("Rutina DESCRIBE\n");
 	int tipo = tipo_describe(comando);
 	switch (tipo) {
 	case 0:
-		describe_full(comando);
+		describe_full();
 		break;
 	case 1:
 		describe_particular(comando);
@@ -103,5 +104,4 @@ void rutina_describe(char* comando) {
 	default:
 		printf("Error en comando DESCRIBE.\n");
 	}
-
 }

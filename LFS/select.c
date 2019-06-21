@@ -20,7 +20,7 @@ t_bloque *crear_bloque_buscar(char *bloque)
 }
 
 static void bloque_destroy(t_bloque *self) {
-//    free(self->name);
+    free(self->name);
     free(self);
 }
 
@@ -166,18 +166,19 @@ int contar_comas(char *temp)
 	 char* nroBloque = string_duplicate(bloque_nr);
 	 char* root = string_new();
 	 string_append(&root,puntoDeMontaje);
-	 string_append(&root,"Bloques/");
+	 string_append(&root,"Bloques/bloque");
 	 string_append(&root,nroBloque);
 	 string_append(&root,".bin");
 
 	 int bloque_size = 0;
 	 FILE *f;
 	 f = fopen(root, "rb");
-	 if(f==NULL){
+	 if(f == NULL){
 		 printf("El bloque %s no se pudo abrir.\n", bloque_nr);
 	 }else{
 		 char temp[32]= "";
 		 char **tokens_registro;
+		 char **tokens_registro_2;
 		 char *string_aux_2;
 
 		 while(!feof(f) && bloque_size < size_bloque){
@@ -187,7 +188,11 @@ int contar_comas(char *temp)
 			 tokens_registro = string_split(temp, ";");
 			 if(flag_key_value != 0){
 				if(control == 1 && nr_comas == 2){
-					comparar_key_y_agregar_valor(atoi(tokens_registro[1]), key, strdup(tokens_registro[2]), atoi(tokens_registro[0]), timestamp_valor);
+
+					tokens_registro_2 = string_split(array_aux, ";");
+					comparar_key_y_agregar_valor(atol(tokens_registro_2[1]), key, strdup(tokens_registro_2[2]), atoi(tokens_registro_2[0]), timestamp_valor);
+
+					comparar_key_y_agregar_valor(atol(tokens_registro[1]), key, strdup(tokens_registro[2]), atoi(tokens_registro[0]), timestamp_valor);
 					flag_key_value = 0;
 					control = 0;
 					memset(array_aux, 0X0, sizeof(array_aux));
@@ -195,9 +200,8 @@ int contar_comas(char *temp)
 					string_aux_2 = malloc(strlen(temp)*sizeof(char));
 					strcpy(string_aux_2, temp);
 				 	strcat(array_aux, string_aux_2);
-//				 	printf("MOD: %s\n", array_aux);
 				 	tokens_registro = string_split(array_aux, ";");
-				 	comparar_key_y_agregar_valor(atoi(tokens_registro[1]), key, strdup(tokens_registro[2]), atoi(tokens_registro[0]), timestamp_valor);
+				 	comparar_key_y_agregar_valor(atol(tokens_registro[1]), key, strdup(tokens_registro[2]), atoi(tokens_registro[0]), timestamp_valor);
 				 	memset(array_aux, 0x0, sizeof(array_aux));
 				 	free(string_aux_2);
 				 	flag_key_value = 0;
@@ -205,10 +209,10 @@ int contar_comas(char *temp)
 				 	}
 				 }else{ //Si la flag == 0
 					 if((nr_comas == 2) && ((flag_last_bloque == 1) && (bloque_size == size_bloque))){
-						 comparar_key_y_agregar_valor(atoi(tokens_registro[1]), key, tokens_registro[2], atoi(tokens_registro[0]), timestamp_valor);
+						 comparar_key_y_agregar_valor(atol(tokens_registro[1]), key, strdup(tokens_registro[2]), atoi(tokens_registro[0]), timestamp_valor);
 
 					 }else if(nr_comas == 2 && bloque_size < size_bloque){ //En el medio
-						 comparar_key_y_agregar_valor(atoi(tokens_registro[1]), key, tokens_registro[2], atoi(tokens_registro[0]), timestamp_valor);
+						 comparar_key_y_agregar_valor(atol(tokens_registro[1]), key, strdup(tokens_registro[2]), atoi(tokens_registro[0]), timestamp_valor);
 					 }else{
 						if(nr_comas == 2)
 							 control = 1;
@@ -242,7 +246,6 @@ int contar_comas(char *temp)
 	 int file_size = ftell(bf);
 	 fclose(bf);
 	 free(root);
-	 free(bloque);
 	 return file_size;
  }
 
@@ -251,20 +254,16 @@ int contar_comas(char *temp)
 	 int flag_last_bloque = 0;
 	 int size_bloque;
 	 int cant_bloques = list_size(bloques_buscar);
+	 t_bloque *block = malloc(sizeof(t_bloque));
 
-	 for(int i=0; i<cant_bloques;i++){
-
-		 t_bloque *block = block = list_get(bloques_buscar, i);
-
+	 for(int i = 0; i < cant_bloques; i++){
+		 t_bloque *block = list_get(bloques_buscar, i);
 		 if(i == cant_bloques-1)
-		 {
 			 flag_last_bloque = 1;
-		 }
-
 		 size_bloque = size_of_bloque(block);
-
 		 buscar_key_bloques(block->name, key, timestamp_valor, flag_last_bloque, size_bloque);
 	 }
+	 free(block);
  }
 
 
@@ -279,12 +278,11 @@ int existe_tabla(char *tabla)
 	string_append(&pathAbsoluto,"Tablas/");
 	string_append(&pathAbsoluto,nombreTablaGuardado);
 
-	if (access(pathAbsoluto, F_OK) == -1){
-	   free(pathAbsoluto);
-	   free(nombreTablaGuardado);
-	   return 0;
+	if (access(pathAbsoluto, R_OK) == -1){
+		free(pathAbsoluto);
+		free(nombreTablaGuardado);
+	    return 0;
 	}
-
 	free(pathAbsoluto);
 	free(nombreTablaGuardado);
 	return 1; // devuelve 1 si existe la tabla, sino devuelve 0.
@@ -296,27 +294,27 @@ int cargar_bloques(char *root, t_list *bloques_buscar)
 	FILE *f;
 	f = fopen(root, "rb");
 	if(f==NULL){
-			printf("El archivo particion no se ha podido abrir correctamente\n");
-			return 0;
+		printf("El archivo particion no se ha podido abrir correctamente\n");
+		return 0;
 	}else{
-		 int i=0, cont=0;
+		 int i = 0, cont = 0;
 		 char temp_helper[4];
-		 char bloque[8]="";
-		 char size[8]="";
-		 int flag_bloque=0;
+		 char bloque[8] = "";
+		 char size[8] = "";
+		 int flag_bloque = 0;
 
-		 while(fread(&temp_helper[0], 1, 1, f)==1){
-			 if(temp_helper[0]>=48 && temp_helper[0]<=57){
-				 flag_bloque=1;
-				 bloque[i]= temp_helper[0];
+		 while(fread(&temp_helper[0], 1, 1, f) == 1){
+			 if(temp_helper[0] >= 48 && temp_helper[0] <= 57){
+				 flag_bloque = 1;
+				 bloque[i] = temp_helper[0];
 				 i++;
 			 }else{
-				 if(flag_bloque==1){
+				 if(flag_bloque == 1){
 					 strcpy(&bloque[i], "\0");
-					 flag_bloque=0;
-					 i=0;
+					 flag_bloque = 0;
+					 i = 0;
 					 cont++;
-					 if(cont==1){
+					 if(cont == 1){
 						 strcpy(size, bloque);
 					 }else{
 						 t_bloque *bloque_creado = crear_bloque_buscar(bloque);
@@ -345,13 +343,12 @@ void buscar_bloques_particion(char *tabla, int particion_buscar, int type_flag, 
 		 char **entrada_aux;
 		 while ((entrada = readdir(dir)) != NULL){
 			 entrada_aux = string_split(entrada->d_name, ".");
-			 if(&(&entrada_aux)[1] != NULL){
+			 if(entrada_aux[1] != NULL){
 				 if (strcmp(entrada_aux[1],"tmp")==0){
-					 char* rootAux = string_duplicate(root);
-					 string_append(&rootAux,"/");
-					 string_append(&rootAux, entrada->d_name);
-					 cargar_bloques(rootAux, bloques_buscar);
-					 free(rootAux);
+					 char root_aux[256] = "";
+					 sprintf(root_aux, "%s/%s", root, entrada->d_name);
+					 cargar_bloques(root_aux, bloques_buscar);
+					 memset(root_aux, 0x0, sizeof(root_aux));
 				 }
 			 }
 		 }
@@ -434,13 +431,12 @@ t_list *filtrar_registros_particion(t_list *particion_encontrada, uint16_t key)
 
 
 
-
 t_par_valor_timestamp *filtrar_timestamp_mayor(t_list *timestamp_valor, int list_size)
 {
 	int i;
 	t_par_valor_timestamp *value_aux, *value;
 	value_aux = (t_par_valor_timestamp *)list_get(timestamp_valor, 0);
-	for(i=1; i<list_size; i++){
+	for(i = 1; i < list_size; i++){
 		value = (t_par_valor_timestamp *)list_get(timestamp_valor, i);
 		if(value->timestamp > value_aux->timestamp){
 			value_aux = value;
@@ -463,7 +459,7 @@ t_par_valor_timestamp *filtrar_timestamp_mayor(t_list *timestamp_valor, int list
 	int cant_registros = list_size(registros_encontrados);
 	int i;
 	if(cant_registros!=0){
-		for(i=0; i<cant_registros; i++){
+		for(i = 0; i < cant_registros; i++){
 			t_registro *registro_extraido = malloc(sizeof(t_registro));
 			registro_extraido = (t_registro *)list_get(registros_encontrados,i);
 			char *valor = strdup(registro_extraido->value);
@@ -487,13 +483,13 @@ t_par_valor_timestamp *filtrar_timestamp_mayor(t_list *timestamp_valor, int list
 void rutina_select(char* comando)
 {
 
-	printf("Operacion: SELECT\n");
+	printf("operacion: select\n");
 
 	char *tabla=get_tabla(comando);
-	printf("Tabla: %s\n", get_tabla(comando));
+	printf("tabla: %s\n", get_tabla(comando));
 
 	uint16_t key = get_key(comando);
-	printf("Key: %d\n", get_key(comando));
+	printf("key: %d\n", get_key(comando));
 
 	if(existe_tabla(tabla)){
 		int nr_particiones_metadata = obtener_particiones_metadata(tabla);
