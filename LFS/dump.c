@@ -261,54 +261,56 @@ void liberar_lista_bloques(t_list *lista_bloques_tmp) {
 }
 
 void dump() {
-	int i, j, k;
-	int table_change;
-	int siga_siga = 0;
-	lista_bloques_tmp = list_create();
-	sem_wait(&dump_semaphore);
-	for (i = 0; i < list_size(memtable); i++) {
-		space_full = 0;
-		fp_dump = NULL;
-		table_change = 0;
-		t_tabla *tabla = malloc(sizeof(t_tabla));
-		tabla = list_get(memtable, i);
-		if (existe_tabla(tabla->name_tabla)) {
-			struct bloques_tmp *bloques_tmp_tabla = malloc(sizeof(struct bloques_tmp));
-			bloques_tmp_tabla = crear_bloques_tmp(tabla->name_tabla);
-			for (j = 0; j < list_size(tabla->lista_particiones); j++) {
-				t_particion *particion = malloc(sizeof(t_particion));
-				particion = list_get(tabla->lista_particiones, j);
-				for (k = 0; k < list_size(particion->lista_registros); k++) {
-					t_registro *registro = malloc(sizeof(t_registro));
-					registro = list_get(particion->lista_registros, k);
-					if(strlen(registro->value) > 0){
-						if (table_change == 0 && k == 1)
-							table_change = 1;
-						guardar_registros_en_bloques(registro, table_change,
+	if(!lista_vacia(memtable)){
+		int i, j, k;
+		int table_change;
+		int siga_siga = 0;
+		lista_bloques_tmp = list_create();
+		sem_wait(&dump_semaphore);
+		for (i = 0; i < list_size(memtable); i++){
+			space_full = 0;
+			fp_dump = NULL;
+			table_change = 0;
+			t_tabla *tabla = malloc(sizeof(t_tabla));
+			tabla = list_get(memtable, i);
+			if(existe_tabla(tabla->name_tabla)){
+				struct bloques_tmp *bloques_tmp_tabla = malloc(sizeof(struct bloques_tmp));
+				bloques_tmp_tabla = crear_bloques_tmp(tabla->name_tabla);
+				for(j = 0; j < list_size(tabla->lista_particiones); j++){
+					t_particion *particion = malloc(sizeof(t_particion));
+					particion = list_get(tabla->lista_particiones, j);
+					for (k = 0; k < list_size(particion->lista_registros); k++) {
+						t_registro *registro = malloc(sizeof(t_registro));
+						registro = list_get(particion->lista_registros, k);
+						if(strlen(registro->value) > 0){
+							if (table_change == 0 && k == 1)
+								table_change = 1;
+							guardar_registros_en_bloques(registro, table_change,
 													 bloques_tmp_tabla);
-						siga_siga = 1;
-					}else{
-						free(bloques_tmp_tabla);
-						free(lista_bloques_tmp);
-						siga_siga = 0;
+							siga_siga = 1;
+						}else{
+							free(bloques_tmp_tabla);
+							free(lista_bloques_tmp);
+							siga_siga = 0;
+						}
+						void liberar_elementos_particion(void *elemento) {
+							return registro_destroy((t_registro *) elemento);
+						}
+						list_remove_and_destroy_element(particion->lista_registros, k, liberar_elementos_particion);
 					}
-					void liberar_elementos_particion(void *elemento) {
-						return registro_destroy((t_registro *) elemento);
-					}
-					list_remove_and_destroy_element(particion->lista_registros, k, liberar_elementos_particion);
+				}
+				grabar_registro("NULL", "NULL", 0, 0, 0, 0, bloques_tmp_tabla, 1); //Close fp_dump
+				if(siga_siga == 1){
+					list_add(lista_bloques_tmp, bloques_tmp_tabla);
 				}
 			}
-			grabar_registro("NULL", "NULL", 0, 0, 0, 0, bloques_tmp_tabla, 1); //Close fp_dump
-			if(siga_siga == 1){
-				list_add(lista_bloques_tmp, bloques_tmp_tabla);
-			}
 		}
-	}
-	if(siga_siga == 1){
-		guardar_bloques_metadata(lista_bloques_tmp);
-		liberar_lista_bloques(lista_bloques_tmp);
-	}
+		if(siga_siga == 1){
+			guardar_bloques_metadata(lista_bloques_tmp);
+			liberar_lista_bloques(lista_bloques_tmp);
+		}
 	sem_post(&dump_semaphore);
+	}
 }
 
 void ejecutar_dump() {
