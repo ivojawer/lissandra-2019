@@ -1536,7 +1536,7 @@ void rutina_drop(char* comando)
 
 //llena la estructura LFS_config e inicializa el logger
 void cargar_configuracion_inicial() {
-	t_config* config = config_create("../LFS.config");
+	t_config* config = config_create("../../CONFIG/LFS.config");
 
 	LFS_config.puerto_escucha = config_get_int_value(config, "PUERTO_ESCUCHA");
 	LFS_config.punto_montaje = config_get_string_value(config, "PUNTO_MONTAJE");

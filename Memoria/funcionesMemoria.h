@@ -20,6 +20,7 @@
 #include <stdbool.h>
 #include <math.h>
 #include "gossiping.h"
+#include <semaphore.h>
 
 
 typedef struct {
@@ -27,6 +28,12 @@ typedef struct {
 	uint16_t key;
 	char value;
 }marco;
+
+typedef struct {
+	int id;
+	sem_t semaforoDeHilo;
+	void* punteroARespuesta;
+}hiloDeEjecucion;
 
 typedef struct{
 	bool vacio;
@@ -38,12 +45,23 @@ typedef struct{
 	int flagModificado;
 }pagina;
 
+typedef struct{
+	request* laRequest;
+	int idKernel;
+}requestConID;
+
+typedef struct{
+	int nombre;
+	int elSocket;
+	seed* laSeed;
+}memoriaGossip;
 
 void* comienzoMemoria;
 disponibilidad* marcos;
 int cantMarcos;
 int tamanioMarco;
 
+void ejecutarRequests();
 segmento* encuentroTablaPorNombre(char* nombreTabla);
 marco* getMarcoFromPagina(pagina*);
 marco* getMarcoFromIndex(int);
@@ -55,12 +73,13 @@ pagina* nuevoDato(t_list* tablaPaginas,int flagModificado,int key, int timestamp
 pagina* getPagina(int key, char* nombreTabla);
 void consola();
 void mandarAEjecutarRequest(request* requestAEjecutar);
-void mandarALFS(int,char*);
-void Select(char* parametros);
-void insert(char* parametros);
-void create(char* parametros);
-void describe(char* parametro);
-void drop(char* parametro);
+void mandarRequestALFS(int,char*);
+char* Select(char* parametros);
+int insert(char* parametros);
+int create(char* parametros);
+t_list* describe(char* parametro);
+int drop(char* parametro);
 void journal();
+seed* enviarYRecibirSeeds(memoriaGossip* memoriaDestino);
 
 #endif /* FUNCIONESMEMORIA_H_ */

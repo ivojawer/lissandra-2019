@@ -5,7 +5,6 @@ extern t_list* memorias;
 extern sem_t sem_gossiping;
 extern t_list* listaEXEC;
 extern script* scriptRefreshMetadata;
-extern t_list* seeds;
 
 void conectarseAUnaMemoria(seed* unaSeed) {
 
@@ -19,7 +18,9 @@ void conectarseAUnaMemoria(seed* unaSeed) {
 	int headerRespuesta = recibirInt(socketMemoria, logger);
 
 	if (headerRespuesta != HANDSHAKE) {
-		log_error(logger, "Se envio un handshake a la memoria y se devolvio otra cosa.");
+		log_error(logger,
+				"Se envio un handshake a la memoria y se devolvio otra cosa.");
+		close(socketMemoria);
 		return;
 	}
 
@@ -27,13 +28,15 @@ void conectarseAUnaMemoria(seed* unaSeed) {
 
 	if (modulo != MEMORIA) {
 		log_error(logger, "Se conecto algo que no es la memoria.");
+		close(socketMemoria);
 		return;
 	}
 
 	int nombreMemoria = recibirInt(socketMemoria, logger);
 
-	if (nombreMemoria == -1) {
-		return; //El error ya esta en el recibirInt
+	if (nombreMemoria == -1) { //Log error ya esta en la funcion
+		close(socketMemoria);
+		return;
 	}
 
 	memoriaEnLista* nuevaMemoria = malloc(sizeof(memoriaEnLista));
@@ -50,6 +53,11 @@ void conectarseAUnaMemoria(seed* unaSeed) {
 	nuevaMemoria->ip = string_duplicate(unaSeed->ip);
 	nuevaMemoria->puerto = unaSeed->puerto;
 
+	nuevaMemoria->estaViva = 1;
+	sem_init(&nuevaMemoria->sem_cambioScriptsEsperando, 0, 1);
+
+	list_create(nuevaMemoria->scriptsEsperando);
+
 	free(unaSeed->ip);
 
 	free(unaSeed);
@@ -64,9 +72,7 @@ void conectarseAUnaMemoria(seed* unaSeed) {
 }
 
 void manejoErrorMemoria(int nombreMemoria) {
-	log_error(logger,
-			"Se recibio de la memoria %i algo incorrecto, se va a cerrar la conexion.",
-			nombreMemoria);
+	log_error(logger, "Se desconecto la memoria %i.", nombreMemoria);
 	matarMemoria(nombreMemoria);
 }
 
@@ -130,35 +136,33 @@ void comunicacionConMemoria(memoriaEnLista* memoria) {
 			case TODO_BIEN: {
 
 				respuesta = TODO_BIEN;
+				break;
 
 			}
 			case ERROR: {
 
 				respuesta = ERROR;
-
+				break;
 			}
-			case MEM_LLENA:
-			{
+
+			case MEM_LLENA: {
 				respuesta = MEM_LLENA;
+				break;
 			}
-
-				scriptReceptor->resultadoDeEnvio = malloc(sizeof(int));
-				memcpy(scriptReceptor->resultadoDeEnvio, &respuesta,
-						sizeof(int));
-
-				sem_post(&scriptReceptor->semaforoDelScript);
-
-				continue;
 
 			default: {
-
 				manejoErrorMemoria(memoria->nombre);
 				return;
 			}
 
 			}
 
-			return; //Esta linea nunca se va a ejecutar, es para que eclipse deje de joder
+			scriptReceptor->resultadoDeEnvio = malloc(sizeof(int));
+			memcpy(scriptReceptor->resultadoDeEnvio, &respuesta, sizeof(int));
+
+			sem_post(&scriptReceptor->semaforoDelScript);
+
+			continue;
 
 		}
 
@@ -208,6 +212,11 @@ void comunicacionConMemoria(memoriaEnLista* memoria) {
 
 			t_list* seeds = recibirSeeds(socketMemoria, logger);
 
+			if (list_size(seeds) == 0) { //TODO: Preguntar si se puede llegar a recibir una lista de seeds sin nada
+				manejoErrorMemoria(memoria->nombre);
+				return;
+			}
+
 			pthread_t h_gossiping;
 
 			pthread_create(&h_gossiping, NULL, (void *) agregarMemorias, seeds);
@@ -239,6 +248,15 @@ void comunicacionConMemoria(memoriaEnLista* memoria) {
 			}
 
 			t_list* metadatas = recibirMetadatas(socketMemoria, logger);
+
+			metadataTablaLFS* metadataPrueba = list_get(metadatas, 0);
+
+			if (metadataPrueba->consistencia == -1) {
+				manejoErrorMemoria(memoria->nombre);
+				free(metadataPrueba);
+				list_destroy(metadatas);
+				return;
+			}
 
 			int respuesta = 1;
 

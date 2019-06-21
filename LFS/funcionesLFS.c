@@ -1,26 +1,42 @@
 #include "funcionesLFS.h"
-#define MAXCHAR 1000
-extern t_config* bitMapMetadata;
-extern t_list* listaDeNombreDeTablas;
-extern t_list* memTable;
+
 extern t_log* logger;
+
+extern t_list* memtable;
+
 extern int cantidadBloques;
+extern int tamanioBloques;
+
 extern char* puntoDeMontaje;
-extern int socketLFSAMEM;
-extern t_bitarray* bitMap;
+extern int retardo; //en milisegundos
+extern int tamanioValue;
+extern int tiempoDump; //en milisegundos
+
+extern FILE *fp_dump;
+
+extern char array_aux[128];
+
+//////////////////////////////////////////////
+
+
+int size_particion = 0;           //// de estas no estoy 100% segura si hay alguna obsoleta
+t_list *particion_encontrada;
+t_list *registros_encontrados;
+t_list *tabla_encontrada;
+t_list *lista_describe;
+int wait_particiones = 1;
+char *consistency;
 
 
 void mandarAEjecutarRequest(request* requestAEjecutar) {
 
-
-	char* parametros = string_duplicate(requestAEjecutar->parametros); //Esto es para que se pueda hacer un free() en consola.c sin que rompa
+	char *parametros = string_duplicate(requestAEjecutar->parametros); //Esto es para que se pueda hacer un free() en consola.c sin que rompa
 	switch (requestAEjecutar->requestEnInt) {
 	case SELECT:
-		;
 		{
 			pthread_t h_select;
 
-			pthread_create(&h_select, NULL, (void *) Select, parametros);
+			pthread_create(&h_select, NULL, (void *) rutina_select, parametros);
 
 			pthread_detach(h_select);
 
@@ -30,11 +46,10 @@ void mandarAEjecutarRequest(request* requestAEjecutar) {
 		}
 
 	case INSERT:
-		;
 		{
 			pthread_t h_insert;
 
-			pthread_create(&h_insert, NULL, (void *) insert, parametros);
+			pthread_create(&h_insert, NULL, (void *) rutina_insert, parametros);
 
 			pthread_detach(h_insert);
 
@@ -42,12 +57,10 @@ void mandarAEjecutarRequest(request* requestAEjecutar) {
 		}
 
 	case CREATE:
-		;
-
 		{
 			pthread_t h_create;
 
-			pthread_create(&h_create, NULL, (void *) create, parametros);
+			pthread_create(&h_create, NULL, (void *) rutina_create, parametros);
 
 			pthread_detach(h_create);
 
@@ -55,12 +68,11 @@ void mandarAEjecutarRequest(request* requestAEjecutar) {
 		}
 
 	case DESCRIBE:
-		;
 		{
 
 			pthread_t h_describe;
 
-			pthread_create(&h_describe, NULL, (void *) describe, parametros);
+			pthread_create(&h_describe, NULL, (void *) rutina_describe, parametros);
 
 			pthread_detach(h_describe);
 
@@ -68,12 +80,11 @@ void mandarAEjecutarRequest(request* requestAEjecutar) {
 		}
 
 	case DROP:
-		;
 		{
 
 			pthread_t h_drop;
 
-			pthread_create(&h_drop, NULL, (void *) drop, parametros);
+			pthread_create(&h_drop, NULL, (void *) rutina_drop, parametros);
 
 			pthread_detach(h_drop);
 
@@ -86,358 +97,229 @@ void mandarAEjecutarRequest(request* requestAEjecutar) {
 	liberarRequest(requestAEjecutar);
 }
 
-int tablaYaExiste(char* nombreTabla) {
 
-	char* nombreTablaGuardado = string_duplicate(nombreTabla);
-	string_to_upper(nombreTablaGuardado);
+void iniciar_variables(){
 
-	char* pathAbsoluto = string_new();
-	string_append(&pathAbsoluto,puntoDeMontaje);
-	string_append(&pathAbsoluto,"Tablas/");
-	string_append(&pathAbsoluto,nombreTablaGuardado);
+	//asigno variables globales del LFS.config
+	t_config* config = config_create("../../CONFIG/LFS.config");
+	puntoDeMontaje = string_duplicate(config_get_string_value(config,"PUNTO_MONTAJE"));
+	retardo = config_get_int_value(config,"RETARDO");
+	tamanioValue = config_get_int_value(config,"TAMAÑO_VALUE");
+	tiempoDump = config_get_int_value(config,"TIEMPO_DUMP");
 
-	if (access(pathAbsoluto, F_OK) == -1){
-       return 0;
-	}
-	return 1; // devuelve 1 si existe la tabla, sino devuelve 0.
+	//asigno variables globales del Metadata.bin
+	char* dirMetadata = string_duplicate(puntoDeMontaje);
+	string_append(&dirMetadata,"Metadata/Metadata.bin");
 
+	t_config* metadataLFS = config_create(dirMetadata);
+	cantidadBloques = config_get_int_value(metadataLFS,"BLOCKS");
+	tamanioBloques = config_get_int_value(metadataLFS,"BLOCK_SIZE");
+
+	memtable = list_create();
+	tabla_encontrada = list_create();
+	registros_encontrados = list_create();
+	particion_encontrada = list_create();
+	fp_dump = NULL;
+	memset(array_aux, 0X0, sizeof(array_aux));
+	sem_init(&dump_semaphore, 0, 1);
+
+	//agrego bitarray de cargar_configuracion_FS()
+	crear_bitarray(cantidadBloques);
+
+	config_destroy(config);
+	config_destroy(metadataLFS);
+	free(dirMetadata);
 }
 
-int tablaExisteEnMemTable(char* nombreDeTabla){
 
-	char* nombreTablaGuardado = string_duplicate(nombreDeTabla);
-	string_to_upper(nombreTablaGuardado);
+char* get_tabla(char* comando)
+{
+	char **tokens_comando = string_split(comando, " ");
+	char *tabla = tokens_comando[1];
+	return tabla;
+}
 
-	bool coincideNombreTabla(t_tablaEnMemTable* unaTabla){
-		return string_equals_ignore_case(unaTabla->nombreTabla,nombreTablaGuardado);
+int get_key(char* comando)
+{
+	char **tokens_comando = string_split(comando, " ");
+	char *key = tokens_comando[2];
+	return atoi(key);
+}
+
+char *get_value(char* comando)
+{
+	int primera_ocurrencia = str_first_index_of('"', comando);
+	int segunda_ocurrencia = str_last_index_of('"', comando);
+	return string_substring(comando, primera_ocurrencia + 1, segunda_ocurrencia - primera_ocurrencia - 1);
+}
+
+//retorna el timestamp escrito en la request o el del epoch unix si la request no trae uno
+double get_timestamp(char* comando) {
+	if (comando[string_length(comando) - 1] == '"'){ //si no incluyo un timestamp en la request
+		struct timeval tv;
+		gettimeofday(&tv, NULL);
+		return (tv.tv_sec) * 1000 + (tv.tv_usec) / 1000;
+	}else{
+		int indice_inicial = str_last_index_of('"', comando) + 1;
+		char* str_timestamp = string_substring(comando, indice_inicial,  string_length(comando) - 1 - str_last_index_of('"', comando));
+		double double_timestamp = atol(str_timestamp);
+		return double_timestamp;
 	}
-
-	if(list_any_satisfy(memTable,(void*) coincideNombreTabla)){
-		return 1;
-	}
-	return 0; // devuelve 1 si existe la tabla, sino devuelve 0.
-
 }
 
 
-void crearTablaEnMemTable(char* nombreDeTabla) {
-
-	t_tablaEnMemTable* nuevaTabla;
-
-	nuevaTabla = malloc(sizeof(t_tablaEnMemTable));
-
-	nuevaTabla->nombreTabla = malloc(sizeof(nombreDeTabla));
-
-	char* tabla = string_duplicate(nombreDeTabla);
-
-	string_to_upper(tabla);
-
-	nuevaTabla->nombreTabla = tabla;
-
-	nuevaTabla->datosAInsertar = list_create();
-
-	list_add(memTable, nuevaTabla);
-
+char *get_consistencia(char *comando)
+{
+	char** tokens_comando = string_split(comando, " ");
+	char *consistencia = tokens_comando[2];
+	return consistencia;
 }
 
-t_tablaEnMemTable* getTablaPorNombre(t_list* memoriaTemp, char* nombreDeTabla){
 
-	bool filtroNombreTabla(t_tablaEnMemTable* unaTabla){
-		return string_equals_ignore_case(unaTabla->nombreTabla,nombreDeTabla);
-	}
-
-	return list_find(memoriaTemp,(void*)filtroNombreTabla);
+int get_particiones(char *comando)
+{
+	char** tokens_comando = string_split(comando, " ");
+	return atoi(tokens_comando[3]);
 }
 
-int posicionLibreEnBitMap(){
-	int i;
-	for(i=0;i<cantidadBloques;i++){
-		if(!bitarray_test_bit(bitMap,i)){
-			log_info(logger,"Posicion %i en el bitmap libre.",i);
-			return i;
-		}
-	}
-	return -1;
+
+int get_tiempo_compactacion(char *comando)
+{
+	char** tokens_comando = string_split(comando, " ");
+	return atoi(tokens_comando[4]);
 }
 
-void Select(char* parametros) {
 
-//	char** parametrosEnVector = string_n_split(parametros, 2, " ");
-//
-//	char* tabla = parametrosEnVector[0];
-//	int key = atoi(parametrosEnVector[1]);
-//
-//	//chequea si existe
-//	if (!tablaYaExiste(tabla)) {
-//		log_error(logger, "%s%s%s", "La tabla ", tabla, " no existe.");
-//		return;
-//	}
-//
-//	//sacar path de tabla - TODO: quizas esto lo tengo que abstraer en otra funcion?? (despues refactoreo)
-//	char* pathAbsoluto = string_new();
-//	string_append(&pathAbsoluto,puntoDeMontaje);
-//	string_append(&pathAbsoluto,"Tablas/");
-//	string_append(&pathAbsoluto,tabla);
-//
-//	//obtener metadata (cant particiones)
-//	char* archivoMetadata = string_new();
-//	string_append(&archivoMetadata,pathAbsoluto);
-//	string_append(&archivoMetadata,"/metadata");
-//
-//	t_config* metadata = config_create(archivoMetadata);
-//
-//	//calcular particion con key
-//	int cantParticiones=config_get_int_value(metadata,"PARTITIONS");
-//	int numeroParticion = key % cantParticiones; //funcion modulo
-//
-//	char* archivoParticion = string_new();
-//	string_append(&archivoParticion,pathAbsoluto);
-//	char numParticion[cantParticiones];
-//	sprintf(numParticion, "%i.bin",numeroParticion);
-//	string_append(&archivoParticion,numParticion);
-//
-//
-//	t_config* particion = config_create(archivoParticion);
-//	printf("hola \n");
-//
-//	//buscar en los bloques
-//
-//	char** bloques = config_get_array_value(particion,"BLOQUES");
-//	printf("hola \n");
-//
-//	char* pathBloques = string_new();
-//	string_append(&pathBloques,puntoDeMontaje);
-//	string_append(&pathBloques,"/Bloques/");
-//
-//	// proximamente: REFACTOREO DONDE ABSTRAIGO BUSCAR EN BLOQUE - Solo En Cines
-//
-//	printf("hola \n");
-//
-//	for(int i=0;bloques[i]!=NULL;i++){
-//
-//		printf("hola \n");
-//
-//		char* bloque = string_new();
-//		string_append(&bloque,pathBloques);
-//		string_append(&bloque,bloques[i]);
-//		string_append(&bloque,".bin");
-//
-//		FILE* bin = fopen(bloque,"a+");
-//		char str[MAXCHAR];
-//
-//		while (fgets(str, MAXCHAR, bin) != NULL){
-//
-//			printf("hola \n");
-//
-//			char** unRegistro = string_split(str,";"); //SEPARO LOS TRES VALORES DEL REGISTRO
-//
-//			char* keyParseada = string_substring(unRegistro[1],1,string_length(unRegistro[1])-1);
-//
-//			printf("hola \n");
-//
-//			printf("naooos: %s \n",keyParseada);
-//
-//		}
-//
-//		fclose(bin);
-//
-//	}
-//
-//
-//	free(parametrosEnVector[1]);
-//	free(parametrosEnVector[0]);
-//	free(parametrosEnVector);
-//	free(parametros);
 
-}
+int obtener_particiones_metadata(char* tabla)
+{
 
-void insert(char* parametros) {
-
-	char** parametrosEnVector = string_n_split(parametros, 4, " ");
-
-	char* nomTabla = parametrosEnVector[0];
-	int unaKey = atoi(parametrosEnVector[1]);
-	char* unValue = parametrosEnVector[2]; //TODO: Sacarle las comillas
-	int unTimestamp;
-
-	if (parametrosEnVector[3] == NULL) {
-		unTimestamp = 123; //TODO: poner aca el tiempo actual
-	} else {
-		unTimestamp = atoi(parametrosEnVector[3]);
-	}
-
-	if (!tablaYaExiste(nomTabla)) {
-		log_error(logger, "%s%s%s", "La tabla ", nomTabla, " no existe.");
-		return;
-	}
-
-	registro* nuevoRegistro;
-	nuevoRegistro = malloc(sizeof(registro));
-	nuevoRegistro->timestamp = unTimestamp;
-	nuevoRegistro->key = unaKey;
-	nuevoRegistro->value = malloc(sizeof(unValue)); //por aca falta contemplar que el size del value sea valido
-	nuevoRegistro->value = unValue;
-
-	if (!tablaExisteEnMemTable(nomTabla)){
-		crearTablaEnMemTable(nomTabla);
-	}
-
-	t_tablaEnMemTable* tabla = getTablaPorNombre(memTable,nomTabla);
-	list_add(tabla->datosAInsertar,nuevoRegistro);
-}
-
-void create(char* parametros) {
-	char** parametrosEnVector = string_n_split(parametros, 4, " ");
-	char* tabla = string_duplicate(parametrosEnVector[0]);
-	string_to_upper(tabla);
-	char* consistencia = parametrosEnVector[1];
-	char* particiones = parametrosEnVector[2];
-	char* tiempoCompactacion = parametrosEnVector[3];
-
-	//chequea si existe
-	if (tablaYaExiste(tabla)) {
-		log_error(logger, "%s%s%s", "La tabla ", tabla, " ya existe.");
-		return;
-	}
-
-	//crea directorio
-	char* pathAbsoluto = string_new();
-	string_append(&pathAbsoluto,puntoDeMontaje);
-	string_append(&pathAbsoluto,"Tablas/");
-	string_append(&pathAbsoluto,tabla);
-
-	int result = mkdir(pathAbsoluto, 0700);
-
-	if (-1 == result){
-		printf("Error creating directory!\n");
-		exit(1);
-	}
-
-	//crea metadata y la escribe
 	char* archivoMetadata = string_new();
-	string_append(&archivoMetadata,pathAbsoluto);
-	string_append(&archivoMetadata,"/metadata");
+	char* unaTabla = string_duplicate(tabla);
+	string_append(&archivoMetadata,puntoDeMontaje);
+	string_append(&archivoMetadata,"Tablas/");
+	string_append(&archivoMetadata,unaTabla);
+	string_append(&archivoMetadata,"/metadata.config");
 
-	FILE* metadata = fopen(archivoMetadata,"a+");
-
-	fprintf(metadata,"CONSISTENCY=%s \n",consistencia);
-	fprintf(metadata,"PARTITIONS=%s \n",particiones);
-	fprintf(metadata,"COMPACTION_TIME=%s \n",tiempoCompactacion);
-
-	fclose(metadata);
-
-	//crea los .bin
-	int cantParticiones = atoi(particiones);
-
-	for(int i=0;i<cantParticiones;i++){
-
-		char numParticion[cantParticiones]; //no hay malloc, no va free
-		sprintf(numParticion, "%i", i);
-		char* particion = string_new();
-		string_append(&particion,pathAbsoluto);
-		string_append(&particion,"/");
-		string_append(&particion,numParticion);
-		string_append(&particion,".bin");
-
-		FILE* bin = fopen(particion,"a+");
-
-		fprintf(bin,"SIZE=0 \n");
-
-		int posicionBloque = posicionLibreEnBitMap();
-		if(posicionBloque == -1){
-				log_error(logger,"No hay bloques disponibles");
-				return;
-		}
-		bitarray_set_bit(bitMap,posicionBloque);
-
-		char numBloque[cantidadBloques];
-		sprintf(numBloque,"%i",posicionBloque);
-		fprintf(bin,"BLOCKS=[%s]\n",numBloque);
-
-		fclose(bin);
-
-		free(particion);
-	}
-
-	liberarArrayDeStrings(parametrosEnVector);
-	free(pathAbsoluto);
+	t_config* config = config_create(archivoMetadata);
+	int nr_particiones_metadata = config_get_int_value(config, "PARTITIONS");
+	config_destroy(config);
 	free(archivoMetadata);
-	//free(parametros);
-	//seguro faltan frees aca
-
+	free(unaTabla);
+	return nr_particiones_metadata;
 }
 
-void describe(char* parametro) {
-	if (strcmp(parametro, " ")) //Si hay un parametro
+
+char *obtener_consistencia_metadata(char* tabla)
+{
+	char* archivoMetadata = string_new();
+	char* unaTabla = string_duplicate(tabla);
+	string_append(&archivoMetadata,puntoDeMontaje);
+	string_append(&archivoMetadata,"Tablas/");
+	string_append(&archivoMetadata,unaTabla);
+	string_append(&archivoMetadata,"/metadata.config");
+
+	t_config* config = config_create(archivoMetadata);
+	consistency = malloc(strlen(config_get_string_value(config, "CONSISTENCY")));
+	strcpy(consistency, config_get_string_value(config, "CONSISTENCY"));
+	config_destroy(config);
+	free(archivoMetadata);
+	free(unaTabla);
+	return consistency;
+}
+
+
+int obtener_tiempo_compactacion_metadata(char* tabla)
+{
+	char* archivoMetadata = string_new();
+	char* unaTabla = string_duplicate(tabla);
+	string_append(&archivoMetadata,puntoDeMontaje);
+	string_append(&archivoMetadata,"Tablas/");
+	string_append(&archivoMetadata,unaTabla);
+	string_append(&archivoMetadata,"/metadata.config");
+
+	t_config* config = config_create(archivoMetadata);
+	int tiempo_compactacion = config_get_int_value(config, "COMPACTION_TIME");
+	config_destroy(config);
+	free(archivoMetadata);
+	free(unaTabla);
+	return tiempo_compactacion;
+}
+
+
+
+void crear_bloques_FS(int nr_blocks)
+{
+	for(int i = 0; i < nr_blocks; i++){
+
+		char* root = string_duplicate(puntoDeMontaje);
+		string_append(&root,"Bloques/bloque");
+		string_append(&root,string_itoa(i));
+		string_append(&root,".bin");
+		FILE *fp;
+		fp = fopen(root, "w+b");
+		fclose(fp);
+		free(root);
+	}
+}
+
+
+/*
+ * Supongo que Bitmap.bin EXISTE
+ * Si esta vacio el Bitmap, le carga la cantidad de bloques que dice el arhivo Metada
+ * y los setea a todos en 0. Despues crea a los Bloques (supongo que no existen)
+ * Si el Bitmap tiene datos supongo que ya existe los Bloques y algunos estan lleno y otros no
+ */
+
+void setear_bitarray(int nr_blocks)
+{
+	int i = 0;
+	char c;
+	char *root = string_duplicate(puntoDeMontaje);
+	string_append(&root,"/Metadata/Bitmap.bin");
+
+	FILE *fp;
+	fp = fopen(root, "r+b");
+	if(fp == NULL)
 	{
+		log_error(logger,"Hubo un error abriendo el bitmap.");
 		return;
 	}
-}
 
-void drop(char* parametro) {
+	fseek(fp, 0L, SEEK_END);
+	int file_size = ftell(fp);
 
-}
-
-//TODO: faltan todos los frees
-
-//--------------Basura que quiero guardar--------------------------------------------
-
-//----------Basura del bitMap en el config------------------------
-
-//	t_bitarray* bitMap = generarBitMap();
-//	bitarray_set_bit(bitMap,0);
-//	guardarBitMapEnConfig(bitMap);
-//	bitarray_destroy(bitMap);
-//	t_bitarray* bitMap2 = generarBitMap();
-//	testearBitMap(bitMap2);
-
-//----------------------------------------------------------------
-
-//t_bitarray* generarBitMap(){      //esto es rancio pero lo que sigue es peor lo100to
-//
-//	char* bitArray = config_get_string_value(bitMapMetadata,"BITMAP");
-//	t_bitarray* bitMap = bitarray_create(bitArray,string_length(bitArray));
-//	return bitMap;
-//}
-//
-//void guardarBitMapEnConfig(t_bitarray* bitMap){ //ESTA FUNCION ES LO MAS FEO QUE HICE EN MI VIDA, SI QUIEREN POR DISCORD EXPLICO EL PORQUE
-//
-//	//genero UN STRING CON LA ESTRUCTURA DEL ARRAY A PARTIR DE UN BITMAP KHE (horrible ya se)
-//	char* arrayEnString = string_new();
-//	string_append(&arrayEnString,"[");
-//	for(int i=0;i<cantidadBloques;i++){
-//		int bit = bitarray_test_bit(bitMap,i);
-//		string_append(&arrayEnString,string_itoa(bit));
-//		string_append(&arrayEnString,",");
-//	}
-//	int largo =string_length(arrayEnString);
-//	char* arrayEnStringSinComa = string_substring_until(arrayEnString,largo-1);
-//	string_append(&arrayEnStringSinComa,"]");
-//
-//	//guardo esta criatura del diablo en el CONFIG
-//	config_set_value(bitMapMetadata,"BITMAP",arrayEnStringSinComa);
-//}
-
-//----------------------------------------------------------------
-
-//----------Basura para probar algunas funciones---------
-
-//t_tablaEnMemTable* ultimaTabla(t_list* memTemp){
-//	return list_get(memTemp,memTemp->elements_count - 1);
-//}
-//
-//t_tablaEnMemTable* ultimoDato(t_list* datos){
-//	return list_get(datos,datos->elements_count - 1);
-//}
-void testearBitMap(t_bitarray* bitMap){
-	for(int i=0;i<cantidadBloques;i++){
-		int bit = bitarray_test_bit(bitMap,i);
-		printf("bittt:%i\n",bit);
+	if (file_size == 0){	//Bitmap vacio
+		fseek(fp, 0L, SEEK_SET);
+		for(i = 0; i < nr_blocks; i++){
+			bitarray_clean_bit(bitarray, i);
+			fprintf(fp, "%d",  bitarray_test_bit(bitarray, i));
+		}
+		crear_bloques_FS(nr_blocks);
+	}else{
+		printf("Bitmap ya seteado\n");
+		fseek(fp, 0L, SEEK_SET);
+		while(!feof(fp)){
+			c = fgetc(fp);
+			if(!feof(fp)){
+				if(atoi(&c) == 1){
+					bitarray_set_bit(bitarray, i);
+				}else{
+					bitarray_clean_bit(bitarray, i);
+				}
+				i++;
+			}
+		}
 	}
+	fclose(fp);
+	free(root);
 }
 
-//fseek(bin, 0, SEEK_END);
-//int tamanioArchivo = ftell(bin);
-//
-//char* bytes[20]; //este 20 es sumamente cuestionable, preguntar
-//sprintf(bytes, "%i", tamanioArchivo);
+void crear_bitarray(int nr_blocks){
+	char *data;
+	data = malloc(nr_blocks);
+	memset(data, '0', nr_blocks);
+
+	bitarray = bitarray_create_with_mode(data, nr_blocks, LSB_FIRST);
+	setear_bitarray(nr_blocks);
+}

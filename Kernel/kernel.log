@@ -316,3 +316,20 @@
 [INFO] 19:49:09:602 kernel/(9052:9061): Se acaba de conectar la memoria 420
 [INFO] 19:49:55:742 kernel/(9052:9080): 1000: NEW->READY
 [INFO] 19:49:55:743 kernel/(9052:9063): 1000: READY->EXEC
+[INFO] 15:03:42:59 kernel/(11531:11542): 1000: NEW->READY
+[INFO] 15:03:42:59 kernel/(11531:11537): 1000: READY->EXEC
+[ERROR] 15:03:42:59 kernel/(11531:11543): No hay memorias conectadas para ejecutar la request 3.
+[ERROR] 15:03:42:59 kernel/(11531:11543): Hubo un error en la ejecucion del script 1000
+[INFO] 15:03:42:59 kernel/(11531:11543): 1000: EXEC->EXIT
+[INFO] 15:03:48:770 kernel/(11531:11549): 1001: NEW->READY
+[INFO] 15:03:48:770 kernel/(11531:11537): 1001: READY->EXEC
+[INFO] 15:25:01:837 kernel/(12115:12139): 1000: NEW->READY
+[INFO] 15:25:01:837 kernel/(12115:12128): 1000: READY->EXEC
+[ERROR] 15:25:01:846 kernel/(12115:12140): No hay memorias conectadas para ejecutar la request 3.
+[ERROR] 15:25:01:847 kernel/(12115:12140): Hubo un error en la ejecucion del script 1000
+[INFO] 15:25:01:847 kernel/(12115:12140): 1000: EXEC->EXIT
+[INFO] 15:27:56:863 kernel/(12263:12280): 1000: NEW->READY
+[INFO] 15:27:56:863 kernel/(12263:12275): 1000: READY->EXEC
+[ERROR] 15:27:56:869 kernel/(12263:12282): No hay memorias conectadas para ejecutar la request 3.
+[ERROR] 15:27:56:871 kernel/(12263:12282): Hubo un error en la ejecucion del script 1000
+[INFO] 15:27:56:871 kernel/(12263:12282): 1000: EXEC->EXIT

@@ -1,6 +1,10 @@
 #ifndef REQUESTS_H_
 #define REQUESTS_H_
 
+#define SC 0
+#define SHC 1
+#define EC 2
+
 #define SELECT 0
 #define INSERT 1
 #define CREATE 2
@@ -11,31 +15,27 @@
 #define RUN 7
 #define METRICS 8
 
-#define SC 0
-#define SHC 1
-#define EC 2
-
 //Cosos de comunicacion:
 
 //Operaciones:
-#define HANDSHAKE 0
-#define GOSSIPING 1
-#define REQUEST 2
-#define REGISTRO 3
-#define DATO 4
-#define OP_JOURNAL 5
-#define RESPUESTA 6
-#define METADATAS 7
+#define HANDSHAKE 100
+#define GOSSIPING 101
+#define REQUEST 102
+#define REGISTRO 103
+#define DATO 104
+#define OP_JOURNAL 105
+#define RESPUESTA 106
+#define METADATAS 107
 
 //Respuestas:
-#define ERROR -1
+#define ERROR 0
 #define TODO_BIEN 1
-#define MEM_LLENA 2
+#define MEM_LLENA 200
 
 //Identificadores de modulo:
-#define KERNEL 0
-#define MEMORIA 1
-#define LFS 2
+#define KERNEL 300
+#define MEMORIA 301
+#define LFS 302
 
 #include<stdio.h>
 #include<stdlib.h>
@@ -74,25 +74,33 @@ typedef struct {
 	char* value;
 } registro;
 
-//Cosas de requests:
+//Analisis de requests:
 int esUnaRequestValida(char* requestEnString);
 int queRequestEs(char* palabra);
 int esUnParametroValido(int request, char* parametro);
 int queConsistenciaEs(char* string);
-void liberarArrayDeStrings(char** array);
+int esDescribeGlobal(request* request);
+
+//Cosas de requests:
 request* crearStructRequest(char* requestEnString);
 char* requestStructAString(request* request);
-int esDescribeGlobal(request* request);
 void liberarRequest(request* request);
 
+//MISC:
+int str_first_index_of(char c, char* cadena);
+int str_last_index_of(char c, char* cadena);
+int lista_vacia(t_list *lista);
+void liberarArrayDeStrings(char** array);
+void describirMetadatas(t_list* metadatas);
+
 //Comunicacion:
-void enviarInt(int aQuien,int intAEnviar);
-void enviarIntConHeader(int aQuien,int intAEnviar, int header);
+void enviarInt(int aQuien, int intAEnviar);
+void enviarIntConHeader(int aQuien, int intAEnviar, int header);
 void enviarVariosIntsConHeader(int aQuien, t_list* intsAEnviar, int header);
 int recibirInt(int deQuien, t_log* logger);
 
-void enviarStringConHeaderEId(int aQuien,char* string, int header, int id);
-void enviarStringConHeader(int aQuien,char* string , int header);
+void enviarStringConHeaderEId(int aQuien, char* string, int header, int id);
+void enviarStringConHeader(int aQuien, char* string, int header);
 char* recibirString(int deQuien, t_log* logger);
 
 void enviarRequestConHeaderEId(int aQuien, request* requestAEnviar, int header,

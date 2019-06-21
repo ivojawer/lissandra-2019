@@ -3,11 +3,13 @@
 #include <sys/socket.h>
 #include <commons/config.h>
 
-int socketALFS;
-
-void conexiones();
-int crearConexion(int);
 void messageHandler(char*,int);
-void primeraConexionKernel();
+void aceptarConexiones();
+int primeraConexionLFS();
 void conexionLFS();
 void comunicacionConKernel();
+void comunicacionConLFS();
+void manejoErrorKernel();
+void manejoErrorLFS();
+void enviarRespuestaAlKernel(int id, int respuesta);
+void conectarseAOtraMemoria(seed* laSeed);

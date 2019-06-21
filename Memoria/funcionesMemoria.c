@@ -3,8 +3,96 @@
 extern t_log* logger;
 extern t_config* config;
 extern t_list* tablaSegmentos;
-extern int caracMaxDeValue;
+extern int socketLFS;
+extern sem_t requestsDisponibles;
+extern t_list* colaDeRequests;
+extern int socketKernel;
 
+void ejecutarRequests() {
+
+	while (1) {
+
+		sem_wait(&requestsDisponibles);
+
+		requestConID* requestEID = list_get(colaDeRequests, 0);
+
+		request* requestAEjecutar = requestEID->laRequest;
+
+		switch (requestAEjecutar->requestEnInt) {
+		case SELECT: {
+
+			char* datoObtenido = Select(requestAEjecutar->parametros);
+
+			if (requestEID->idKernel) {
+
+				if (datoObtenido == NULL) {
+
+					enviarRespuestaAlKernel(requestEID->idKernel, ERROR);
+
+				} else {
+					enviarStringConHeaderEId(socketKernel, datoObtenido, DATO,
+							requestEID->idKernel);
+				}
+
+			}
+			break;
+		}
+
+		case INSERT: {
+
+			int resultado = insert(requestAEjecutar->parametros);
+
+			if (requestEID->idKernel) {
+				enviarRespuestaAlKernel(requestEID->idKernel, resultado);
+			}
+
+			break;
+		}
+
+		case DROP: {
+
+			int resultado = drop(requestAEjecutar->parametros);
+			if (requestEID->idKernel) {
+				enviarRespuestaAlKernel(requestEID->idKernel, resultado);
+			}
+			break;
+		}
+		case CREATE: {
+			int resultado = create(requestAEjecutar->parametros);
+			if (requestEID->idKernel) {
+				enviarRespuestaAlKernel(requestEID->idKernel, resultado);
+			}
+
+			break;
+		}
+		case DESCRIBE: {
+
+			t_list* resultado = describe(requestAEjecutar->parametros);
+
+			metadataTablaLFS* metadataPrueba = list_get(resultado,0);
+
+			if (requestEID->idKernel) {
+
+				if(metadataPrueba->consistencia == -1){
+					enviarRespuestaAlKernel(requestEID->idKernel, ERROR);
+				}
+				else
+				{
+					enviarMetadatasConHeaderEId(socketKernel,resultado,METADATAS,requestEID->idKernel);
+				}
+			}
+
+			break;
+		}
+		case JOURNAL: {
+			journal();
+			break;
+		}
+
+		}
+	}
+
+}
 
 //TABLA DE SEGMENTOS
 
@@ -94,91 +182,6 @@ pagina* nuevoDato(t_list* tablaPaginas, int flagModificado, int key,
 	return nuevaPagina;
 }
 
-void mandarAEjecutarRequest(request* requestAEjecutar) {
-
-	//Importante: Si el parametro es enteramente vacio, aca tiene que entrar aca como " ".
-
-	char* parametros = string_duplicate(requestAEjecutar->parametros);
-
-	switch (requestAEjecutar->requestEnInt) {
-	case SELECT:
-		;
-		{
-			pthread_t h_select;
-
-			pthread_create(&h_select, NULL, (void *) Select, parametros);
-
-			pthread_detach(h_select);
-
-			break;
-		}
-
-	case INSERT:
-		;
-		{
-			pthread_t h_insert;
-
-			pthread_create(&h_insert, NULL, (void *) insert, parametros);
-
-			pthread_detach(h_insert);
-
-			break;
-		}
-
-	case CREATE:
-		;
-
-		{
-			pthread_t h_create;
-
-			pthread_create(&h_create, NULL, (void *) create, parametros);
-
-			pthread_detach(h_create);
-
-			break;
-		}
-
-	case DESCRIBE:
-		;
-		{
-
-			pthread_t h_describe;
-
-			pthread_create(&h_describe, NULL, (void *) describe, parametros);
-
-			pthread_detach(h_describe);
-
-			break;
-		}
-
-	case DROP:
-		;
-		{
-
-			pthread_t h_drop;
-
-			pthread_create(&h_drop, NULL, (void *) drop, parametros);
-
-			pthread_detach(h_drop);
-
-			break;
-
-		}
-
-	}
-
-	liberarRequest(requestAEjecutar);
-}
-
-
-marco* getMarcoFromIndex(int nroFrame){
-	return comienzoMemoria + nroFrame * tamanioMarco;
-}
-
-marco* getMarcoFromPagina(pagina* pag){
-	return getMarcoFromIndex(pag->nroMarco);
-}
-
 segmento* encuentroTablaPorNombre(char* nombreTabla) {
 	bool comparoNombreTabla(segmento* segmentoAComparar) {
 		return strcmp(nombreTabla, segmentoAComparar->nombreDeTabla) == 0;
@@ -212,11 +215,13 @@ pagina* getPagina(int key, char* nombreTabla) { //retorna un NULL si no existe l
 		return NULL;
 }
 
-void Select(char* parametros) {
+char* Select(char* parametros) {
 	char** parametrosEnVector = string_n_split(parametros, 2, " ");
 	char* tabla = parametrosEnVector[0];
 	string_to_upper(tabla);
 	int key = atoi(parametrosEnVector[1]);
+
+	liberarArrayDeStrings(parametrosEnVector);
 
 	log_info(logger, "Select de tabla: %s - key: %d", tabla, key);
 
@@ -226,12 +231,26 @@ void Select(char* parametros) {
 		printf("Registro pedido: %s\n", &getMarcoFromPagina(paginaPedida)->value);
 	} else {
 		log_info(logger, "No encontre el dato, mandando request a LFS");
-		mandarALFS(SELECT, parametros);
+
+		mandarRequestALFS(SELECT, parametros);
+
+		int header = recibirInt(socketLFS, logger);
+		if (header != REQUEST) {
+			manejoErrorLFS();
+			return NULL;
+		}
+
+		char* dato = recibirString(socketLFS, logger);
+
+		if (!strcmp(dato, " ")) {
+			free(dato);
+			manejoErrorLFS();
+			return NULL;
+		}
+
+		return dato;
+
 	}
-	free(parametrosEnVector[0]);
-	free(parametrosEnVector[1]);
-	free(parametrosEnVector);
-	free(parametros); //si pruebo por codigo este free rompe porque no viene de un malloc.
 
 }
 
@@ -249,7 +268,7 @@ char* sacoComillas(char* cadena) {
 	return cadena;
 }
 
-void insert(char* parametros) {
+int insert(char* parametros) {
 
 	char** parametrosEnVector = string_n_split(parametros, 3, " ");
 
@@ -257,9 +276,13 @@ void insert(char* parametros) {
 	string_to_upper(tabla);
 	int key = atoi(parametrosEnVector[1]);
 	char* value = parametrosEnVector[2];
+
+	liberarArrayDeStrings(parametrosEnVector);
+
 	value = sacoComillas(value);
 	//value=string_substring_until(value,config_get_int_value(config,"CANT_MAX_CARAC")); //lo corta para que no ocupe mas de 20 caracteres
-	int timestamp = time(NULL) / 1000;
+
+	int timestamp = time(NULL) / 1000; //TODO: Hacer la adquisicion del timestamp consistente con el LFS
 
 	log_info(logger, "INSERT: Tabla:%s - key:%d - timestamp:%d - value:%s\n",
 			tabla, key, timestamp, value);
@@ -272,63 +295,88 @@ void insert(char* parametros) {
 
 		nuevoDato(tablaCreada->tablaDePaginas, 1, key, timestamp, value);
 		printf("dato insertado y tabla creada\n");
+		return 1;
 	} else {
 		pagina* datoEncontrado = encuentroDatoPorKey(tablaEncontrada, key);
 		if (datoEncontrado != NULL) {
 			log_info(logger, "tengo que actualizar el dato");
 			actualizoDato(datoEncontrado, value, timestamp);
 			printf("dato actualizado\n");
+			return 1;
 		} else {
 			log_info(logger, "tengo que cear el dato");
 			nuevoDato(tablaEncontrada->tablaDePaginas, 1, key, timestamp,
 					value);
 			printf("dato insertado\n");
+			return 1;
 		}
 	}
-	free(parametrosEnVector[0]);
-	free(parametrosEnVector[1]);
-	free(parametrosEnVector[2]);
-	free(parametrosEnVector);
-	free(parametros);
-}
-
-void create(char* parametros) {
-
-//	char** parametrosEnVector = string_n_split(parametros, 4, " ");
-//
-//	char* tabla = string_duplicate(parametrosEnVector[0]);
-//	char* consistencia = parametrosEnVector[1];
-//	int particiones = atoi(parametrosEnVector[2]);
-//	char* tiempoCompactacion = parametrosEnVector[3];
-//
-//	mandarCreateALFS(tabla,consistencia,particiones,tiempoCompactacion);
-//
-//	liberarArrayDeStrings(parametrosEnVector);
-
-	mandarALFS(CREATE, parametros);
-
-	free(parametros);
 
 }
 
-void mandarALFS(int requestAMandar, char* parametros) {
+int create(char* parametros) {
+
+	mandarRequestALFS(CREATE, parametros);
+
+	int header = recibirInt(socketLFS, logger);
+
+	if (header != RESPUESTA) {
+		manejoErrorLFS();
+		return -1;
+	}
+
+	int respuesta = recibirInt(socketLFS, logger);
+
+	return respuesta;
+
+}
+
+void mandarRequestALFS(int requestAMandar, char* parametros) {
+
 	request* nuevaRequest = malloc(sizeof(request));
 	nuevaRequest->requestEnInt = requestAMandar;
 	nuevaRequest->parametros = string_duplicate(parametros);
 
-	enviarRequestConHeader(socketALFS, nuevaRequest, REQUEST);
+	enviarRequestConHeader(socketLFS, nuevaRequest, REQUEST);
+
+	free(nuevaRequest->parametros);
+	free(nuevaRequest);
 }
-void describe(char* parametro) {
+t_list* describe(char* parametro) {
 
-	if (strcmp(parametro, " ")) //Si hay un parametro
-			{
+	mandarRequestALFS(CREATE, parametro);
 
-		return;
+	int header = recibirInt(socketLFS, logger);
+
+	t_list* metadatas;
+
+	if (header != RESPUESTA) {
+		manejoErrorLFS();
+		metadatas = list_create();
+
+		metadataTablaLFS* metadata = malloc(sizeof(metadataTablaLFS));
+		metadata->nombre = NULL;
+		metadata->consistencia = -1;
+		metadata->particiones = -1;
+		metadata->compactTime = -1;
+
+		list_add(metadatas, metadata);
+
+		return metadatas;
 	}
 
+	metadatas = recibirMetadatas(socketLFS, logger);
+
+	metadataTablaLFS* metadataPrueba = list_get(metadatas, 0);
+
+	if (metadataPrueba->compactTime != -1) {
+		describirMetadatas(metadatas);
+	}
+
+	return metadatas;
 }
 
-void drop(char* parametro) {
+int drop(char* parametro) {
 
 	void liberoDato(pagina* pag) {
 
@@ -350,12 +398,25 @@ void drop(char* parametro) {
 		}
 		list_remove_by_condition(tablaSegmentos,(void*)comparoNombreTabla);
 		printf("libere los datos y destruyo tabla paginas\n");
-		free(tablaADropear);
+
 		printf("tabla eliminada\n");
-		free(tabla);
+
 	}
-	mandarALFS(DROP, parametro);
-	free(parametro);
+	free(tablaADropear);
+	free(tabla);
+	mandarRequestALFS(DROP, parametro);
+
+	int header = recibirInt(socketLFS, logger);
+
+	if (header != REQUEST) {
+		manejoErrorLFS();
+		return 0;
+	}
+
+	int respuesta = recibirInt(socketLFS, logger);
+
+	return respuesta;
+
 }
 
 

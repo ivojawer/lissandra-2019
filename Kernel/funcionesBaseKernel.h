@@ -1,7 +1,7 @@
 #ifndef FUNCIONESBASEKERNEL_H_
 #define FUNCIONESBASEKERNEL_H_
 
-#define MAXBUFFER 100
+#define MAXBUFFER 300
 
 #define RAIZSCRIPTS "/home/utnso/workspace/tp-2019-1c-U-TN-Tecno/Kernel/scripts/"
 #define DIRCONFIG "/home/utnso/workspace/tp-2019-1c-U-TN-Tecno/CONFIG/kernel.config"
@@ -42,15 +42,19 @@ typedef struct {
 	time_t tiempoInicio;
 } tiempoDeOperacion;
 
-typedef struct{
-	int nombre;
-	int socket; //Algo asi
-	int* consistencias;
+typedef struct {
 	char* ip;
 	int puerto;
+	int* consistencias;
+	int nombre;
+	int socket;
+	int estaViva;
+	t_list* scriptsEsperando;
+	sem_t sem_cambioScriptsEsperando;
 } memoriaEnLista;
+
 void journal();
-char* leerLinea(char* direccion,int lineaALeer);
+char* leerLinea(char* direccion, int lineaALeer);
 int removerScriptDeLista(int id, t_list* lista);
 int encontrarScriptEnLista(int id, t_list* lista);
 int criterioDeTabla(char* nombreTabla);
@@ -64,10 +68,10 @@ int crearArchivoParaRequest(script* script, request* requestAArchivo);
 int moverScript(int scriptID, t_list* listaOrigen, t_list* listaDestino);
 void mostrarListaScripts(t_list* lista);
 void limpiarListasTiempos();
-int promedioDeTiemposDeOperaciones (t_list* tiempos);
-int esMasNuevoQue30Segundos (tiempoDeOperacion tiempoOperacion);
+int promedioDeTiemposDeOperaciones(t_list* tiempos);
+int esMasNuevoQue30Segundos(tiempoDeOperacion tiempoOperacion);
 void insertarTiempo(time_t tiempoInicial, time_t tiempoFinal, int request);
-t_list* filterCasero_esMasNuevoQue30Segundos (t_list* tiempos);
+t_list* filterCasero_esMasNuevoQue30Segundos(t_list* tiempos);
 void matarListas();
 int encontrarPosicionDeMemoria(int memoriaAEncontrar);
 int memoriaECSiguiente(int memoriaInicialEC);
@@ -79,9 +83,10 @@ int memoriaHash(int key);
 void matarMemoria(int nombreMemoria);
 int seedYaExiste(seed* unaSeed);
 void actualizarMetadatas(t_list* metadatas);
-void agregarUnaMetadata (metadataTablaLFS* unaMetadata);
+void agregarUnaMetadata(metadataTablaLFS* unaMetadata);
 int manejarRespuestaDeMemoria(script* elScript, request* laRequest, int memoria);
-
-
+int laMemoriaTieneConsistencias(memoriaEnLista* unaMemoria);
+void sacarScriptDeEspera(int nombreScript, memoriaEnLista* laMemoria);
+int existeTabla(char* nombreTabla);
 
 #endif /* FUNCIONESBASEKERNEL_H_ */

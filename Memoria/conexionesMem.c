@@ -1,64 +1,217 @@
 #include "conexionesMem.h"
 
 extern t_log* logger;
-extern t_list* seeds;
+extern sem_t requestsDisponibles;
+extern t_list* colaDeRequests;
+extern t_list* tablaGossiping;
+extern int nombreMemoria;
+extern sem_t sem_gossiping;
 int socketKernel;
 int socketLFS;
 
-void primeraConexionKernel() {
+int primeraConexionLFS() {
+
 	t_config* config = config_create(DIRCONFIG);
-	int puerto = config_get_int_value(config, "PUERTO_ESCUCHA");
 
-	int socketServidor = crearServidor(puerto);
+	char* ipLFS = string_duplicate(config_get_string_value(config, "IP_LFS"));
+	int puertoLFS = config_get_int_value(config, "PUERTO_LFS");
 
-	socketKernel = accept(socketServidor, (void*) NULL, NULL);
+	socketLFS = conectarseAServidor(ipLFS, puertoLFS);
+
+	enviarIntConHeader(socketLFS, MEMORIA, HANDSHAKE); //HANDSHAKE-MEMORIA
+
+	int headerRespuesta = recibirInt(socketLFS, logger);
+
+	if (headerRespuesta != HANDSHAKE) {
+		log_error(logger,
+				"Se envio un handshake al LFS y se devolvio otra cosa.");
+		close(socketLFS);
+		return -1;
+	}
+
+	int moduloConectado = recibirInt(socketLFS, logger);
+
+	if (moduloConectado != LFS) {
+		log_error(logger, "Se conecto algo que no es el LFS.");
+		close(socketLFS);
+		return -1;
+	}
+
+	int tamanioMaximoValue = recibirInt(socketLFS, logger);
+
+	config_destroy(config);
+
+	return tamanioMaximoValue;
+
+}
+
+void aceptarConexiones() {
+	t_config* config = config_create(DIRCONFIG);
+
+	int puertoServidor = config_get_int_value(config, "PUERTO_ESCUCHA");
+
+	int socketServidor = crearServidor(puertoServidor);
 
 	t_list* listaInts = list_create();
 
 	int nombreModulo = MEMORIA;
 
-	int nombreMemoria = config_get_int_value(config, "MEMORY_NUMBER");
+	list_add(listaInts, &nombreModulo);
+	list_add(listaInts, &nombreMemoria);
 
 	config_destroy(config);
+
+	while (1) {
+
+		int socketMisterioso = accept(socketServidor, (void*) NULL, NULL);
+
+		enviarVariosIntsConHeader(socketMisterioso, listaInts, HANDSHAKE); //HANDSHAKE-MEMORIA-NOMBRE
+
+		int operacion = recibirInt(socketMisterioso, logger);
+
+		if (operacion != HANDSHAKE) {
+			log_error(logger, "Se envio un handshake y se devolvio otra cosa.");
+			close(socketMisterioso);
+			continue;
+		}
+
+		int modulo = recibirInt(socketMisterioso, logger);
+
+		switch (modulo) {
+		case KERNEL: {
+			log_info(logger, "Se conecto el Kernel.");
+			socketKernel = socketMisterioso;
+			pthread_t h_conexionKernel;
+			pthread_create(&h_conexionKernel, NULL,
+					(void *) comunicacionConKernel,
+					NULL);
+			pthread_detach(h_conexionKernel);
+
+			continue;
+		}
+
+		case MEMORIA: {
+			int nombre = recibirInt(socketMisterioso, logger);
+
+			memoriaGossip* nuevaMemoriaConectada = malloc(
+					sizeof(memoriaGossip));
+			nuevaMemoriaConectada->nombre = nombre;
+			nuevaMemoriaConectada->elSocket = socketMisterioso;
+			nuevaMemoriaConectada->laSeed = NULL;
+
+			sem_wait(&sem_gossiping);
+
+			seed* seedDeLaMemoria = enviarYRecibirSeeds(nuevaMemoriaConectada);
+
+			if (seedDeLaMemoria->puerto == -1) {
+				log_error(logger, "Fallo la conexion a la memoria %i.", nombre);
+				close(socketMisterioso);
+				free(seedDeLaMemoria);
+				free(nuevaMemoriaConectada);
+				continue;
+			}
+
+			nuevaMemoriaConectada->laSeed = seedDeLaMemoria;
+
+			list_add(tablaGossiping, nuevaMemoriaConectada);
+
+			sem_post(&sem_gossiping);
+
+			log_info(logger, "Se conecto la memoria %i.", nombre);
+
+			continue;
+		}
+
+		default: {
+			log_error(logger, "Se conecto indebidamente algo.");
+			close(socketMisterioso);
+			continue;
+		}
+
+		}
+
+	}
+
+}
+
+void conectarseAOtraMemoria(seed* laSeed) { //Esto es secuencial al hilo de gossiping, no es necesario sincronizar
+
+	int socketMemoria = conectarseAServidor(laSeed->ip, laSeed->puerto);
+
+	if (socketMemoria == -1) {
+		return;
+	}
+
+	t_list* listaInts = list_create();
+
+	int nombreModulo = MEMORIA;
 
 	list_add(listaInts, &nombreModulo);
 	list_add(listaInts, &nombreMemoria);
 
-	enviarVariosIntsConHeader(listaInts, HANDSHAKE, socketKernel);
-
-	list_destroy(listaInts);
+	enviarVariosIntsConHeader(socketKernel, listaInts, HANDSHAKE); //HANDSHAKE-MEMORIA-NOMBRE
 
 	int operacion = recibirInt(socketKernel, logger);
 
 	if (operacion != HANDSHAKE) {
 		log_error(logger,
-				"Se envio un handshake al kernel y se devolvio otra cosa.");
+				"Se envio un handshake a una memoria y se devolvio otra cosa.");
+		list_destroy(listaInts);
+		close(socketMemoria);
 		return;
 	}
 
 	int modulo = recibirInt(socketKernel, logger);
 
-	if (modulo != KERNEL) {
-		log_error(logger, "Se conecto algo que no es el kernel.");
+	if (modulo != MEMORIA) {
+		log_error(logger,
+				"Se conecto indebidamente algo que no es una memoria.");
+		list_destroy(listaInts);
+		close(socketMemoria);
 		return;
 	}
 
-	comunicacionConKernel();
+	int nombre = recibirInt(socketKernel, logger);
 
-}
+	if (nombre == -1) {
+		log_error(logger, "Se recibio algo indebido de una memoria.");
+		list_destroy(listaInts);
+		close(socketMemoria);
+		return;
+	}
 
-void manejoErrorKernel() {
-	log_error(logger,
-			"Se recibio del kernel algo incorrecto, se va a cerrar la conexion.");
-	close(socketKernel);
+	memoriaGossip* nuevaMemoriaConectada = malloc(sizeof(memoriaGossip));
+	nuevaMemoriaConectada->nombre = nombre;
+	nuevaMemoriaConectada->elSocket = socketMemoria;
+	nuevaMemoriaConectada->laSeed = laSeed;
+
+	seed* respuesta = enviarYRecibirSeeds(nuevaMemoriaConectada);
+
+	if (respuesta->puerto == -1) {
+		log_error(logger, "Fallo la conexion a la memoria %i.", nombre);
+		close(socketMemoria);
+		free(respuesta);
+		free(nuevaMemoriaConectada);
+		free(laSeed->ip);
+		free(laSeed);
+		return;
+	}
+
+	log_info(logger, "Se conecto la memoria %i.", nombre);
+
+	list_add(tablaGossiping, nuevaMemoriaConectada);
+
 }
 
 void comunicacionConKernel() {
 	while (1) {
+
 		int operacion = recibirInt(socketKernel, logger);
 
 		switch (operacion) {
+
 		case REQUEST: {
+
 			int id = recibirInt(socketKernel, logger);
 
 			if (id == -1) {
@@ -73,18 +226,37 @@ void comunicacionConKernel() {
 				return;
 			}
 
-			//Hacer la request
+			requestConID* requestParaHilo = malloc(sizeof(requestConID));
+
+			requestParaHilo->laRequest = unaRequest;
+			requestParaHilo->idKernel = id;
+
+			list_add(colaDeRequests, requestParaHilo);
+			sem_post(&requestsDisponibles);
+
 			break;
 
 		}
 		case GOSSIPING: {
-			enviarSeedsConHeader(socketKernel, seeds, GOSSIPING);
+//			enviarSeedsConHeader(socketKernel, seeds, GOSSIPING);
 			continue;
 		}
 		case JOURNAL: {
-			journal();
+			request* unaRequest = malloc(sizeof(request));
+			unaRequest->requestEnInt = JOURNAL;
+			unaRequest->parametros = NULL;
+
+			requestConID* requestParaHilo = malloc(sizeof(requestConID));
+
+			requestParaHilo->laRequest = unaRequest;
+			requestParaHilo->idKernel = 0;
+
+			list_add(colaDeRequests, requestParaHilo);
+			sem_post(&requestsDisponibles);
+
 			continue;
 		}
+
 		default: {
 			manejoErrorKernel();
 			return;
@@ -130,4 +302,24 @@ void enviarInsert(registro reg){
 void conexionLFS() {
 	t_config* config = config_create(DIRCONFIG);
 	socketLFS = conectarseAServidor(config_get_string_value(config,"IP_FS"),config_get_int_value(config,"PUERTO_FS"));
+void enviarRespuestaAlKernel(int id, int respuesta) {
+	t_list* intsAEnviar = list_create();
+
+	list_add(intsAEnviar, &id);
+	list_add(intsAEnviar, &respuesta);
+
+	enviarVariosIntsConHeader(socketKernel, intsAEnviar,
+	RESPUESTA);
+}
+
+void manejoErrorKernel() {
+	log_error(logger,
+			"Se recibio del kernel algo incorrecto, se va a cerrar la conexion.");
+	close(socketKernel);
+}
+
+void manejoErrorLFS() {
+	log_error(logger,
+			"Se recibio del LFS algo incorrecto, se va a cerrar la conexion.");
+	close(socketLFS);
 }

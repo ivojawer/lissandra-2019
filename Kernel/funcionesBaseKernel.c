@@ -12,9 +12,10 @@ extern t_list* memorias;
 extern sem_t sem_tiemposInsert;
 extern sem_t sem_tiemposSelect;
 extern sem_t sem_actualizacionMetadatas;
-extern sem_t sem_cambioSleepEjecucion;
+extern sem_t sem_movimientoScripts;
+extern sem_t sem_borradoMemoria;
+extern sem_t sem_cambioMemoriaEC;
 extern int proximaMemoriaEC;
-extern int sleepEjecucion;
 extern t_log* logger;
 
 int encontrarScriptEnLista(int id, t_list* lista) {
@@ -111,8 +112,6 @@ int charsDeBuffer(char* buffer) {
 
 char* leerLinea(char* direccion, int lineaALeer) {
 
-	//TODO: Semaforo con crearArchivo?
-
 	FILE* archivo;
 	archivo = fopen(direccion, "r");
 	char* resultado = string_new();
@@ -144,18 +143,16 @@ char* leerLinea(char* direccion, int lineaALeer) {
 
 		if (i == lineaALeer) {
 
-			string_append(&resultado,resultadoDeLeer);
+			string_append(&resultado, resultadoDeLeer);
 
 			resultadoDeLeer = fgets(buffer, MAXBUFFER, archivo);
 
-			if (resultadoDeLeer == NULL)
-			{
+			if (resultadoDeLeer == NULL) {
 				string_append(&resultado, "\0");
-			}
-			else
-			{
+			} else {
 				char* resultadoAux = resultado;
-				resultado = string_substring_until(resultado,strlen(resultado)-1);
+				resultado = string_substring_until(resultado,
+						strlen(resultado) - 1);
 				free(resultadoAux);
 			}
 		}
@@ -200,13 +197,19 @@ char* nombreScript(script* script) {
 
 	if (script->esPorConsola) {
 
-		string_append(&nombre, leerLinea(script->direccionScript, 0));
+		if (strlen(script->direccionScript) > strlen(RAIZSCRIPTS)) {
+			char* nombreAux = string_substring_from(script->direccionScript,
+					sizeof(RAIZSCRIPTS) - 1);
 
-		char* nombreAux = nombre;
+			if (!strcmp(nombreAux, string_itoa(script->idScript))) {
+				string_append(&nombre, leerLinea(script->direccionScript, 0));
+			} else {
+				string_append(&nombre, script->direccionScript);
+			}
+		} else {
+			string_append(&nombre, script->direccionScript);
+		}
 
-		nombre = string_substring_until(nombre, strlen(nombre) - 1);
-
-		free(nombreAux);
 	}
 
 	else {
@@ -223,9 +226,8 @@ void mostrarListaScripts(t_list* lista) {
 		script* script = list_get(lista, i);
 
 		char* nombre = nombreScript(script);
-		printf("%s%i%s%i%s%s%s", "Script ", script->idScript,
-				": Lineas ejecutadas: ", script->lineasLeidas, ". Script: ",
-				nombre, "\n");
+		printf("ID script %i: Lineas ejecutadas: %i. Script: %s\n",
+				script->idScript, script->lineasLeidas, nombre);
 
 		free(nombre);
 	}
@@ -233,21 +235,21 @@ void mostrarListaScripts(t_list* lista) {
 
 int moverScript(int scriptID, t_list* listaOrigen, t_list* listaDestino) {
 
-	//TODO: Poner semaforos?
-
 	int index = encontrarScriptEnLista(scriptID, listaOrigen);
 
 	if (index == -1) {
 		return -1;
 	}
 
+	sem_wait(&sem_movimientoScripts);
 	script* script = list_get(listaOrigen, index);
 
-	if ((removerScriptDeLista(scriptID, listaOrigen)) == 0) {
-		return 0;
+	if ((removerScriptDeLista(scriptID, listaOrigen)) == -1) {
+		return -1;
 	}
 
 	list_add(listaDestino, script);
+	sem_post(&sem_movimientoScripts);
 
 	return 1;
 }
@@ -341,12 +343,10 @@ void limpiarListasTiempos() {
 
 void matarListaScripts(t_list* scripts) {
 
-	for (int i = 0; i < list_size(scripts); i++) {
-		script* elemento = list_get(scripts, i);
+	while (list_size(scripts) != 0) {
+		script* elemento = list_remove(scripts, 0);
 
 		free(elemento->direccionScript);
-
-		list_remove(scripts, i);
 	}
 
 	list_destroy(scripts);
@@ -406,8 +406,7 @@ int determinarAQueMemoriaEnviar(request* unaRequest) {
 
 	int criterio = criterioDeTabla(devolverTablaDeRequest(unaRequest));
 
-	if (criterio == -1) //No existe la tabla (TODO: Ver si esto se hace antes o que, tambien lo del CREATE)
-			{
+	if (criterio == -1) {
 		log_error(logger, "No se encontro la tabla %s en las metadatas.",
 				devolverTablaDeRequest(unaRequest));
 		return -1;
@@ -418,7 +417,7 @@ int determinarAQueMemoriaEnviar(request* unaRequest) {
 	case SC: {
 		for (int i = 0; i < list_size(memorias); i++) {
 			memoriaEnLista* unaMemoria = list_get(memorias, i);
-			if (unaMemoria->consistencias[SC] == SC) {
+			if (unaMemoria->consistencias[SC] == SC && unaMemoria->estaViva) {
 				return unaMemoria->nombre;
 			}
 		}
@@ -456,13 +455,18 @@ int determinarAQueMemoriaEnviar(request* unaRequest) {
 
 }
 
-int unaMemoriaCualquiera() //TODO: Ver si tiene que tener criterio o no
+int unaMemoriaCualquiera() //TODO: Repreguntar si tiene que tener criterio o no
 {
-	if (list_size(memorias) == 0) {
-		return -1;
+	for (int i = 0; i < list_size(memorias); i++) {
+		memoriaEnLista* unaMemoria = list_get(memorias, 0);
+
+		if (laMemoriaTieneConsistencias(unaMemoria) && unaMemoria->estaViva) {
+			return unaMemoria->nombre;
+		}
 	}
-	memoriaEnLista* unaMemoria = list_get(memorias, 0);
-	return unaMemoria->nombre;
+
+	return -1;
+
 }
 
 int memoriaHash(int key) {
@@ -483,28 +487,54 @@ int memoriaHash(int key) {
 	return key % cantidadMemoriasSHC;
 }
 
-void matarMemoria(int nombreMemoria) { //TODO: Semaforo?
+void matarMemoria(int nombreMemoria) {
+	//Esto virtualmente borra la memoria del sistema, no la borra completamente para que
+	//las cosas que la estan usando en el momento de borrarla no rompan pero que se enteren que se borro.
 
 	for (int i = 0; i < list_size(memorias); i++) {
 		memoriaEnLista* unaMemoria = list_get(memorias, i);
 
 		if (unaMemoria->nombre == nombreMemoria) {
+			sem_wait(&sem_borradoMemoria);
+
+			list_remove(memorias, i);
 
 			if (unaMemoria->nombre == proximaMemoriaEC) {
+
+				sem_wait(&sem_cambioMemoriaEC);
 				proximaMemoriaEC = memoriaECSiguiente(proximaMemoriaEC);
 
 				if (unaMemoria->nombre == proximaMemoriaEC) //Si es la unica EC
 						{
 					proximaMemoriaEC = -1;
 				}
+				sem_post(&sem_cambioMemoriaEC);
 			}
 
-			free(unaMemoria->consistencias);
+			unaMemoria->estaViva = 0;
 			free(unaMemoria->ip);
-			close(unaMemoria->socket);
 
-			list_remove(memorias, i);
-			free(unaMemoria);
+			close(unaMemoria->socket);
+			sem_post(&sem_borradoMemoria);
+
+			sem_wait(&unaMemoria->sem_cambioScriptsEsperando);
+			while (list_size(unaMemoria->scriptsEsperando) != 0) {
+
+				int* nombreScript = list_remove(unaMemoria->scriptsEsperando,
+						0);
+
+				int respuesta = ERROR;
+
+				int index = encontrarScriptEnLista(*nombreScript, listaEXEC);
+
+				script* elScript = list_get(listaEXEC, index);
+
+				elScript->resultadoDeEnvio = malloc(sizeof(int));
+				memcpy(elScript->resultadoDeEnvio, &respuesta, sizeof(int));
+
+				sem_post(&elScript->semaforoDelScript);
+			}
+			sem_post(&unaMemoria->sem_cambioScriptsEsperando);
 
 			return;
 		}
@@ -515,8 +545,13 @@ int seedYaExiste(seed* unaSeed) {
 	for (int i = 0; i < list_size(memorias); i++) {
 		memoriaEnLista* unaMemoria = list_get(memorias, i);
 
+		if (!unaMemoria->estaViva) {
+			continue;
+		}
+
 		if (!(strcmp(unaMemoria->ip, unaSeed->ip))
 				&& (unaSeed->puerto == unaMemoria->puerto)) {
+
 			return 1;
 		}
 	}
@@ -526,8 +561,10 @@ int seedYaExiste(seed* unaSeed) {
 void agregarUnaMetadata(metadataTablaLFS* unaMetadata) {
 	if (criterioDeTabla(unaMetadata->nombre) == -1) //Si no existe ya
 			{
+		sem_wait(&sem_actualizacionMetadatas);
 		list_add(listaTablas, unaMetadata);
-		log_info(logger, "Se agrego la tabla a las metadatas%s",
+		sem_post(&sem_actualizacionMetadatas);
+		log_info(logger, "Se agrego la tabla %s a las metadatas",
 				unaMetadata->nombre);
 	} else {
 		free(unaMetadata->nombre);
@@ -536,6 +573,7 @@ void agregarUnaMetadata(metadataTablaLFS* unaMetadata) {
 }
 
 void actualizarMetadatas(t_list* metadatas) {
+
 	sem_wait(&sem_actualizacionMetadatas);
 
 	while (list_size(listaTablas) != 0) {
@@ -549,7 +587,7 @@ void actualizarMetadatas(t_list* metadatas) {
 
 	listaTablas = metadatas;
 
-	log_info(logger, "Se termino de actualizar las metadatas");
+	log_info(logger, "Se termino de actualizar las metadatas.");
 
 	sem_post(&sem_actualizacionMetadatas);
 }
@@ -570,16 +608,36 @@ int manejarRespuestaDeMemoria(script* elScript, request* laRequest, int memoria)
 
 		journal();
 
+		sem_wait(&sem_borradoMemoria);
+
+		int index = encontrarPosicionDeMemoria(memoria);
+
+		if (index == -1) {
+			sem_post(&sem_borradoMemoria);
+			return -1;
+		}
+
 		memoriaEnLista* laMemoria = list_get(memorias,
 				encontrarPosicionDeMemoria(memoria));
-		sem_wait(&sem_cambioSleepEjecucion);
-		int tiempoDeSleep = sleepEjecucion;
-		sem_wait(&sem_cambioSleepEjecucion);
 
-		sleep(tiempoDeSleep);
+//		sem_wait(&sem_cambioSleepEjecucion);
+//		int tiempoDeSleep = sleepEjecucion;
+//		sem_wait(&sem_cambioSleepEjecucion);
+//
+//		sleep(tiempoDeSleep);
 
 		enviarRequestConHeaderEId(laMemoria->socket, laRequest, REQUEST,
 				elScript->idScript);
+
+		list_add(laMemoria->scriptsEsperando, &elScript->idScript);
+
+		sem_post(&sem_borradoMemoria);
+
+		sem_wait(&elScript->semaforoDelScript);
+
+		sem_wait(&laMemoria->sem_cambioScriptsEsperando);
+		sacarScriptDeEspera(elScript->idScript, laMemoria);
+		sem_post(&laMemoria->sem_cambioScriptsEsperando);
 
 		respuesta = manejarRespuestaDeMemoria(elScript, laRequest, memoria);
 	}
@@ -617,7 +675,9 @@ int manejarRespuestaDeMemoria(script* elScript, request* laRequest, int memoria)
 				actualizarMetadatas(metadatas);
 			} else {
 				metadataTablaLFS* laMetadata = list_get(metadatas, 0);
+				sem_wait(&sem_actualizacionMetadatas);
 				agregarUnaMetadata(laMetadata);
+				sem_post(&sem_actualizacionMetadatas);
 
 				list_destroy(metadatas);
 			}
@@ -637,5 +697,33 @@ int manejarRespuestaDeMemoria(script* elScript, request* laRequest, int memoria)
 
 	return respuesta;
 
+}
+
+int laMemoriaTieneConsistencias(memoriaEnLista* unaMemoria) {
+	if (!unaMemoria->estaViva) {
+		return -1;
+	}
+
+	if (unaMemoria->consistencias[SC] == -1
+			&& unaMemoria->consistencias[EC] == -1
+			&& unaMemoria->consistencias[SHC] == -1) {
+		return 0;
+	}
+	return 1;
+}
+
+void sacarScriptDeEspera(int nombreScript, memoriaEnLista* laMemoria) {
+	for (int i = 0; i < list_size(laMemoria->scriptsEsperando); i++) {
+		int* unScript = list_get(laMemoria->scriptsEsperando, i);
+
+		if (nombreScript == *unScript) {
+			list_remove(laMemoria->scriptsEsperando, i);
+			return;
+		}
+	}
+}
+
+int existeTabla(char* nombreTabla) {
+	return criterioDeTabla(nombreTabla) + 1;
 }
 
