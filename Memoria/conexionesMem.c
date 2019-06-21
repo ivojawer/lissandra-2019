@@ -291,7 +291,7 @@ void enviarInsert(registro reg){
 	string_append(parametros,keyEnString);
 	string_append_with_format(parametros," ",reg.value);
 	string_append_with_format(parametros," ",tsEnString);
-
+	printf("insert a enviar:%s",parametros);
 	free(keyEnString);
 	free(tsEnString);
 
@@ -299,27 +299,22 @@ void enviarInsert(registro reg){
 
 }
 
-void conexionLFS() {
-	t_config* config = config_create(DIRCONFIG);
-	socketLFS = conectarseAServidor(config_get_string_value(config,"IP_FS"),config_get_int_value(config,"PUERTO_FS"));
 void enviarRespuestaAlKernel(int id, int respuesta) {
 	t_list* intsAEnviar = list_create();
 
 	list_add(intsAEnviar, &id);
 	list_add(intsAEnviar, &respuesta);
 
-	enviarVariosIntsConHeader(socketKernel, intsAEnviar,
-	RESPUESTA);
+	enviarVariosIntsConHeader(socketKernel, intsAEnviar,RESPUESTA);
+}
+void manejoErrorLFS() {
+	log_error(logger,"Se recibio del LFS algo incorrecto, se va a cerrar la conexion.");
+	close(socketLFS);
 }
 
+
 void manejoErrorKernel() {
-	log_error(logger,
-			"Se recibio del kernel algo incorrecto, se va a cerrar la conexion.");
+	log_error(logger,"Se recibio del kernel algo incorrecto, se va a cerrar la conexion.");
 	close(socketKernel);
 }
 
-void manejoErrorLFS() {
-	log_error(logger,
-			"Se recibio del LFS algo incorrecto, se va a cerrar la conexion.");
-	close(socketLFS);
-}

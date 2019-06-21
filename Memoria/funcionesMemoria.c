@@ -141,7 +141,7 @@ void asignoPaginaEnMarco(int key, int timestamp, char* value,
 
 	void* marcoParaKey = mempcpy(comienzoMarco, &timestamp, sizeof(int));
 	void* marcoParaValue = mempcpy(marcoParaKey, &key, sizeof(int));
-	memcpy(marcoParaValue, value, caracMaxDeValue); //maximo carac string
+	strcpy(marcoParaValue, value); //maximo carac string
 //	log_info(logger,"Marco donde asigne: %p",comienzoMarco);
 }
 
@@ -165,13 +165,13 @@ pagina* nuevoDato(t_list* tablaPaginas, int flagModificado, int key,
 	nuevaPagina->flagModificado = flagModificado;
 
 	nuevaPagina->nroMarco = numeroMarcoDondeAlocar();
-//	printf("marco pagina a asigar en marco:%p\n", nuevaPagina->dato);
+	printf("marco pagina a asigar en marco:%d\n", nuevaPagina->nroMarco);
 
 	asignoPaginaEnMarco(key, timestamp, value, getMarcoFromPagina(nuevaPagina));
-//	nuevaPagina->dato =comienzoMemoria;
-//	asignoPaginaEnMarco(key,timestamp,value,comienzoMemoria);
 
-//	printf("value pagina a agregar: %s", &nuevaPagina->dato->value);
+
+
+	printf("value pagina a agregar: %s", &getMarcoFromPagina(nuevaPagina)->value);
 
 	list_add(tablaPaginas, nuevaPagina);
 
@@ -188,6 +188,11 @@ segmento* encuentroTablaPorNombre(char* nombreTabla) {
 	}
 
 	return list_find(tablaSegmentos, (void*) comparoNombreTabla);
+}
+
+marco* getMarcoFromPagina(pagina* pag){
+
+	return comienzoMemoria+pag->nroMarco*tamanioMarco;
 }
 
 pagina* encuentroDatoPorKey(segmento* tabla, int key) {
@@ -269,19 +274,19 @@ char* sacoComillas(char* cadena) {
 }
 
 int insert(char* parametros) {
-
 	char** parametrosEnVector = string_n_split(parametros, 3, " ");
 
 	char* tabla = parametrosEnVector[0];
 	string_to_upper(tabla);
 	int key = atoi(parametrosEnVector[1]);
+
 	char* value = parametrosEnVector[2];
 
 	liberarArrayDeStrings(parametrosEnVector);
 
 	value = sacoComillas(value);
-	//value=string_substring_until(value,config_get_int_value(config,"CANT_MAX_CARAC")); //lo corta para que no ocupe mas de 20 caracteres
 
+	//value=string_substring_until(value,config_get_int_value(config,"CANT_MAX_CARAC")); //lo corta para que no ocupe mas de 20 caracteres
 	int timestamp = time(NULL) / 1000; //TODO: Hacer la adquisicion del timestamp consistente con el LFS
 
 	log_info(logger, "INSERT: Tabla:%s - key:%d - timestamp:%d - value:%s\n",
@@ -380,7 +385,7 @@ int drop(char* parametro) {
 
 	void liberoDato(pagina* pag) {
 
-		int nroMarco = ((void*) getMarcoFromPagina(pag) - comienzoMemoria) / tamanioMarco;
+		int nroMarco = pag->nroMarco;
 		printf("nro de marco a dropear:%d\n", nroMarco);
 		marcos[nroMarco].vacio=true;
 		printf("cambie valores marco\n");
@@ -437,6 +442,7 @@ void journalPorSegmento(segmento* seg){
 	list_iterate(paginasModificadas,(void*)mandoPaginaComoInsert);
 	char* nombreTabla = string_duplicate(seg->nombreDeTabla);
 	drop(nombreTabla);
+	printf("termine journal de %s\n",seg->nombreDeTabla);
 }
 
 void journal() {
