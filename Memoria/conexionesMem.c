@@ -3,6 +3,7 @@
 extern t_log* logger;
 extern t_list* seeds;
 int socketKernel;
+int socketLFS;
 
 void primeraConexionKernel() {
 	t_config* config = config_create(DIRCONFIG);
@@ -94,6 +95,39 @@ void comunicacionConKernel() {
 
 }
 
-void conexionLFS() {
+char* ponerComillas(char* string){
+	printf("hola\n");
+	char* cadenaConComillas = malloc((string_length(string)+2)*sizeof(char));
+	*cadenaConComillas='"';
+	strcpy(&cadenaConComillas[1],string);
+	cadenaConComillas[string_length(string)+1]='"';
+	printf("con comillas:%s\n",cadenaConComillas);
+	return cadenaConComillas;
+}
 
+void enviarInsert(registro reg){
+
+	int lengthKey = snprintf( NULL, 0, "%d", reg.key );
+	char* keyEnString = malloc( lengthKey + 1 );
+	snprintf( keyEnString, lengthKey + 1, "%d", reg.key );
+
+	int lengthTS = snprintf( NULL, 0, "%d", reg.timestamp );
+	char* tsEnString = malloc( lengthTS + 1 );
+	snprintf( tsEnString, lengthTS + 1, "%d", reg.key );
+
+	char* parametros = "";
+	string_append(parametros,keyEnString);
+	string_append_with_format(parametros," ",reg.value);
+	string_append_with_format(parametros," ",tsEnString);
+
+	free(keyEnString);
+	free(tsEnString);
+
+	enviarStringConHeader(socketLFS,parametros,INSERT);
+
+}
+
+void conexionLFS() {
+	t_config* config = config_create(DIRCONFIG);
+	socketLFS = conectarseAServidor(config_get_string_value(config,"IP_FS"),config_get_int_value(config,"PUERTO_FS"));
 }

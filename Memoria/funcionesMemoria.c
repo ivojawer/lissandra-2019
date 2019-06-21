@@ -1,7 +1,10 @@
 #include "funcionesMemoria.h"
 
 extern t_log* logger;
+extern t_config* config;
 extern t_list* tablaSegmentos;
+extern int caracMaxDeValue;
+
 
 //TABLA DE SEGMENTOS
 
@@ -34,6 +37,7 @@ t_list* crearTablaPaginas() {
 	return list_create();
 }
 
+
 pagina* ultimaPagina(t_list* tablaPaginas){ //para testear
 	pagina* lastPagina = list_get(tablaPaginas,tablaPaginas->elements_count - 1);
 	return lastPagina ;
@@ -49,7 +53,7 @@ void asignoPaginaEnMarco(int key, int timestamp, char* value,
 
 	void* marcoParaKey = mempcpy(comienzoMarco, &timestamp, sizeof(int));
 	void* marcoParaValue = mempcpy(marcoParaKey, &key, sizeof(int));
-	memcpy(marcoParaValue, value, 20); //maximo carac string
+	memcpy(marcoParaValue, value, caracMaxDeValue); //maximo carac string
 //	log_info(logger,"Marco donde asigne: %p",comienzoMarco);
 }
 
@@ -64,9 +68,6 @@ int numeroMarcoDondeAlocar() {
 	return -1; //falta aplicar algoritmo LRU si no encontro ninguna libre
 }
 
-void* marcoDondeAlocar() {
-	return comienzoMemoria + numeroMarcoDondeAlocar() * tamanioMarco;
-}
 
 pagina* nuevoDato(t_list* tablaPaginas, int flagModificado, int key,
 		int timestamp, char* value) {
@@ -75,10 +76,10 @@ pagina* nuevoDato(t_list* tablaPaginas, int flagModificado, int key,
 
 	nuevaPagina->flagModificado = flagModificado;
 
-	nuevaPagina->dato = marcoDondeAlocar();
+	nuevaPagina->nroMarco = numeroMarcoDondeAlocar();
 //	printf("marco pagina a asigar en marco:%p\n", nuevaPagina->dato);
 
-	asignoPaginaEnMarco(key, timestamp, value, nuevaPagina->dato);
+	asignoPaginaEnMarco(key, timestamp, value, getMarcoFromPagina(nuevaPagina));
 //	nuevaPagina->dato =comienzoMemoria;
 //	asignoPaginaEnMarco(key,timestamp,value,comienzoMemoria);
 
@@ -88,7 +89,7 @@ pagina* nuevoDato(t_list* tablaPaginas, int flagModificado, int key,
 
 	pagina* paginaAgregada = ultimaPagina(tablaPaginas); //para testear
 	log_info(logger, "value de mi pagina agregada: %s",
-			&paginaAgregada->dato->value);
+			&getMarcoFromPagina(paginaAgregada)->value);
 
 	return nuevaPagina;
 }
@@ -169,6 +170,15 @@ void mandarAEjecutarRequest(request* requestAEjecutar) {
 	liberarRequest(requestAEjecutar);
 }
 
+
+marco* getMarcoFromIndex(int nroFrame){
+	return comienzoMemoria + nroFrame * tamanioMarco;
+}
+
+marco* getMarcoFromPagina(pagina* pag){
+	return getMarcoFromIndex(pag->nroMarco);
+}
+
 segmento* encuentroTablaPorNombre(char* nombreTabla) {
 	bool comparoNombreTabla(segmento* segmentoAComparar) {
 		return strcmp(nombreTabla, segmentoAComparar->nombreDeTabla) == 0;
@@ -180,7 +190,7 @@ segmento* encuentroTablaPorNombre(char* nombreTabla) {
 pagina* encuentroDatoPorKey(segmento* tabla, int key) {
 	bool comparoKey(pagina* pag) {
 //		printf("key a comparar:%d - key encontrada:%d\n", key, pag->dato->key);
-		return pag->dato->key == key;
+		return getMarcoFromPagina(pag)->key == key;
 	}
 	return list_find(tabla->tablaDePaginas, (void*) comparoKey);
 
@@ -195,7 +205,7 @@ pagina* getPagina(int key, char* nombreTabla) { //retorna un NULL si no existe l
 				tabla->nombreDeTabla);
 		pagina* dato = encuentroDatoPorKey(tabla, key);
 		log_info(logger, "Encontre un dato con el value: %s",
-				&dato->dato->value);
+				&getMarcoFromPagina(dato)->value);
 
 		return dato;
 	} else
@@ -213,7 +223,7 @@ void Select(char* parametros) {
 	pagina* paginaPedida = getPagina(key, tabla);
 
 	if (paginaPedida != NULL) {
-		printf("Registro pedido: %s\n", &paginaPedida->dato->value);
+		printf("Registro pedido: %s\n", &getMarcoFromPagina(paginaPedida)->value);
 	} else {
 		log_info(logger, "No encontre el dato, mandando request a LFS");
 		mandarALFS(SELECT, parametros);
@@ -226,8 +236,8 @@ void Select(char* parametros) {
 }
 
 void actualizoDato(pagina* pagina, char* nuevoValue, int nuevoTimestamp) {
-	strcpy(&pagina->dato->value, nuevoValue);
-	pagina->dato->timestamp = nuevoTimestamp;
+	strcpy(&getMarcoFromPagina(pagina)->value, nuevoValue);
+	getMarcoFromPagina(pagina)->timestamp = nuevoTimestamp;
 
 }
 
@@ -322,7 +332,7 @@ void drop(char* parametro) {
 
 	void liberoDato(pagina* pag) {
 
-		int nroMarco = ((void*) pag->dato - comienzoMemoria) / tamanioMarco;
+		int nroMarco = ((void*) getMarcoFromPagina(pag) - comienzoMemoria) / tamanioMarco;
 		printf("nro de marco a dropear:%d\n", nroMarco);
 		marcos[nroMarco].vacio=true;
 		printf("cambie valores marco\n");
@@ -348,6 +358,36 @@ void drop(char* parametro) {
 	free(parametro);
 }
 
-void journal() {
 
+void mandoPaginaComoInsert(pagina* pag){
+	registro pagAMandar;
+	marco* frame = getMarcoFromPagina(pag);
+	pagAMandar.key=frame->key;
+	pagAMandar.timestamp = frame->timestamp;
+	pagAMandar.value = &frame->value;
+	enviarInsert(pagAMandar);
 }
+
+void journalPorSegmento(segmento* seg){
+	bool estaModificada(pagina* pag){
+		return pag->flagModificado;
+	}
+	t_list* paginasModificadas=list_filter(seg->tablaDePaginas,(void*)estaModificada);
+	list_iterate(paginasModificadas,(void*)mandoPaginaComoInsert);
+	char* nombreTabla = string_duplicate(seg->nombreDeTabla);
+	drop(nombreTabla);
+}
+
+void journal() {
+	list_iterate(tablaSegmentos,(void*)journalPorSegmento);
+}
+
+
+
+void journalAutomatico(){
+	while(true){
+
+		sleep(config_get_int_value(config,"RETARDO_GOSSIPING"));
+	}
+}
+

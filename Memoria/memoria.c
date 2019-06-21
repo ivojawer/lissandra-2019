@@ -3,15 +3,16 @@
 t_log* logger;
 t_list* tablaSegmentos;
 t_list* seeds;
-
+int caracMaxDeValue;
+t_config* config;
 int main() {
 
 	logger = log_create("memoria.log", "memoria", 1, 0); //3er parametro en 1 para mostrarlos en consola. Sino en 0
 
-	t_config* config = config_create(DIRCONFIG); //DUDA: Si es un config por memoria esto va en la carpeta CONFIG tmb  lo hago una por proyecto como aca
+	config = config_create(DIRCONFIG); //DUDA: Si es un config por memoria esto va en la carpeta CONFIG tmb  lo hago una por proyecto como aca
 
 	int tamanioMemoria = config_get_int_value(config, "TAM_MEM");
-	int caracMaxDeValue = config_get_int_value(config, "CANT_MAX_CARAC");
+	caracMaxDeValue = 20;//viene del handshake
 
 	config_destroy(config);
 
@@ -22,7 +23,7 @@ int main() {
 	//printf("comienzo memoria:%p\n", comienzoMemoria);
 	//divido en marcos
 
-	tamanioMarco = caracMaxDeValue * sizeof(char) + sizeof(int) + sizeof(int); //value + key + timestamp
+	tamanioMarco = caracMaxDeValue * sizeof(char) + sizeof(int) + sizeof(unsigned long); //value + key + timestamp
 	log_info(logger,"el tamanio de mi marco es: %d", tamanioMarco);
 	cantMarcos = tamanioMemoria/tamanioMarco; //tamanio marco siempre es mult de 2 asi que da redondo
 	log_info(logger,"cantidad de marcos: %d",cantMarcos);
@@ -34,6 +35,8 @@ int main() {
 	tablaSegmentos = crearTablaSegmentos();
 
 //	cargarSeedsIniciales();
+	ponerComillas("hola");
+	conexionLFS();
 
 	pthread_t h_consola;
 	pthread_t h_conexionKernel;
