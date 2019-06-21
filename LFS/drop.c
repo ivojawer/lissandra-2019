@@ -1,5 +1,6 @@
 #include "funcionesLFS.h"
 
+extern void liberar_tabla(void *elemento);
 extern char* puntoDeMontaje;
 
 void iterar_busqueda_de_bloques(void (foo)(char *, int, int, t_list *),
@@ -87,6 +88,12 @@ void rutina_drop(char* comando) {
 	sem_wait(&dump_semaphore);
 	if (existe_tabla(tabla)){
 		eliminar_tabla(tabla);
+
+		t_list *tabla_encontrada = list_create();
+		tabla_encontrada = filtrar_tabla_memtable(tabla);
+		if(!lista_vacia(tabla_encontrada)){
+			liberar_tabla(tabla);
+		}
 	}else{
 		printf("La tabla no se encuentra en el sistema\n");
 	}

@@ -212,7 +212,8 @@ void agregar_bloque_particion(void *elemento) {
 
 void liberar_elementos_particiones(void *elemento) {
 	t_particion *particion = elemento;
-	void liberar_elementos_particion(void *elemento) {
+	void liberar_elementos_particion(void *elemento){
+		if(elemento != NULL)
 		return registro_destroy((t_registro *) elemento);
 	}
 	list_iterate(particion->lista_registros, liberar_elementos_particion);
@@ -220,20 +221,25 @@ void liberar_elementos_particiones(void *elemento) {
 
 void liberar_tabla(void *elemento) {
 	t_tabla *tabla = elemento;
+	if(tabla != NULL){
 	void liberar_elementos_tabla(void *elemento) {
-		return liberar_elementos_particiones(elemento);
+		if(elemento != NULL)
+			return liberar_elementos_particiones(elemento);
 	}
-	list_iterate(tabla->lista_particiones, liberar_elementos_tabla);
 
-	void liberar_particiones(void *elemento) {
-		return particion_destroy((t_particion *) elemento);
+	if(list_size(tabla->lista_particiones) > 0){
+		list_iterate(tabla->lista_particiones, liberar_elementos_tabla);
+
+		void liberar_particiones(void *elemento) {
+			if(elemento != NULL)
+				return particion_destroy((t_particion *) elemento);
+		}
+		list_iterate(tabla->lista_particiones, liberar_particiones);
 	}
-	list_iterate(tabla->lista_particiones, liberar_particiones);
-
-	tabla_destroy(tabla);
+	}
 }
 
-void liberar_memtable_aux() {
+void liberar_memtable() {
 	void liberar_elementos(void *elemento) {
 		return liberar_tabla(elemento);
 	}

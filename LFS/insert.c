@@ -16,8 +16,10 @@ t_registro *crear_registro(unsigned long timestamp, uint16_t key, char *value)
 
 void registro_destroy(t_registro *self)
 {
-	free(self->value);
-	free(self);
+	if(self != NULL){
+		free(self->value);
+		free(self);
+	}
 }
 
 
@@ -33,8 +35,11 @@ t_particion *crear_particion_memtable(int size, int particion_buscar)
 
 void particion_destroy(t_particion *self)
 {
-	free(self->lista_registros);
-	free(self);
+	if(self != NULL){
+		if(self->lista_registros != NULL)
+			free(self->lista_registros);
+		free(self);
+	}
 }
 
 t_particion *agregar_registro_en_particion_nueva(t_particion *nueva_particion, t_registro *registro_nuevo)
