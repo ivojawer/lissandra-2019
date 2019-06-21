@@ -219,9 +219,8 @@ void comunicacionConMemoria(memoriaEnLista* memoria) {
 
 			t_list* seeds = recibirSeeds(socketMemoria, logger);
 
-			if (list_size(seeds) == 0) { //TODO: Preguntar si se puede llegar a recibir una lista de seeds sin nada
-				manejoErrorMemoria(memoria->nombre);
-				return;
+			if (list_size(seeds) == 0) {
+				continue; //TODO: Pensar esto mmmmmMMMMmmm
 			}
 
 			pthread_t h_gossiping;
@@ -264,6 +263,8 @@ void comunicacionConMemoria(memoriaEnLista* memoria) {
 				list_destroy(metadatas);
 				return;
 			}
+
+			//TODO: Que hacer con lista vacia
 
 			int respuesta = 1;
 

@@ -93,6 +93,14 @@ void aceptarConexiones() {
 		case MEMORIA: {
 			int nombre = recibirInt(socketMisterioso, logger);
 
+			sem_wait(&sem_gossiping);
+			if (nombre == -1 || memoriaYaEstaConectada(nombre)) { //Si la memoria ya esta conectada, ya se conoce su seed
+				close(socketMisterioso);
+				sem_post(&sem_gossiping);
+				continue;
+			}
+			sem_post(&sem_gossiping);
+
 			memoriaGossip* nuevaMemoriaConectada = malloc(
 					sizeof(memoriaGossip));
 			nuevaMemoriaConectada->nombre = nombre;
@@ -101,17 +109,16 @@ void aceptarConexiones() {
 
 			sem_wait(&sem_gossiping);
 
-			seed* seedDeLaMemoria = enviarYRecibirSeeds(nuevaMemoriaConectada);
+			int respuesta = enviarYRecibirSeeds(nuevaMemoriaConectada);
 
-			if (seedDeLaMemoria->puerto == -1) {
+			if (respuesta == -1) {
 				log_error(logger, "Fallo la conexion a la memoria %i.", nombre);
 				close(socketMisterioso);
-				free(seedDeLaMemoria);
 				free(nuevaMemoriaConectada);
 				continue;
 			}
 
-			nuevaMemoriaConectada->laSeed = seedDeLaMemoria;
+			nuevaMemoriaConectada->laSeed = NULL;
 
 			list_add(tablaGossiping, nuevaMemoriaConectada);
 
@@ -180,26 +187,39 @@ void conectarseAOtraMemoria(seed* laSeed) { //Esto es secuencial al hilo de goss
 		return;
 	}
 
+	sem_wait(&sem_gossiping);
+	if (memoriaYaEstaConectada(nombre)) {
+
+		int index = posicionMemoriaEnLista(nombre);
+
+		memoriaGossip* memoriaYaConectada = list_get(tablaGossiping,index);
+		memoriaYaConectada->laSeed = laSeed;
+		sem_post(&sem_gossiping);
+		return;
+
+	}
+
 	memoriaGossip* nuevaMemoriaConectada = malloc(sizeof(memoriaGossip));
 	nuevaMemoriaConectada->nombre = nombre;
 	nuevaMemoriaConectada->elSocket = socketMemoria;
 	nuevaMemoriaConectada->laSeed = laSeed;
 
-	seed* respuesta = enviarYRecibirSeeds(nuevaMemoriaConectada);
+	int respuesta = enviarYRecibirSeeds(nuevaMemoriaConectada);
 
-	if (respuesta->puerto == -1) {
+	if (respuesta == -1) {
 		log_error(logger, "Fallo la conexion a la memoria %i.", nombre);
 		close(socketMemoria);
-		free(respuesta);
 		free(nuevaMemoriaConectada);
 		free(laSeed->ip);
 		free(laSeed);
 		return;
 	}
 
-	log_info(logger, "Se conecto la memoria %i.", nombre);
-
 	list_add(tablaGossiping, nuevaMemoriaConectada);
+
+	sem_post(&sem_gossiping);
+
+	log_info(logger, "Se conecto a la memoria %i.", nombre);
 
 }
 
@@ -267,36 +287,67 @@ void comunicacionConKernel() {
 
 }
 
-char* ponerComillas(char* string){
+char* ponerComillas(char* string) {
 	printf("hola\n");
-	char* cadenaConComillas = malloc((string_length(string)+2)*sizeof(char));
-	*cadenaConComillas='"';
-	strcpy(&cadenaConComillas[1],string);
-	cadenaConComillas[string_length(string)+1]='"';
-	printf("con comillas:%s\n",cadenaConComillas);
+	char* cadenaConComillas = malloc(
+			(string_length(string) + 2) * sizeof(char));
+	*cadenaConComillas = '"';
+	strcpy(&cadenaConComillas[1], string);
+	cadenaConComillas[string_length(string) + 1] = '"';
+	printf("con comillas:%s\n", cadenaConComillas);
 	return cadenaConComillas;
 }
 
-void enviarInsert(registro reg){
+void enviarInsert(registro reg) {
 
-	int lengthKey = snprintf( NULL, 0, "%d", reg.key );
-	char* keyEnString = malloc( lengthKey + 1 );
-	snprintf( keyEnString, lengthKey + 1, "%d", reg.key );
+	int lengthKey = snprintf( NULL, 0, "%d", reg.key);
+	char* keyEnString = malloc(lengthKey + 1);
+	snprintf(keyEnString, lengthKey + 1, "%d", reg.key);
 
-	int lengthTS = snprintf( NULL, 0, "%d", reg.timestamp );
-	char* tsEnString = malloc( lengthTS + 1 );
-	snprintf( tsEnString, lengthTS + 1, "%d", reg.key );
+	int lengthTS = snprintf( NULL, 0, "%d", reg.timestamp);
+	char* tsEnString = malloc(lengthTS + 1);
+	snprintf(tsEnString, lengthTS + 1, "%d", reg.key);
 
 	char* parametros = "";
-	string_append(parametros,keyEnString);
-	string_append_with_format(parametros," ",reg.value);
-	string_append_with_format(parametros," ",tsEnString);
-	printf("insert a enviar:%s",parametros);
+	string_append(parametros, keyEnString);
+	string_append_with_format(parametros, " ", reg.value);
+	string_append_with_format(parametros, " ", tsEnString);
+	printf("insert a enviar:%s", parametros);
 	free(keyEnString);
 	free(tsEnString);
 
-	enviarStringConHeader(socketLFS,parametros,INSERT);
+	enviarStringConHeader(socketLFS, parametros, INSERT);
 
+}
+
+int memoriaYaEstaConectada(int nombreMemoria) { //Sincronizar por afuera
+
+	int esLaMismaMemoria(memoriaGossip* otraMemoria) {
+		if (otraMemoria->nombre == nombreMemoria) {
+			return 1;
+		}
+		return 0;
+	}
+
+	int resultado = list_any_satisfy(tablaGossiping, (void*) esLaMismaMemoria);
+
+
+	return resultado;
+}
+
+int posicionMemoriaEnLista(int nombreMemoria) { //Sincronizar por afuera
+
+	int esLaMismaMemoria(memoriaGossip* otraMemoria) {
+		if (otraMemoria->nombre == nombreMemoria) {
+			return 1;
+		}
+		return 0;
+	}
+
+	int* resultado = list_find(tablaGossiping, (void*) esLaMismaMemoria);
+
+
+	return *resultado;
 }
 
 void enviarRespuestaAlKernel(int id, int respuesta) {
@@ -305,16 +356,17 @@ void enviarRespuestaAlKernel(int id, int respuesta) {
 	list_add(intsAEnviar, &id);
 	list_add(intsAEnviar, &respuesta);
 
-	enviarVariosIntsConHeader(socketKernel, intsAEnviar,RESPUESTA);
+	enviarVariosIntsConHeader(socketKernel, intsAEnviar, RESPUESTA);
 }
 void manejoErrorLFS() {
-	log_error(logger,"Se recibio del LFS algo incorrecto, se va a cerrar la conexion.");
+	log_error(logger,
+			"Se recibio del LFS algo incorrecto, se va a cerrar la conexion.");
 	close(socketLFS);
 }
 
-
 void manejoErrorKernel() {
-	log_error(logger,"Se recibio del kernel algo incorrecto, se va a cerrar la conexion.");
+	log_error(logger,
+			"Se recibio del kernel algo incorrecto, se va a cerrar la conexion.");
 	close(socketKernel);
 }
 

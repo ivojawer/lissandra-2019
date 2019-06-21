@@ -232,8 +232,11 @@ char* Select(char* parametros) {
 
 	pagina* paginaPedida = getPagina(key, tabla);
 
+	char* dato;
+
 	if (paginaPedida != NULL) {
-		printf("Registro pedido: %s\n", &getMarcoFromPagina(paginaPedida)->value);
+		dato = string_duplicate(&getMarcoFromPagina(paginaPedida)->value);
+		printf("Registro pedido: %s\n", dato);
 	} else {
 		log_info(logger, "No encontre el dato, mandando request a LFS");
 
@@ -245,7 +248,7 @@ char* Select(char* parametros) {
 			return NULL;
 		}
 
-		char* dato = recibirString(socketLFS, logger);
+		dato = recibirString(socketLFS, logger);
 
 		if (!strcmp(dato, " ")) {
 			free(dato);
@@ -253,9 +256,9 @@ char* Select(char* parametros) {
 			return NULL;
 		}
 
-		return dato;
-
 	}
+
+	return dato;
 
 }
 
@@ -378,6 +381,8 @@ t_list* describe(char* parametro) {
 		describirMetadatas(metadatas);
 	}
 
+	//TODO: Hacer algo en particular si llega una lista vacia?
+
 	return metadatas;
 }
 
@@ -448,8 +453,6 @@ void journalPorSegmento(segmento* seg){
 void journal() {
 	list_iterate(tablaSegmentos,(void*)journalPorSegmento);
 }
-
-
 
 void journalAutomatico(){
 	while(true){

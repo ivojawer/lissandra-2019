@@ -1,6 +1,7 @@
 #include "gossiping.h"
 extern t_log* logger;
 extern sem_t sem_gossiping;
+extern sem_t sem_cargarSeeds;
 t_list* seedsConocidas;
 t_list* tablaGossiping;
 
@@ -8,9 +9,9 @@ void hacerGossipingAutomatico() {
 
 	cargarSeedsIniciales();
 
-	t_list* tablaGossiping = list_create();
+	tablaGossiping = list_create();
 
-	gossiping();
+	gossiping(); //Gossip inicial
 
 	while (1) {
 
@@ -22,8 +23,6 @@ void hacerGossipingAutomatico() {
 
 		gossiping();
 
-
-
 	}
 }
 
@@ -34,10 +33,9 @@ void gossiping() {
 	for (int i = 0; i < list_size(tablaGossiping); i++) {
 		memoriaGossip* unaMemoria = list_get(tablaGossiping, i);
 
-		seed* resultado = enviarYRecibirSeeds(unaMemoria);
+		int resultado = enviarYRecibirSeeds(unaMemoria);
 
-		if (resultado->puerto == -1) {
-			free(resultado);
+		if (resultado == -1) {
 			i--; //Se borro la memoria de la lista, por lo que el contador tiene que quedarse en la misma posicion para no saltearse una memoria.
 		}
 
@@ -57,6 +55,7 @@ void sacarMemoriaDeTablaGossip(memoriaGossip* unaMemoria) {
 		return 0;
 	}
 
+	sem_wait(&sem_gossiping);
 	int* index = list_find(tablaGossiping, (void*) esLaMismaMemoria);
 
 	list_remove(tablaGossiping, *index);
@@ -64,12 +63,13 @@ void sacarMemoriaDeTablaGossip(memoriaGossip* unaMemoria) {
 	close(unaMemoria->elSocket);
 
 	free(unaMemoria);
+	sem_post(&sem_gossiping);
 
 	//No liberar la seed, es el mismo seed* que el de la lista de seedsConocidas.
 
 }
 
-seed* enviarYRecibirSeeds(memoriaGossip* memoriaDestino) {
+int enviarYRecibirSeeds(memoriaGossip* memoriaDestino) {
 
 	int seedEstaConectada(seed* unaSeed) {
 
@@ -84,6 +84,8 @@ seed* enviarYRecibirSeeds(memoriaGossip* memoriaDestino) {
 		return !list_any_satisfy(seedsConocidas, (void*) tienenLaMismaSeed);
 	}
 
+	sem_wait(&sem_cargarSeeds);
+
 	t_list* seedsConectadas = list_filter(seedsConocidas,
 			(void*) seedEstaConectada);
 
@@ -95,28 +97,44 @@ seed* enviarYRecibirSeeds(memoriaGossip* memoriaDestino) {
 
 	t_list* seedsRecibidas = recibirSeeds(memoriaDestino->elSocket, logger);
 
-	if (operacion != GOSSIPING || list_size(seedsRecibidas) == 0) {
+	//TODO: Hacer algo en particular si llega una lista vacia?
+
+	if (operacion != GOSSIPING) {
 		sacarMemoriaDeTablaGossip(memoriaDestino);
 
-		seed* seedFallida = malloc(sizeof(seed));
-		seedFallida->puerto = -1;
-		seedFallida->ip = NULL;
+		sem_post(&sem_cargarSeeds);
 
-		return seedFallida;
+		return -1;
 	}
 
+	if (list_size(seedsRecibidas) != 0) {
+
+		seed* seedPrueba = list_get(seedsRecibidas, 0);
+		if (seedPrueba->puerto == -1) {
+			sacarMemoriaDeTablaGossip(memoriaDestino);
+
+			sem_post(&sem_cargarSeeds);
+
+			return -1;
+		}
+	}
 	t_list* seedsNuevas = list_filter(seedsRecibidas, (void*) seedNoExiste);
 
 	list_add_all(seedsConocidas, seedsNuevas);
 
-	seed* seedDeQuienSeEnvio = list_get(seedsRecibidas, 0); //Por convencion la primera es la seed de la memoria misma
+	list_destroy(seedsRecibidas); //TODO: Liberar las seeds que no estan en seedsNuevas
 
-	list_destroy(seedsRecibidas); //TODO: Liberar las seeds que no estan en seedsNuevas excepto la primera
+	sem_post(&sem_cargarSeeds);
 
-	return seedDeQuienSeEnvio; //Esto es para que ande el aceptar conexion memoria
+	return 1;
 }
 
 int esLaMismaSeed(seed* unaSeed, seed* otraSeed) {
+
+	if (unaSeed == NULL || otraSeed == NULL) {
+		return 0;
+	}
+
 	if ((unaSeed->puerto == otraSeed->puerto)
 			&& !strcmp(unaSeed->ip, otraSeed->ip)) {
 		return 1;
@@ -127,6 +145,7 @@ int esLaMismaSeed(seed* unaSeed, seed* otraSeed) {
 int seedNoEstaConectada(seed* unaSeed) {
 
 	int tienenLaMismaSeed(memoriaGossip* memoriaConectada) {
+
 		return esLaMismaSeed(unaSeed, memoriaConectada->laSeed);
 	}
 

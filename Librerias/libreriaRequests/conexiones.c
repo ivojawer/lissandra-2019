@@ -161,7 +161,13 @@ void enviarRequestConHeaderEId(int aQuien, request* requestAEnviar, int header,
 
 void enviarMetadatasConHeaderEId(int aQuien, t_list* metadatas, int header,
 		int id) {
+
 	int cantidadMetadatas = list_size(metadatas);
+
+	if (cantidadMetadatas == 0) {
+		enviarIntConHeader(aQuien, cantidadMetadatas, header);
+		return;
+	}
 
 	int tamanioPaquete = sizeof(int) + sizeof(int) + sizeof(int); //Se pone "= sizeof(int)" por el int de cantidadMetadatas, el header e id que va a ir al principio
 
@@ -220,6 +226,10 @@ void enviarMetadatasConHeader(int aQuien, t_list* metadatas, int header) {
 
 	int cantidadMetadatas = list_size(metadatas);
 
+	if (cantidadMetadatas == 0) {
+		enviarIntConHeader(aQuien, cantidadMetadatas, header);
+		return;
+	}
 	int tamanioPaquete = sizeof(int) + sizeof(int); //Se pone "= sizeof(int)" por el int de cantidadMetadatas y el header que va a ir al principio
 
 	for (int i = 0; i < list_size(metadatas); i++) {
@@ -275,6 +285,12 @@ void enviarMetadatasConHeader(int aQuien, t_list* metadatas, int header) {
 void enviarSeedsConHeader(int aQuien, t_list* seeds, int header) {
 
 	int cantidadSeeds = list_size(seeds);
+
+	if (cantidadSeeds == 0)
+	{
+		enviarIntConHeader(aQuien, cantidadSeeds, header);
+		return;
+	}
 
 	int tamanioPaquete = sizeof(int) + sizeof(int); //Se pone "= sizeof(int)" por el int de cantidadSeeds y el header que va a ir al principio
 
@@ -353,6 +369,36 @@ void enviarRegistroConHeaderEId(int aQuien, registro* unRegistro, int header,
 
 }
 
+void enviarRegistroConHeader(int aQuien, registro* unRegistro, int header) {
+
+	int tamanioValue = strlen(unRegistro->value) + 1;
+	int tamanioTimestamp = sizeof(typeof(unRegistro->timestamp));
+	int tamanioKey = sizeof(typeof(unRegistro->key));
+
+	int tamanioPaquete = sizeof(int) + tamanioTimestamp + tamanioKey
+			+ sizeof(int) + tamanioValue;
+
+	void* paquete = malloc(tamanioPaquete);
+
+	memcpy(paquete, &header, sizeof(int));
+
+	memcpy(paquete + sizeof(int), &unRegistro->timestamp, tamanioTimestamp);
+
+	memcpy(paquete + sizeof(int) + tamanioTimestamp, &unRegistro->key,
+			tamanioKey);
+
+	memcpy(paquete + sizeof(int) + tamanioTimestamp + tamanioKey, &tamanioValue,
+			sizeof(int));
+
+	memcpy(paquete + sizeof(int) + tamanioTimestamp + tamanioKey + sizeof(int),
+			unRegistro->value, tamanioValue);
+
+	send(aQuien, paquete, tamanioPaquete, 0);
+
+	free(paquete);
+
+}
+
 registro* recibirRegistro(int deQuien, t_log* logger) { //Si hubo error: registro->value = " "
 
 	registro* elRegistro = malloc(sizeof(registro));
@@ -362,10 +408,9 @@ registro* recibirRegistro(int deQuien, t_log* logger) { //Si hubo error: registr
 	void* bufferTimestamp = malloc(tamanioTimestamp);
 
 	int respuesta = recv(deQuien, bufferTimestamp, tamanioTimestamp,
-			MSG_WAITALL);
+	MSG_WAITALL);
 
-	if (respuesta == -1)
-			{
+	if (respuesta == -1) {
 		elRegistro->value = string_duplicate(" ");
 		return elRegistro;
 	}
@@ -380,8 +425,7 @@ registro* recibirRegistro(int deQuien, t_log* logger) { //Si hubo error: registr
 
 	respuesta = recv(deQuien, bufferKey, tamanioKey, MSG_WAITALL);
 
-	if (respuesta == -1)
-			{
+	if (respuesta == -1) {
 		elRegistro->value = string_duplicate(" ");
 		return elRegistro;
 	}
@@ -460,6 +504,7 @@ int recibirInt(int deQuien, t_log* logger) { //Si hubo error: elInt = -1
 }
 
 t_list* recibirMetadatas(int deQuien, t_log* logger) { //Si hubo error: lista de una metadata, esa metadata tiene consistencia,particiones y compactTime = -1
+
 	int cantidadMetadatas = recibirInt(deQuien, logger);
 
 	t_list* metadatas = list_create();
@@ -476,6 +521,10 @@ t_list* recibirMetadatas(int deQuien, t_log* logger) { //Si hubo error: lista de
 		return metadatas;
 	}
 
+	if (cantidadMetadatas == 0) {
+		return metadatas; //Lista vacia
+	}
+
 	for (int i = 0; i < cantidadMetadatas; i++) {
 		metadataTablaLFS* metadata = malloc(sizeof(metadataTablaLFS));
 
@@ -490,7 +539,7 @@ t_list* recibirMetadatas(int deQuien, t_log* logger) { //Si hubo error: lista de
 			free(metadata->nombre);
 			free(metadata);
 
-			while(list_size(metadatas) != 0) {
+			while (list_size(metadatas) != 0) {
 				metadataTablaLFS* metadataABorrar = list_remove(metadatas, 0);
 				free(metadataABorrar->nombre);
 				free(metadataABorrar);
@@ -513,13 +562,21 @@ t_list* recibirMetadatas(int deQuien, t_log* logger) { //Si hubo error: lista de
 	return metadatas;
 }
 
-t_list* recibirSeeds(int deQuien, t_log* logger) { //Si hubo error: lista vacia
+t_list* recibirSeeds(int deQuien, t_log* logger) { //Si hubo error: primer elemento tiene puerto == -1
 	int cantidadSeeds = recibirInt(deQuien, logger);
 
 	t_list* seeds = list_create();
 
 	if (cantidadSeeds == -1) {
+		seed* seedFallida = malloc(sizeof(seed));
+		seedFallida->ip = NULL;
+		seedFallida->puerto = -1;
+		list_add(seeds, seedFallida);
 		return seeds;
+	}
+
+	if (cantidadSeeds == 0) {
+		return seeds; //Lista vacia
 	}
 
 	for (int i = 0; i < cantidadSeeds; i++) {
@@ -535,11 +592,16 @@ t_list* recibirSeeds(int deQuien, t_log* logger) { //Si hubo error: lista vacia
 			free(unaSeed->ip);
 			free(unaSeed);
 
-			while( list_size(seeds) !=0) {
+			while (list_size(seeds) != 0) {
 				seed* seedABorrar = list_remove(seeds, 0);
 				free(seedABorrar->ip);
 				free(seedABorrar);
 			}
+
+			seed* seedFallida = malloc(sizeof(seed));
+			seedFallida->ip = NULL;
+			seedFallida->puerto = -1;
+			list_add(seeds, seedFallida);
 
 			return seeds;
 

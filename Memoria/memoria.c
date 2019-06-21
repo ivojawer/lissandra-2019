@@ -8,6 +8,7 @@ t_list* hilosEnEjecucion;
 t_list* colaDeRequests;
 sem_t requestsDisponibles;
 sem_t sem_gossiping;
+sem_t sem_cargarSeeds;
 int nombreMemoria;
 
 int main() {
@@ -22,6 +23,7 @@ int main() {
 	colaDeRequests = list_create();
 	sem_init(&requestsDisponibles,0,0);
 	sem_init(&sem_gossiping,0,1);
+	sem_init(&sem_cargarSeeds,0,1);
 
 
 	int tamanioMemoria = config_get_int_value(config, "TAM_MEM");
