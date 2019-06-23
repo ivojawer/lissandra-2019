@@ -70,7 +70,7 @@ typedef struct {
 
 typedef struct {
 	int timestamp;
-	int key;
+	uint16_t key;
 	char* value;
 } registro;
 
@@ -120,6 +120,8 @@ void enviarRegistroConHeaderEId(int aQuien, registro* unRegistro, int header,
 		int id);
 registro* recibirRegistro(int deQuien, t_log* logger);
 
+void enviarListaDeRequestsConHeader(int aQuien, t_list* requests, int header);
+t_list* recibirRequests (int deQuien, t_log* logger);
 //Sockets:
 int crearServidor(int puerto);
 int conectarseAServidor(char* ip, int puerto);

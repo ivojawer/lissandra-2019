@@ -84,6 +84,14 @@ int enviarYRecibirSeeds(memoriaGossip* memoriaDestino) {
 		return !list_any_satisfy(seedsConocidas, (void*) tienenLaMismaSeed);
 	}
 
+	int seedExiste(seed* unaSeed) {
+		int tienenLaMismaSeed(seed* otraSeed) {
+			return esLaMismaSeed(unaSeed, otraSeed);
+		}
+
+		return list_any_satisfy(seedsConocidas, (void*) tienenLaMismaSeed);
+	}
+
 	sem_wait(&sem_cargarSeeds);
 
 	t_list* seedsConectadas = list_filter(seedsConocidas,
@@ -97,10 +105,10 @@ int enviarYRecibirSeeds(memoriaGossip* memoriaDestino) {
 
 	t_list* seedsRecibidas = recibirSeeds(memoriaDestino->elSocket, logger);
 
-	//TODO: Hacer algo en particular si llega una lista vacia?
-
 	if (operacion != GOSSIPING) {
 		sacarMemoriaDeTablaGossip(memoriaDestino);
+
+		list_destroy(seedsRecibidas);
 
 		sem_post(&sem_cargarSeeds);
 
@@ -113,18 +121,28 @@ int enviarYRecibirSeeds(memoriaGossip* memoriaDestino) {
 		if (seedPrueba->puerto == -1) {
 			sacarMemoriaDeTablaGossip(memoriaDestino);
 
+			free(seedPrueba);
+			list_destroy(seedsRecibidas);
 			sem_post(&sem_cargarSeeds);
 
 			return -1;
 		}
+	} else {
+		list_destroy(seedsRecibidas);
+		sem_post(&sem_cargarSeeds);
+		return 1; //Seeds vacias, no hay nada que hacer aca muchachos
 	}
 	t_list* seedsNuevas = list_filter(seedsRecibidas, (void*) seedNoExiste);
 
 	list_add_all(seedsConocidas, seedsNuevas);
 
-	list_destroy(seedsRecibidas); //TODO: Liberar las seeds que no estan en seedsNuevas
-
 	sem_post(&sem_cargarSeeds);
+
+	t_list* seedsALiberar = list_filter(seedsRecibidas, (void*) seedExiste);
+
+	list_destroy_and_destroy_elements(seedsALiberar,(void*) liberarSeed);
+
+	list_destroy(seedsRecibidas);
 
 	return 1;
 }
@@ -140,6 +158,15 @@ int esLaMismaSeed(seed* unaSeed, seed* otraSeed) {
 		return 1;
 	}
 	return 0;
+}
+
+void liberarSeed(seed* seedALiberar)
+{
+	if(seedALiberar->ip != NULL)
+	{
+		free(seedALiberar->ip);
+	}
+	free(seedALiberar);
 }
 
 int seedNoEstaConectada(seed* unaSeed) {

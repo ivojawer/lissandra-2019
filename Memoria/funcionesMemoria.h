@@ -24,7 +24,7 @@
 
 
 typedef struct {
-	unsigned long timestamp;
+	int timestamp;
 	uint16_t key;
 	char value;
 }marco;
@@ -69,7 +69,8 @@ bool filtroNombreTabla( char*,segmento*);
 t_list* crearTablaSegmentos();
 t_list* crearTablaPaginas();
 segmento* nuevaTabla(t_list*,char*);
-pagina* nuevoDato(t_list* tablaPaginas,int flagModificado,int key, int timestamp, char* value);
+pagina* nuevoDato(t_list* tablaPaginas, int flagModificado, uint16_t key,
+		int timestamp, char* value);
 pagina* getPagina(int key, char* nombreTabla);
 void consola();
 void mandarAEjecutarRequest(request* requestAEjecutar);

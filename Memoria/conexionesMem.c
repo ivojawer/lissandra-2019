@@ -192,7 +192,7 @@ void conectarseAOtraMemoria(seed* laSeed) { //Esto es secuencial al hilo de goss
 
 		int index = posicionMemoriaEnLista(nombre);
 
-		memoriaGossip* memoriaYaConectada = list_get(tablaGossiping,index);
+		memoriaGossip* memoriaYaConectada = list_get(tablaGossiping, index);
 		memoriaYaConectada->laSeed = laSeed;
 		sem_post(&sem_gossiping);
 		return;
@@ -298,25 +298,41 @@ char* ponerComillas(char* string) {
 	return cadenaConComillas;
 }
 
-void enviarInsert(registro reg) {
+void enviarRegistroComoInsert(registro* registroAEnviar) {
 
-	int lengthKey = snprintf( NULL, 0, "%d", reg.key);
-	char* keyEnString = malloc(lengthKey + 1);
-	snprintf(keyEnString, lengthKey + 1, "%d", reg.key);
+//	int lengthKey = snprintf( NULL, 0, "%d", registroAEnviar->key);
+//	char* keyEnString = malloc(lengthKey + 1);
+//	snprintf(keyEnString, lengthKey + 1, "%d", registroAEnviar->key);
 
-	int lengthTS = snprintf( NULL, 0, "%d", reg.timestamp);
+	int lengthTS = snprintf( NULL, 0, "%d", registroAEnviar->timestamp); //Cuando sea la hora habra que cambiar esto (probablemente por %llu)
 	char* tsEnString = malloc(lengthTS + 1);
-	snprintf(tsEnString, lengthTS + 1, "%d", reg.key);
+	snprintf(tsEnString, lengthTS + 1, "%d", registroAEnviar->timestamp);
 
-	char* parametros = "";
-	string_append(parametros, keyEnString);
-	string_append_with_format(parametros, " ", reg.value);
-	string_append_with_format(parametros, " ", tsEnString);
-	printf("insert a enviar:%s", parametros);
-	free(keyEnString);
+	request* insertAEnviar = malloc(sizeof(request));
+	insertAEnviar->requestEnInt = INSERT;
+
+	char* parametros = string_new();
+
+	char* tabla = "TablaRandom"; //TODO: No se especifica la tabla
+
+	string_append(&parametros, tabla);
+	string_append(&parametros, " ");
+	string_append(&parametros, string_itoa(registroAEnviar->key));
+	string_append(&parametros, " \"");
+	string_append(&parametros, registroAEnviar->value);
+	string_append(&parametros, "\" ");
+	string_append(&parametros, tsEnString);
 	free(tsEnString);
 
-	enviarStringConHeader(socketLFS, parametros, INSERT);
+	insertAEnviar->parametros = parametros;
+
+	requestConID* requestAEjecutar = malloc(sizeof(requestConID));
+
+	requestAEjecutar->laRequest = insertAEnviar;
+	requestAEjecutar->idKernel = 0;
+
+	list_add(colaDeRequests, requestAEjecutar);
+	sem_post(&requestsDisponibles);
 
 }
 
@@ -331,7 +347,6 @@ int memoriaYaEstaConectada(int nombreMemoria) { //Sincronizar por afuera
 
 	int resultado = list_any_satisfy(tablaGossiping, (void*) esLaMismaMemoria);
 
-
 	return resultado;
 }
 
@@ -345,7 +360,6 @@ int posicionMemoriaEnLista(int nombreMemoria) { //Sincronizar por afuera
 	}
 
 	int* resultado = list_find(tablaGossiping, (void*) esLaMismaMemoria);
-
 
 	return *resultado;
 }

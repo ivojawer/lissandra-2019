@@ -399,6 +399,101 @@ void enviarRegistroConHeader(int aQuien, registro* unRegistro, int header) {
 
 }
 
+void enviarListaDeRequestsConHeader(int aQuien, t_list* requests, int header)
+{
+	int cantidadRequests = list_size(requests);
+
+	if(list_size(requests) == 0)
+	{
+		enviarIntConHeader(aQuien,cantidadRequests,header);
+		return;
+	}
+
+	t_list* requestsEnString = list_map(requests,(void*) requestStructAString);
+
+	int tamanioPaquete = sizeof(int); //Header
+
+	for(int i = 0; i<cantidadRequests; i++)
+	{
+		char* unaRequest = list_get(requestsEnString,i);
+		int tamanioString = strlen(unaRequest)+1;
+
+		tamanioPaquete += sizeof(int) + tamanioString;
+	}
+
+	void* paquete = malloc(tamanioPaquete);
+
+	memcpy(paquete,&header,sizeof(int));
+
+	memcpy(paquete+sizeof(int),&cantidadRequests,sizeof(int));
+
+	int ultimaPosicionPaquete = sizeof(int) + sizeof(int);
+
+	for(int i = 0; i<cantidadRequests;i++)
+	{
+
+		char* unaRequest = list_get(requestsEnString,i);
+
+		int tamanioString =strlen(unaRequest) + 1;
+
+		memcpy(paquete + ultimaPosicionPaquete,&tamanioString,sizeof(int));
+		memcpy(paquete + ultimaPosicionPaquete+sizeof(int),unaRequest,tamanioString);
+
+		ultimaPosicionPaquete += sizeof(int)+tamanioString;
+	}
+
+	send(aQuien,paquete,tamanioPaquete,0);
+
+	free(paquete);
+}
+
+t_list* recibirRequests (int deQuien, t_log* logger) //Si hubo error: primer elemento de lista tiene requestEnInt == -1
+{
+	request* requestFallida = malloc(sizeof(request));
+	requestFallida->parametros = NULL;
+	requestFallida->requestEnInt = -1;
+
+	int cantidadRequests = recibirInt(deQuien,logger);
+
+	t_list* requests = list_create();
+
+	if (cantidadRequests == 0)
+	{
+		free(requestFallida);
+		return requests; //Lista vacia
+	}
+	else if(cantidadRequests == -1)
+	{
+		list_add(requests,requestFallida);
+		return requests;
+	}
+
+	for(int i = 0;i<cantidadRequests;i++)
+	{
+		request* unaRequest = recibirRequest(deQuien,logger);
+
+		if (unaRequest->requestEnInt == -1)
+		{
+			free(unaRequest);
+
+			while(list_size(requests) != 0)
+			{
+				request* requestARemover = list_remove(requests,0);
+				free(requestARemover->parametros);
+				free(requestARemover);
+			}
+
+			list_add(requests,requestFallida);
+			return requests;
+		}
+		list_add(requests,unaRequest);
+	}
+
+	free(requestFallida);
+	return requests;
+
+}
+
 registro* recibirRegistro(int deQuien, t_log* logger) { //Si hubo error: registro->value = " "
 
 	registro* elRegistro = malloc(sizeof(registro));

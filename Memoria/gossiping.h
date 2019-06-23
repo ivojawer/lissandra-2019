@@ -14,5 +14,6 @@ void mostrarSeeds();
 void mostrarSeed();
 int esLaMismaSeed(seed* unaSeed, seed* otraSeed);
 void tratarDeConectarseASeeds();
+void liberarSeed(seed* seedALiberar);
 
 #endif /* GOSSIPING_H_ */

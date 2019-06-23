@@ -7,6 +7,7 @@ extern int socketLFS;
 extern sem_t requestsDisponibles;
 extern t_list* colaDeRequests;
 extern int socketKernel;
+extern sem_t sem_journal;
 
 void ejecutarRequests() {
 
@@ -17,6 +18,8 @@ void ejecutarRequests() {
 		requestConID* requestEID = list_get(colaDeRequests, 0);
 
 		request* requestAEjecutar = requestEID->laRequest;
+
+		sem_wait(&sem_journal);
 
 		switch (requestAEjecutar->requestEnInt) {
 		case SELECT: {
@@ -69,16 +72,15 @@ void ejecutarRequests() {
 
 			t_list* resultado = describe(requestAEjecutar->parametros);
 
-			metadataTablaLFS* metadataPrueba = list_get(resultado,0);
+			metadataTablaLFS* metadataPrueba = list_get(resultado, 0);
 
 			if (requestEID->idKernel) {
 
-				if(metadataPrueba->consistencia == -1){
+				if (metadataPrueba->consistencia == -1) {
 					enviarRespuestaAlKernel(requestEID->idKernel, ERROR);
-				}
-				else
-				{
-					enviarMetadatasConHeaderEId(socketKernel,resultado,METADATAS,requestEID->idKernel);
+				} else {
+					enviarMetadatasConHeaderEId(socketKernel, resultado,
+					METADATAS, requestEID->idKernel);
 				}
 			}
 
@@ -90,6 +92,9 @@ void ejecutarRequests() {
 		}
 
 		}
+
+
+		sem_post(&sem_journal);
 	}
 
 }
@@ -125,13 +130,13 @@ t_list* crearTablaPaginas() {
 	return list_create();
 }
 
-
-pagina* ultimaPagina(t_list* tablaPaginas){ //para testear
-	pagina* lastPagina = list_get(tablaPaginas,tablaPaginas->elements_count - 1);
-	return lastPagina ;
+pagina* ultimaPagina(t_list* tablaPaginas) { //para testear
+	pagina* lastPagina = list_get(tablaPaginas,
+			tablaPaginas->elements_count - 1);
+	return lastPagina;
 }
 
-void asignoPaginaEnMarco(int key, int timestamp, char* value,
+void asignoPaginaEnMarco(uint16_t key, int timestamp, char* value,
 		void* comienzoMarco) {
 	//timestamp->key->value el orden importa
 
@@ -139,7 +144,7 @@ void asignoPaginaEnMarco(int key, int timestamp, char* value,
 //	printf("key:%d\n",key);
 //	printf("timestamp:%d\n",timestamp);
 
-	void* marcoParaKey = mempcpy(comienzoMarco, &timestamp, sizeof(int));
+	void* marcoParaKey = mempcpy(comienzoMarco, &timestamp, sizeof(int)); //TODO: Cambiar tipos
 	void* marcoParaValue = mempcpy(marcoParaKey, &key, sizeof(int));
 	strcpy(marcoParaValue, value); //maximo carac string
 //	log_info(logger,"Marco donde asigne: %p",comienzoMarco);
@@ -156,8 +161,7 @@ int numeroMarcoDondeAlocar() {
 	return -1; //falta aplicar algoritmo LRU si no encontro ninguna libre
 }
 
-
-pagina* nuevoDato(t_list* tablaPaginas, int flagModificado, int key,
+pagina* nuevoDato(t_list* tablaPaginas, int flagModificado, uint16_t key,
 		int timestamp, char* value) {
 
 	pagina* nuevaPagina = malloc(sizeof(pagina));
@@ -169,9 +173,8 @@ pagina* nuevoDato(t_list* tablaPaginas, int flagModificado, int key,
 
 	asignoPaginaEnMarco(key, timestamp, value, getMarcoFromPagina(nuevaPagina));
 
-
-
-	printf("value pagina a agregar: %s", &getMarcoFromPagina(nuevaPagina)->value);
+	printf("value pagina a agregar: %s",
+			&getMarcoFromPagina(nuevaPagina)->value);
 
 	list_add(tablaPaginas, nuevaPagina);
 
@@ -190,9 +193,9 @@ segmento* encuentroTablaPorNombre(char* nombreTabla) {
 	return list_find(tablaSegmentos, (void*) comparoNombreTabla);
 }
 
-marco* getMarcoFromPagina(pagina* pag){
+marco* getMarcoFromPagina(pagina* pag) {
 
-	return comienzoMemoria+pag->nroMarco*tamanioMarco;
+	return comienzoMemoria + pag->nroMarco * tamanioMarco;
 }
 
 pagina* encuentroDatoPorKey(segmento* tabla, int key) {
@@ -243,7 +246,7 @@ char* Select(char* parametros) {
 		mandarRequestALFS(SELECT, parametros);
 
 		int header = recibirInt(socketLFS, logger);
-		if (header != REQUEST) {
+		if (header != DATO) {
 			manejoErrorLFS();
 			return NULL;
 		}
@@ -281,7 +284,7 @@ int insert(char* parametros) {
 
 	char* tabla = parametrosEnVector[0];
 	string_to_upper(tabla);
-	int key = atoi(parametrosEnVector[1]);
+	uint16_t key = (uint16_t) atoi(parametrosEnVector[1]);
 
 	char* value = parametrosEnVector[2];
 
@@ -381,8 +384,6 @@ t_list* describe(char* parametro) {
 		describirMetadatas(metadatas);
 	}
 
-	//TODO: Hacer algo en particular si llega una lista vacia?
-
 	return metadatas;
 }
 
@@ -392,7 +393,7 @@ int drop(char* parametro) {
 
 		int nroMarco = pag->nroMarco;
 		printf("nro de marco a dropear:%d\n", nroMarco);
-		marcos[nroMarco].vacio=true;
+		marcos[nroMarco].vacio = true;
 		printf("cambie valores marco\n");
 		free(pag);
 	}
@@ -400,13 +401,16 @@ int drop(char* parametro) {
 	char* tabla = string_duplicate(parametro);
 	string_to_upper(tabla);
 	segmento* tablaADropear = encuentroTablaPorNombre(tabla);
-	if(tablaADropear !=NULL){
-		printf("encontre la tabla a dropear, nombre:%s\n",tablaADropear->nombreDeTabla);
-		list_destroy_and_destroy_elements(tablaADropear->tablaDePaginas,(void*)liberoDato);
-		bool comparoNombreTabla(segmento* segmentoAComparar){
-				return strcmp(tablaADropear->nombreDeTabla,segmentoAComparar->nombreDeTabla) == 0;
+	if (tablaADropear != NULL) {
+		printf("encontre la tabla a dropear, nombre:%s\n",
+				tablaADropear->nombreDeTabla);
+		list_destroy_and_destroy_elements(tablaADropear->tablaDePaginas,
+				(void*) liberoDato);
+		bool comparoNombreTabla(segmento* segmentoAComparar) {
+			return strcmp(tablaADropear->nombreDeTabla,
+					segmentoAComparar->nombreDeTabla) == 0;
 		}
-		list_remove_by_condition(tablaSegmentos,(void*)comparoNombreTabla);
+		list_remove_by_condition(tablaSegmentos, (void*) comparoNombreTabla);
 		printf("libere los datos y destruyo tabla paginas\n");
 
 		printf("tabla eliminada\n");
@@ -429,35 +433,89 @@ int drop(char* parametro) {
 
 }
 
-
-void mandoPaginaComoInsert(pagina* pag){
-	registro pagAMandar;
+void mandoPaginaComoInsert(pagina* pag) {
+	registro* pagAMandar = malloc(sizeof(registro));
 	marco* frame = getMarcoFromPagina(pag);
-	pagAMandar.key=frame->key;
-	pagAMandar.timestamp = frame->timestamp;
-	pagAMandar.value = &frame->value;
-	enviarInsert(pagAMandar);
+	pagAMandar->key = frame->key;
+	pagAMandar->timestamp = frame->timestamp;
+	pagAMandar->value = &frame->value;
+	enviarRegistroComoInsert(pagAMandar);
+	free(pagAMandar);
 }
 
-void journalPorSegmento(segmento* seg){
-	bool estaModificada(pagina* pag){
+request* pasarPaginaAInsert(pagina* paginaAPasar, char* nombreTabla) {
+
+	request* paginaEnInsert = malloc(sizeof(request));
+
+	paginaEnInsert->requestEnInt = INSERT;
+
+	paginaEnInsert->parametros = string_new();
+
+	marco* frame = getMarcoFromPagina(paginaAPasar);
+
+	int lengthTS = snprintf( NULL, 0, "%d", frame->timestamp); //Cuando sea la hora habra que cambiar esto (probablemente por %llu)
+	char* tsEnString = malloc(lengthTS + 1);
+	snprintf(tsEnString, lengthTS + 1, "%d", frame->timestamp);
+
+	string_append(&paginaEnInsert->parametros, nombreTabla);
+	string_append(&paginaEnInsert->parametros, " ");
+	string_append(&paginaEnInsert->parametros, string_itoa(frame->key));
+	string_append(&paginaEnInsert->parametros, " \"");
+	string_append(&paginaEnInsert->parametros, &frame->value);
+	string_append(&paginaEnInsert->parametros, "\" ");
+	string_append(&paginaEnInsert->parametros, tsEnString);
+
+	free(tsEnString);
+
+	return paginaEnInsert;
+}
+
+t_list* journalPorSegmento(segmento* seg) {
+
+	bool estaModificada(pagina* pag) {
 		return pag->flagModificado;
 	}
-	t_list* paginasModificadas=list_filter(seg->tablaDePaginas,(void*)estaModificada);
-	list_iterate(paginasModificadas,(void*)mandoPaginaComoInsert);
+
+	request* pasarPaginaAInsertConNombreDelSegmento(pagina* paginaAPasar)
+	{
+		return pasarPaginaAInsert(paginaAPasar, seg->nombreDeTabla);
+	}
+
+
+	t_list* paginasModificadas = list_filter(seg->tablaDePaginas,
+			(void*) estaModificada);
+
+	t_list* insertsAMandar = list_map(paginasModificadas,(void*) pasarPaginaAInsertConNombreDelSegmento);
+
+	list_destroy(paginasModificadas);
+
 	char* nombreTabla = string_duplicate(seg->nombreDeTabla);
 	drop(nombreTabla);
-	printf("termine journal de %s\n",seg->nombreDeTabla);
+
+	return insertsAMandar;
 }
 
 void journal() {
-	list_iterate(tablaSegmentos,(void*)journalPorSegmento);
+	//TODO: Hay algun problema si las listas son vacias?
+
+	t_list* listasDeInserts = list_map(tablaSegmentos, (void*) journalPorSegmento);
+
+	t_list* seedInsertsInicial = list_remove(listasDeInserts,0);
+
+	t_list* insertsAMandar = list_fold(listasDeInserts,seedInsertsInicial,(void*) list_add_all);
+
+	enviarListaDeRequestsConHeader(socketLFS,insertsAMandar,JOURNAL);
+
+	sem_post(&sem_journal);
 }
 
-void journalAutomatico(){
-	while(true){
+void journalAutomatico() {
 
-		sleep(config_get_int_value(config,"RETARDO_GOSSIPING"));
+	while (true) {
+		sleep(config_get_int_value(config, "RETARDO_GOSSIPING"));
+		sem_wait(&sem_journal);
+		journal();
+		sem_post(&sem_journal);
 	}
 }
 
