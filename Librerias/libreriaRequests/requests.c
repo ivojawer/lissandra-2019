@@ -47,7 +47,7 @@ char* requestStructAString(request* request) {
 	}
 	case DESCRIBE: {
 
-		if (!strcmp(" ", request->parametros)) {
+		if (!strcmp(" ", request->parametros) || request->parametros == NULL) {
 			string_append(&requestEnString, "DESCRIBE");
 
 		} else {
