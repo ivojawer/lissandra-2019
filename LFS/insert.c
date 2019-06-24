@@ -1,5 +1,6 @@
 #include "funcionesLFS.h"
 
+extern int socket_memoria;
 extern t_list* memtable;
 
 extern int tamanioValue;
@@ -148,6 +149,7 @@ void rutina_insert(char* comando)
 			int size = obtener_size_particion(tabla, particion_buscar);
 			if(size >= 0){
 
+				modificar_op_control(tabla, 1);
 				t_list *tabla_encontrada = list_create();
 				tabla_encontrada = filtrar_tabla_memtable(tabla);
 				t_list *lista_particion_encontrada = filtrar_particion_tabla(tabla_encontrada, particion_buscar);
@@ -169,11 +171,14 @@ void rutina_insert(char* comando)
 				}else{
 					agregar_registro_en_particion_existente(tabla, particion_buscar, registro_nuevo);
 				}
+				modificar_op_control(tabla, 0);
 				printf("Registro agregado a la particion.\n");
+				enviarIntConHeader(socket_memoria, TODO_BIEN, RESPUESTA);
 			}
 
 		}else{
 			printf("No se pudo encontrar la tabla %s.\n",tabla);
+			enviarIntConHeader(socket_memoria, ERROR, RESPUESTA);
 		}
 	}
 //	liberar_tabla_encontrada(tabla_encontrada);

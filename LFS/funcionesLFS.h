@@ -16,6 +16,7 @@
 #include <pthread.h>
 #include <sys/stat.h>
 #include "requests.h"
+#include "conexionesLFS.h"
 #include <signal.h>
 #include <semaphore.h>
 
@@ -30,6 +31,11 @@
 #include <sys/socket.h>
 
 /*** ESTRUCTURAS ***/
+
+struct op_control{
+	sem_t tabla_sem;
+	char *tabla;
+};
 
 struct describe {
 	char *name;
@@ -79,10 +85,11 @@ typedef struct{
 
 //Generales
 void consola();
-void conexiones();
 void mandarAEjecutarRequest(request* requestAEjecutar);
 void iniciar_variables();
-
+void crear_control_op(char *tabla);
+t_list* op_control_list;
+sem_t requests_disponibles;
 
 //Usadas por varias funciones
 t_bitarray *bitarray;
@@ -97,7 +104,9 @@ t_list *filtrar_tabla_memtable(char *tabla);
 t_list *filtrar_particion_tabla(t_list *tabla_encontrada, int particion_buscar);
 void crear_bitarray(int nr_blocks);
 void tabla_destroy(t_tabla *self);
-
+t_list* cola_requests;
+void cargar_op_control_tablas();
+void modificar_op_control(char *tabla, int mod_flag);
 
 //funciones para obtener campos individuales de una request
 char* get_tabla(char* comando);
@@ -116,9 +125,6 @@ void rutina_insert(char* comando);
 void rutina_create(char* comando);
 void rutina_drop(char* comando);
 void rutina_describe(char* comando);
-
-
-
 
 //INSERT
 t_registro *crear_registro(unsigned long timestamp, uint16_t key, char *value);

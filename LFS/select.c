@@ -1,5 +1,6 @@
 #include "funcionesLFS.h"
 
+extern int socket_memoria;
 extern t_list* memtable;
 extern char* puntoDeMontaje;
 
@@ -387,10 +388,12 @@ t_list *filtrar_tabla_memtable(char *tabla)
 	bool coincide_nombre(void *tabla_mt){
 		return comparar_nombre(tabla, tabla_mt);
 	}
+	sem_wait(&dump_semaphore);
 
 	tabla_encontrada = list_filter(memtable, coincide_nombre); //Supongo que solo extrae 1 tabla
 	if(lista_vacia(tabla_encontrada))
 		printf("La tabla <%s> no se encuentra en la memtable\n", tabla);
+	sem_post(&dump_semaphore);
 
 	return tabla_encontrada;
 }
@@ -474,6 +477,12 @@ t_par_valor_timestamp *filtrar_timestamp_mayor(t_list *timestamp_valor, int list
 	}else{
 		t_par_valor_timestamp *timestamp_value_max = filtrar_timestamp_mayor(timestamp_valor, list_size(timestamp_valor));
 		printf("El valor de la key ingresada es: %s\n", timestamp_value_max->valor);
+
+		if(timestamp_value_max->valor == NULL){
+			enviarIntConHeader(socket_memoria, ERROR, RESPUESTA);
+		}else{
+			enviarStringConHeader(socket_memoria, timestamp_value_max->valor, DATO);
+		}
 	}
 	liberar_bloques_buscar(bloques_buscar);
 	liberar_timestamp_valor(timestamp_valor);
@@ -482,10 +491,9 @@ t_par_valor_timestamp *filtrar_timestamp_mayor(t_list *timestamp_valor, int list
 
 void rutina_select(char* comando)
 {
-
 	printf("operacion: select\n");
 
-	char *tabla=get_tabla(comando);
+	char *tabla = get_tabla(comando);
 	printf("tabla: %s\n", get_tabla(comando));
 
 	uint16_t key = get_key(comando);
@@ -494,11 +502,13 @@ void rutina_select(char* comando)
 	if(existe_tabla(tabla)){
 		int nr_particiones_metadata = obtener_particiones_metadata(tabla);
 		int particion_buscar = nr_particion_key(key, nr_particiones_metadata);
-		printf("La particion a buscar es: %d\n", particion_buscar);
+
+		modificar_op_control(tabla, 1); //para no cruzarse con Drop
 
 		buscar_en_todos_lados(tabla, key, particion_buscar);
+
+		modificar_op_control(tabla, 0);
 	}else{
 		printf("No se ha podido realizar la operacion\n");
-		}
+	}
 }
-

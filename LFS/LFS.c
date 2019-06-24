@@ -1,16 +1,12 @@
 #include "funcionesLFS.h"
 
-t_log* logger;
 t_list* memtable;
 
 t_config*config;
 t_config*metadataLFS;
 
-//variables del config Metadata/metadata.bin
-int cantidadBloques;
-int tamanioBloques;
-
 //variables del config CONFIG/LFS.config
+t_log* logger;
 char* puntoDeMontaje;
 int retardo; //en milisegundos
 int tamanioValue;
@@ -19,6 +15,11 @@ FILE *fp_dump;
 int control = 0;
 int flag_key_value = 0;
 char array_aux[128] = "";
+
+
+//variables del config Metadata/metadata.bin
+int cantidadBloques;
+int tamanioBloques;
 
 int main() {
 
@@ -32,7 +33,7 @@ int main() {
 
 	pthread_create(&h_consola, NULL, (void *) consola, NULL);
 	pthread_create(&h_dump, NULL, (void *)ejecutar_dump, NULL);
-	pthread_create(&h_conexiones, NULL, (void *) conexiones, NULL);
+	pthread_create(&h_conexiones, NULL, (void *) aceptar_conexiones, NULL);
 
 	pthread_detach(h_conexiones);
 	pthread_join(h_dump, NULL);

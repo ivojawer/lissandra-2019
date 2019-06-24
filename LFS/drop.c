@@ -1,5 +1,6 @@
 #include "funcionesLFS.h"
 
+extern int socket_memoria;
 extern void liberar_tabla(void *elemento);
 extern bool comparar_nombre(char *tabla, void *tabla_mt);
 extern char* puntoDeMontaje;
@@ -88,6 +89,9 @@ void rutina_drop(char* comando) {
 	printf("Rutina DROP\n");
 	char *tabla = get_tabla(comando);
 	sem_wait(&dump_semaphore);
+	modificar_op_control(tabla, 1); //para no cruzarse con Insert y Select
+	//terminar hilos pendientes
+	modificar_op_control(strdup(tabla), 2);
 	if (existe_tabla(tabla)){
 		eliminar_tabla(tabla);
 
@@ -104,9 +108,11 @@ void rutina_drop(char* comando) {
 			}
 
 			list_remove_and_destroy_by_condition(memtable, coincide_nombre, destruir_tabla);
+			enviarIntConHeader(socket_memoria, TODO_BIEN, RESPUESTA);
 		}
 	}else{
 		printf("La tabla no se encuentra en el sistema\n");
+		enviarIntConHeader(socket_memoria, ERROR, RESPUESTA);
 	}
 	sem_post(&dump_semaphore);
 }

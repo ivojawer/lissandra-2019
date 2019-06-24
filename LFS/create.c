@@ -1,9 +1,8 @@
 #include "funcionesLFS.h"
 
 extern t_log *logger;
-
+extern int socket_memoria;
 extern int cantidadBloques;
-
 extern char* puntoDeMontaje;
 
 void agregar_salto_de_linea(char *string) {
@@ -141,6 +140,10 @@ int crear_tabla_FS(char *tabla, int particiones, char *consistencia, int compact
 	free(dir_metadata);
 	free(compactacion_tabla);
 	free(particiones_tabla);
+
+	if(flag_creacion == 0)
+		crear_control_op(tabla);
+
 	return flag_creacion;
 }
 
@@ -167,10 +170,12 @@ void rutina_create(char* comando)
 	}
 
 	if (existe_tabla(tabla)) {
-		log_info(logger, "Se intento crear una tabla ya existente [%s].\n", tabla);
-	} else {
-		if (crear_tabla_FS(tabla, particiones, consistencia, compactacion) == 0)
-			printf("Se creo la tabla [%s].\n",tabla);
-
+		log_info(logger, "Se intento crear la tabla ya existente: %s.\n", tabla);
+		enviarIntConHeader(socket_memoria, TODO_BIEN, RESPUESTA);
+	}else if(crear_tabla_FS(tabla, particiones, consistencia, compactacion) == 0){
+		printf("Se creo la tabla [%s].\n",tabla);
+		enviarIntConHeader(socket_memoria, ERROR, RESPUESTA);
+	}else{
+		printf("Ocurrio un problema\nNo se pudo crear la Tabla\n");
 	}
 }

@@ -28,7 +28,23 @@ int wait_particiones = 1;
 char *consistency;
 
 
-void mandarAEjecutarRequest(request* requestAEjecutar) {
+
+void ejecutar_peticion()
+{
+	while(1){
+		sem_wait(&requests_disponibles);
+
+		request* request_a_ejecutar = list_get(cola_requests, 0); //Si por x motivo se acumulan varias, esto deberia cambiar
+
+		mandarAEjecutarRequest(request_a_ejecutar);
+	}
+}
+
+
+
+void mandarAEjecutarRequest(request* requestAEjecutar)
+{
+
 
 	char *parametros = string_duplicate(requestAEjecutar->parametros); //Esto es para que se pueda hacer un free() en consola.c sin que rompa
 	switch (requestAEjecutar->requestEnInt) {
@@ -39,8 +55,6 @@ void mandarAEjecutarRequest(request* requestAEjecutar) {
 			pthread_create(&h_select, NULL, (void *) rutina_select, parametros);
 
 			pthread_detach(h_select);
-
-			//enviarString("Me llego un select, ocupate macho", socketLFSAMEM);
 
 			break;
 		}
@@ -121,7 +135,12 @@ void iniciar_variables(){
 	particion_encontrada = list_create();
 	fp_dump = NULL;
 	memset(array_aux, 0X0, sizeof(array_aux));
+
+	op_control_list = list_create();
+	cargar_op_control_tablas();
+
 	sem_init(&dump_semaphore, 0, 1);
+	sem_init(&requests_disponibles,0,0);
 
 	//agrego bitarray de cargar_configuracion_FS()
 	crear_bitarray(cantidadBloques);
@@ -323,3 +342,66 @@ void crear_bitarray(int nr_blocks){
 	bitarray = bitarray_create_with_mode(data, nr_blocks, LSB_FIRST);
 	setear_bitarray(nr_blocks);
 }
+
+
+void destroy_op_control(struct op_control *self)
+{
+	free(self->tabla);
+	free(self);
+}
+
+void crear_control_op(char *tabla)
+{
+	struct op_control *s_op_control = malloc(sizeof(struct op_control));
+	s_op_control->tabla = strdup(tabla);
+	sem_init(&(s_op_control->tabla_sem), 0, 1);
+	list_add(op_control_list, s_op_control);
+}
+
+
+void cargar_op_control_tablas()
+{
+	struct dirent *sd;
+	char* tablas = string_new();
+	string_append(&tablas, puntoDeMontaje);
+	string_append(&tablas, "Tablas/");
+	DIR* dir = opendir(tablas);
+	while ((sd = readdir(dir)) != NULL) {
+		if ((strcmp((sd->d_name), ".") != 0) &&
+			(strcmp((sd->d_name), "..") != 0)){
+			crear_control_op(sd->d_name);
+		}
+	}
+	closedir(dir);
+	free(tablas);
+}
+
+bool comparar_nombre_op_control(void *elemento, char *tabla)
+{
+	return (!strcmp(((struct op_control *)elemento)->tabla, tabla));
+}
+
+void modificar_op_control(char *tabla, int mod_flag)
+{
+
+	bool coincide_nombre_op(void *elemento){
+		return comparar_nombre_op_control(elemento, tabla);
+	}
+
+	struct op_control *tabla_a_controlar = malloc(sizeof(struct op_control));
+	tabla_a_controlar = list_find(op_control_list, coincide_nombre_op);
+
+	if(tabla_a_controlar != NULL){
+		if(mod_flag == 1){
+			sem_wait(&(tabla_a_controlar->tabla_sem));
+		}else if(mod_flag == 0){
+			sem_post(&(tabla_a_controlar->tabla_sem));
+		}else{//Eliminar de la lista
+			void destruir_elemento(void *elemento){
+				return destroy_op_control((struct op_control *)elemento);
+			}
+		list_remove_and_destroy_by_condition(op_control_list, coincide_nombre_op, destruir_elemento);
+		}
+	}
+}
+
