@@ -25,7 +25,7 @@
 
 typedef struct {
 	int timestamp; //TODO: Cambiar
-	uint16_t key;
+	int key;
 	char value;
 }marco;
 

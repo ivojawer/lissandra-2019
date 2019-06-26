@@ -284,7 +284,7 @@ int insert(char* parametros) {  //TODO: Cambiar tipos
 
 	char* tabla = parametrosEnVector[0];
 	string_to_upper(tabla);
-	uint16_t key = (uint16_t) atoi(parametrosEnVector[1]);
+	int key = atoi(parametrosEnVector[1]);
 
 	char* value = parametrosEnVector[2];
 
@@ -499,7 +499,7 @@ t_list* journalPorSegmento(segmento* seg) {
 }
 
 void journal() {
-	//TODO: Hay algun problema si las listas son vacias?
+	//TODO: Hay algun problema si las listas son vacias? En haskell no, en C puede ocurrir magia siempre pero no creo.
 
 	t_list* listasDeInserts = list_map(tablaSegmentos,
 			(void*) journalPorSegmento);
