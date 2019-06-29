@@ -69,7 +69,7 @@ bool filtroNombreTabla( char*,segmento*);
 t_list* crearTablaSegmentos();
 t_list* crearTablaPaginas();
 segmento* nuevaTabla(t_list*,char*);
-pagina* nuevoDato(t_list* tablaPaginas, int flagModificado, uint16_t key,
+pagina* nuevoDato(t_list* tablaPaginas, int flagModificado, int key,
 		int timestamp, char* value);
 pagina* getPagina(int key, char* nombreTabla);
 void consola();

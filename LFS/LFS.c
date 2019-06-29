@@ -26,6 +26,13 @@ int main() {
 	logger = log_create("LFS.log", "LFS", 1, 0);
 
 	iniciar_variables();
+//
+//	char* chau[4]={"/home/ivan/eclipse-workspace/tp-2019-1c-U-TN-Tecno/LFS/Filesystem/Bloques/bloque4.bin","/home/ivan/eclipse-workspace/tp-2019-1c-U-TN-Tecno/LFS/Filesystem/Bloques/bloque5.bin","/home/ivan/eclipse-workspace/tp-2019-1c-U-TN-Tecno/LFS/Filesystem/Bloques/bloque6.bin",NULL};
+//
+//	t_list* hola = traerRegistrosBloques(chau);
+//	t_registro* head = list_get(hola,2);
+//	printf("ultimo elemento lista:key:%i - TS:%d - value-%s\n", head->key,head->timestamp,head->value);
+
 
 	pthread_t h_consola;
 	pthread_t h_conexiones;

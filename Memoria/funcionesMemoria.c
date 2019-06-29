@@ -173,8 +173,7 @@ int vacioLRU(){
 
 
 
-
-	return marcoLRU;
+	return paginaLRU->nroMarco;
 }
 
 int numeroMarcoDondeAlocar() {
