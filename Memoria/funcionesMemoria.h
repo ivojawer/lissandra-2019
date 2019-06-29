@@ -41,7 +41,7 @@ typedef struct{
 
 typedef struct{
 	int nroMarco;
-	unsigned long ultimoSelect;
+	int ultimoUso;
 	int flagModificado;
 }pagina;
 

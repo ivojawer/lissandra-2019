@@ -150,6 +150,33 @@ void asignoPaginaEnMarco(uint16_t key, int timestamp, char* value,
 //	log_info(logger,"Marco donde asigne: %p",comienzoMarco);
 }
 
+int vacioLRU(){
+	segmento* segmentoLRU = tablaSegmentos->head->data;
+	pagina* paginaLRU = segmentoLRU->tablaDePaginas->head;
+
+
+
+
+	void menorUltimoUsoPorSegmento(segmento* seg){
+		void menorUltimoUso(pagina* pag){
+				if(pag->ultimoUso < paginaLRU->ultimoUso){
+					paginaLRU=pag;
+					segmentoLRU=seg;
+				}
+		}
+
+
+		list_iterate(seg->tablaDePaginas,(void*)menorUltimoUso);
+	}
+
+	list_iterate(tablaSegmentos,(void*)menorUltimoUsoPorSegmento);
+
+
+
+
+	return marcoLRU;
+}
+
 int numeroMarcoDondeAlocar() {
 	for (int i = 0; i < cantMarcos; i++) {
 		if (marcos[i].vacio) {
@@ -158,11 +185,11 @@ int numeroMarcoDondeAlocar() {
 			return i;
 		}
 	}
-	return -1; //falta aplicar algoritmo LRU si no encontro ninguna libre
+	return vacioLRU(); //falta aplicar algoritmo LRU si no encontro ninguna libre
 }
 
-pagina* nuevoDato(t_list* tablaPaginas, int flagModificado, uint16_t key,
-		int timestamp, char* value) { //TODO: Cambiar tipos
+pagina* nuevoDato(t_list* tablaPaginas, int flagModificado, int key,
+		int timestamp, char* value) {
 
 	pagina* nuevaPagina = malloc(sizeof(pagina));
 
