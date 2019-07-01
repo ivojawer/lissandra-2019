@@ -73,35 +73,6 @@ void liberar_timestamp_valor(t_list *lista_timestamp_valor)
 
 
 
-
-int buscar_tabla_FS(char *tabla_name)        ///// esta funcion no se usa y CREO que hace lo mismo que existe_tabla ... la sacamos?
-{
-	DIR *dir;
-		struct dirent *sd;
-		int encontrado=0;
-
-		char* root = string_duplicate(puntoDeMontaje);
-		string_append(&root,"Tablas/");
-
-		dir = opendir(root);
-
-		if(dir==NULL){
-			printf("No se puedo abrir el directorio de Tablas\n");
-		}else{
-			while( (sd = readdir(dir)) != NULL){
-				if(!strcmp((sd->d_name), tabla_name)){
-					encontrado = 1;
-				}
-			}
-		closedir(dir);
-		free(root);
-		}
-		return encontrado;
-
-
-}
-
-
 int obtener_size_particion(char *tabla, int particion_buscar)
 {
 	char* archivoParticion = string_new();
@@ -184,6 +155,7 @@ int contar_comas(char *temp)
 
 		 while(!feof(f) && bloque_size < size_bloque){
 			 fgets(temp, 32, f);
+			 if(strlen(temp) > 1){
 			 bloque_size += strlen(temp)*sizeof(char);
 			 int nr_comas = contar_comas(temp);
 			 tokens_registro = string_split(temp, ";");
@@ -221,7 +193,8 @@ int contar_comas(char *temp)
 						strcpy(array_aux, temp);
 					 }
 				 }
-		 }
+			 }
+		 }//end while
 	 fclose(f);
 	}
 	 free(root);
@@ -471,9 +444,9 @@ t_par_valor_timestamp *filtrar_timestamp_mayor(t_list *timestamp_valor, int list
 	}else{
 		printf("No se encontro la key %d de la tabla %s en la memtable.\n", key, tabla);
 	}
-	printf("Largo lista *timestamp_valor* %d\n", list_size(timestamp_valor));
+//	printf("Largo lista *timestamp_valor* %d\n", list_size(timestamp_valor));
 	if(lista_vacia(timestamp_valor)){
-		printf("*timestamp_valor* VACIO\n");
+//		printf("*timestamp_valor* VACIO\n");
 	}else{
 		t_par_valor_timestamp *timestamp_value_max = filtrar_timestamp_mayor(timestamp_valor, list_size(timestamp_valor));
 		printf("El valor de la key ingresada es: %s\n", timestamp_value_max->valor);

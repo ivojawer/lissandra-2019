@@ -90,6 +90,7 @@ void iniciar_variables();
 void crear_control_op(char *tabla);
 t_list* op_control_list;
 sem_t requests_disponibles;
+sem_t bloques_bitmap;
 
 //Usadas por varias funciones
 t_bitarray *bitarray;
