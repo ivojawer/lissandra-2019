@@ -11,6 +11,7 @@ extern char* puntoDeMontaje;
 extern int retardo; //en milisegundos
 extern int tamanioValue;
 extern int tiempoDump; //en milisegundos
+extern int full_space;
 
 extern FILE *fp_dump;
 
@@ -134,6 +135,7 @@ void iniciar_variables(){
 	registros_encontrados = list_create();
 	particion_encontrada = list_create();
 	fp_dump = NULL;
+	full_space = 0;
 	memset(array_aux, 0X0, sizeof(array_aux));
 
 	op_control_list = list_create();
@@ -141,6 +143,7 @@ void iniciar_variables(){
 
 	sem_init(&dump_semaphore, 0, 1);
 	sem_init(&requests_disponibles,0,0);
+	sem_init(&bloques_bitmap,0,1);
 
 	//agrego bitarray de cargar_configuracion_FS()
 	crear_bitarray(cantidadBloques);
@@ -154,14 +157,14 @@ void iniciar_variables(){
 char* get_tabla(char* comando)
 {
 	char **tokens_comando = string_split(comando, " ");
-	char *tabla = tokens_comando[1];
+	char *tabla = tokens_comando[0];
 	return tabla;
 }
 
 int get_key(char* comando)
 {
 	char **tokens_comando = string_split(comando, " ");
-	char *key = tokens_comando[2];
+	char *key = tokens_comando[1];
 	return atoi(key);
 }
 
@@ -190,7 +193,7 @@ double get_timestamp(char* comando) {
 char *get_consistencia(char *comando)
 {
 	char** tokens_comando = string_split(comando, " ");
-	char *consistencia = tokens_comando[2];
+	char *consistencia = tokens_comando[1];
 	return consistencia;
 }
 
@@ -198,14 +201,14 @@ char *get_consistencia(char *comando)
 int get_particiones(char *comando)
 {
 	char** tokens_comando = string_split(comando, " ");
-	return atoi(tokens_comando[3]);
+	return atoi(tokens_comando[2]);
 }
 
 
 int get_tiempo_compactacion(char *comando)
 {
 	char** tokens_comando = string_split(comando, " ");
-	return atoi(tokens_comando[4]);
+	return atoi(tokens_comando[3]);
 }
 
 

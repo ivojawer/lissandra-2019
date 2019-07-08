@@ -90,7 +90,6 @@ void rutina_drop(char* comando) {
 	char *tabla = get_tabla(comando);
 	sem_wait(&dump_semaphore);
 	modificar_op_control(tabla, 1); //para no cruzarse con Insert y Select
-	//terminar hilos pendientes
 	modificar_op_control(strdup(tabla), 2);
 	if (existe_tabla(tabla)){
 		eliminar_tabla(tabla);

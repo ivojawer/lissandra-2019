@@ -150,6 +150,32 @@ void asignoPaginaEnMarco(uint16_t key, int timestamp, char* value,
 //	log_info(logger,"Marco donde asigne: %p",comienzoMarco);
 }
 
+int vacioLRU(){
+	segmento* segmentoLRU = tablaSegmentos->head->data;
+	pagina* paginaLRU = segmentoLRU->tablaDePaginas->head;
+
+
+
+
+	void menorUltimoUsoPorSegmento(segmento* seg){
+		void menorUltimoUso(pagina* pag){
+				if(pag->ultimoUso < paginaLRU->ultimoUso){
+					paginaLRU=pag;
+					segmentoLRU=seg;
+				}
+		}
+
+
+		list_iterate(seg->tablaDePaginas,(void*)menorUltimoUso);
+	}
+
+	list_iterate(tablaSegmentos,(void*)menorUltimoUsoPorSegmento);
+
+
+
+	return paginaLRU->nroMarco;
+}
+
 int numeroMarcoDondeAlocar() {
 	for (int i = 0; i < cantMarcos; i++) {
 		if (marcos[i].vacio) {
@@ -158,11 +184,11 @@ int numeroMarcoDondeAlocar() {
 			return i;
 		}
 	}
-	return -1; //falta aplicar algoritmo LRU si no encontro ninguna libre
+	return vacioLRU(); //falta aplicar algoritmo LRU si no encontro ninguna libre
 }
 
-pagina* nuevoDato(t_list* tablaPaginas, int flagModificado, uint16_t key,
-		int timestamp, char* value) { //TODO: Cambiar tipos
+pagina* nuevoDato(t_list* tablaPaginas, int flagModificado, int key,
+		int timestamp, char* value) {
 
 	pagina* nuevaPagina = malloc(sizeof(pagina));
 
@@ -284,7 +310,7 @@ int insert(char* parametros) {  //TODO: Cambiar tipos
 
 	char* tabla = parametrosEnVector[0];
 	string_to_upper(tabla);
-	uint16_t key = (uint16_t) atoi(parametrosEnVector[1]);
+	int key = atoi(parametrosEnVector[1]);
 
 	char* value = parametrosEnVector[2];
 
@@ -499,7 +525,7 @@ t_list* journalPorSegmento(segmento* seg) {
 }
 
 void journal() {
-	//TODO: Hay algun problema si las listas son vacias?
+	//TODO: Hay algun problema si las listas son vacias? En haskell no, en C puede ocurrir magia siempre pero no creo.
 
 	t_list* listasDeInserts = list_map(tablaSegmentos,
 			(void*) journalPorSegmento);

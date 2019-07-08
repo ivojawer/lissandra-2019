@@ -48,18 +48,22 @@ void comunicacion_con_memoria()
 		case JOURNAL: {
 			int i;
 			int nr_registros = recibirInt(socket_cliente, logger);
-			t_list *lista_journal = recibirRequests(socket_cliente, logger); //lista de requests *
+			t_list *lista_journal = list_create();
+			lista_journal = recibirRequests(socket_cliente, logger); //lista de requests *
 
 			for(i = 0; i < nr_registros; i++){
 				request* request_procesar = malloc(sizeof(request));
 				request_procesar = list_get(lista_journal, i);
 				request* request_para_hilo = malloc(sizeof(request));
-				request_para_hilo->requestEnInt = request_procesar->requestEnInt;
+				request_para_hilo->requestEnInt = INSERT;
 				request_para_hilo->parametros = request_procesar->parametros;
 				list_add(cola_requests, request_para_hilo);
 				sem_post(&requests_disponibles);
 			 }
-			//liberar lista_journal
+			void liberar_elemento(void *elemento){
+				return liberarRequest((request *)elemento);
+			}
+			list_destroy_and_destroy_elements(lista_journal, liberar_elemento);
 			continue;
 		}
 		default: {

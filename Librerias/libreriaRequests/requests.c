@@ -19,7 +19,15 @@ request* crearStructRequest(char* requestEnString) {
 
 	request* requestNuevo = malloc(sizeof(request));
 	requestNuevo->requestEnInt = requestInt;
-	requestNuevo->parametros = requestEnString;
+
+	if(requestYParametros[1] == NULL){
+		char* parametrosRequest = string_duplicate(" ");
+		requestNuevo->parametros = parametrosRequest;
+	}else{
+		char* parametrosRequest = string_duplicate(requestYParametros[1]);
+		requestNuevo->parametros = parametrosRequest;
+	}
+
 	liberarArrayDeStrings(requestYParametros);
 
 	return requestNuevo;

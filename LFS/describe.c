@@ -37,8 +37,7 @@ void liberar_metadata_a_enviar(t_list *lista_enviar)
 
 
 int tipo_describe(char *comando) {
-	char **tokens_comando = string_split(comando, " ");
-	if (tokens_comando[1] == NULL)
+	if (strcmp(comando, " ") == 0)
 		return 0;
 	return 1;
 }

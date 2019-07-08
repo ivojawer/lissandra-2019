@@ -3,7 +3,8 @@
 
 #include "funcionesLFS.h"
 
-
+int err_flag;
+int full_space;
 int bloque_dump;
 int espacio_libre;
 int size;

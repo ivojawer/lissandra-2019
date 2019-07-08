@@ -1,6 +1,7 @@
 #include "dump.h"
 
 extern t_list* memtable;
+extern t_log *dump_logger;
 
 extern int cantidadBloques;
 extern int tamanioBloques;
@@ -79,7 +80,7 @@ void grabar_registro(char *root, char *registro_completo, int length_registro,
 			space_full = 2;
 		}
 
-		if (space_full == 0) { //Escribo registro
+		if (space_full == 0){ //Escribo registro
 			j = 0;
 			while ((j < length_registro) && (suma_size < espacio_libre)) {
 				fputc(registro_completo[j], fp_dump);
@@ -88,11 +89,26 @@ void grabar_registro(char *root, char *registro_completo, int length_registro,
 				j++;
 				bloques_tmp->size_total += size;
 			}
-			if ((j < length_registro)
-					&& ((suma_size == espacio_libre)
-							|| (suma_size > espacio_libre))) { //Si se queda sin espacio
+			if ((j < length_registro) && ((suma_size == espacio_libre)
+			    || (suma_size > espacio_libre))){ //Si se queda sin espacio
+				bloque_dump = elegir_bloque_libre(cantidadBloques); //Si devuelve -1, eliminar lo del otro registro y abortar.
+
+				 if(bloque_dump == -1){
+					 int i;
+					 char empty[1] = "";
+					 strcpy(empty, " ");
+					 bloques_tmp->size_total -= j; //MENTIRA, pero solo me quedo con el size de datos
+					 fp_dump->_offset = suma_size-j; //vuelvo al inicio de la ultima linea
+					 fseek(fp_dump, 0l, SEEK_CUR);
+					 for(i = 0; i < j; i++){
+						 fputc(empty[0], fp_dump);
+					 }
+					 fclose(fp_dump);
+					 err_flag = 1;
+					 return;
+				 }
+
 				fclose(fp_dump);
-				bloque_dump = elegir_bloque_libre(cantidadBloques);
 				agregar_bloque_lista_tmp(bloques_tmp->bloques, bloque_dump);
 				char* otroRoot = string_duplicate(puntoDeMontaje);
 				string_append(&otroRoot, "Bloques/bloque");
@@ -123,13 +139,16 @@ void guardar_registros_en_bloques(t_registro *registro_recv, int table_change,
 	string_append(&registro_completo, registro->value);
 	string_append(&registro_completo, "\n");
 
-
 	if (table_change == 0) {
 		memset(&root[0], 0x0, sizeof(root));
 		bloque_dump = elegir_bloque_libre(cantidadBloques);
-		agregar_bloque_lista_tmp(bloques_tmp_tabla->bloques, bloque_dump); //Para crear el archivo temporal
-
-		sprintf(root, "%s/Bloques/bloque%d.bin", puntoDeMontaje, bloque_dump);
+		if(bloque_dump != -1){
+			agregar_bloque_lista_tmp(bloques_tmp_tabla->bloques, bloque_dump); //Para crear el archivo temporal
+			sprintf(root, "%s/Bloques/bloque%d.bin", puntoDeMontaje, bloque_dump);
+		}else{
+			err_flag = 1;
+			return;
+		}
 	}
 	grabar_registro(root, registro_completo, strlen(registro_completo), 0,
 					0, table_change, bloques_tmp_tabla, 0);
@@ -261,6 +280,7 @@ void liberar_lista_bloques(t_list *lista_bloques_tmp) {
 }
 
 void dump() {
+	err_flag = 0;
 	if(!lista_vacia(memtable)){
 		int i, j, k;
 		int table_change;
@@ -275,7 +295,7 @@ void dump() {
 			tabla = list_get(memtable, i);
 			if(existe_tabla(tabla->name_tabla)){
 				struct bloques_tmp *bloques_tmp_tabla = malloc(sizeof(struct bloques_tmp));
-				bloques_tmp_tabla = crear_bloques_tmp(tabla->name_tabla);
+				bloques_tmp_tabla = crear_bloques_tmp(tabla->name_tabla); //Bloques donde se guardan registros
 				for(j = 0; j < list_size(tabla->lista_particiones); j++){
 					t_particion *particion = malloc(sizeof(t_particion));
 					particion = list_get(tabla->lista_particiones, j);
@@ -286,7 +306,16 @@ void dump() {
 							if (table_change == 0 && k == 1)
 								table_change = 1;
 							guardar_registros_en_bloques(registro, table_change,
-													 bloques_tmp_tabla);
+													 bloques_tmp_tabla);//Control de error aca
+							if(err_flag == 1){
+								full_space++;
+								log_info(dump_logger, "Dump finalizado. No se pudo guardar un registro por falta de espacio.");
+								if(full_space == 1)
+									printf("Dump finalizado. No se pudo guardar un registro por falta de espacio\n");
+								sem_post(&dump_semaphore);
+								return;
+							}
+							full_space = 0;
 							siga_siga = 1;
 						}else{
 							free(bloques_tmp_tabla);

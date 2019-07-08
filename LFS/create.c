@@ -27,6 +27,7 @@ int elegir_bloque_libre(int nr_bloques)
 {
 	int free_block, i, flag_free_block = 0;
 
+	sem_wait(&bloques_bitmap);
 	for (i = 0; i < nr_bloques; i++){
 		if (flag_free_block == 0) {
 			if (bitarray_test_bit(bitarray, i) == 0){
@@ -38,6 +39,7 @@ int elegir_bloque_libre(int nr_bloques)
 			}
 		}
 	}
+	sem_post(&bloques_bitmap);
 	return -1;
 }
 
