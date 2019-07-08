@@ -16,7 +16,7 @@ void status();
 int add(char* chocloDeCosas);
 void journal();
 void refreshMetadatas();
-void refreshSleep();
+void refreshConfig();
 
 
 #endif /* FUNCIONESKERNEL_H_ */

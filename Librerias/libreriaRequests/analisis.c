@@ -297,11 +297,29 @@ int esUnaRequestValida(char* requestEnString) {
 
 }
 
-
 int esDescribeGlobal(request* request) {
 	if (request->requestEnInt == DESCRIBE
 			&& !strcmp(request->parametros, " ")) {
 		return 1;
 	}
 	return 0;
+}
+
+void esperarModificacionDeArchivo(char* direccionArchivo) {
+	int elArchivo = inotify_init();
+
+	int watch = inotify_add_watch(elArchivo, direccionArchivo,
+	IN_MODIFY);
+	int bufferSize = sizeof(struct inotify_event);
+
+	struct inotify_event* descriptor = malloc(sizeof(struct inotify_event));
+
+	read(elArchivo, descriptor, bufferSize);
+
+	close(elArchivo);
+
+	inotify_rm_watch(elArchivo, watch);
+
+	free(descriptor);
+	sleep(1);
 }

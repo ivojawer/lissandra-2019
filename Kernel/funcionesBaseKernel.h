@@ -21,7 +21,6 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <commons/config.h>
-#include <sys/inotify.h>
 
 typedef struct {
 	int idScript;
@@ -56,7 +55,7 @@ typedef struct {
 void journal();
 char* leerLinea(char* direccion, int lineaALeer);
 int removerScriptDeLista(int id, t_list* lista);
-int encontrarScriptEnLista(int id, t_list* lista);
+script* encontrarScriptEnLista(int id, t_list* lista);
 int criterioDeTabla(char* nombreTabla);
 char* devolverTablaDeRequest(request* request);
 int esDescribeGlobal(request* request);

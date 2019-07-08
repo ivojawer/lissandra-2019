@@ -18,39 +18,55 @@ extern sem_t sem_cambioMemoriaEC;
 extern int proximaMemoriaEC;
 extern t_log* logger;
 
-int encontrarScriptEnLista(int id, t_list* lista) {
+script* encontrarScriptEnLista(int id, t_list* lista) {
+	sem_wait(&sem_movimientoScripts);
 	for (int i = 0; i < list_size(lista); i++) {
 
 		script* script = list_get(lista, i);
 		if (script->idScript == id) {
-			return i;
+
+			sem_post(&sem_movimientoScripts);
+			return script;
 		}
 
 	}
-	return -1;
+	script* scriptFallido = malloc(sizeof(script));
+
+	scriptFallido->idScript = -1;
+
+	sem_post(&sem_movimientoScripts);
+	return scriptFallido;
 }
 
 int removerScriptDeLista(int id, t_list* lista) {
 
-	int index = encontrarScriptEnLista(id, lista);
+	sem_wait(&sem_movimientoScripts);
+		for (int i = 0; i < list_size(lista); i++) {
 
-	if (index == -1) {
+			script* script = list_get(lista, i);
+			if (script->idScript == id) {
+				list_remove(lista,i);
+				sem_post(&sem_movimientoScripts);
+				return 1;
+			}
+
+		}
+
+		sem_post(&sem_movimientoScripts);
 		return -1;
-	}
-
-	list_remove(lista, index);
-
-	return 1;
 }
 
 int criterioDeTabla(char* nombreTabla) {
+	sem_wait(&sem_actualizacionMetadatas);
 	for (int i = 0; i < list_size(listaTablas); i++) {
 		metadataTablaLFS* tabla = list_get(listaTablas, i);
 
 		if (!strcmp(tabla->nombre, nombreTabla)) {
+			sem_post(&sem_actualizacionMetadatas);
 			return tabla->consistencia;
 		}
 	}
+	sem_post(&sem_actualizacionMetadatas);
 
 	return -1;
 }
@@ -222,6 +238,9 @@ char* nombreScript(script* script) {
 }
 
 void mostrarListaScripts(t_list* lista) {
+
+	sem_wait(&sem_movimientoScripts);
+
 	for (int i = 0; i < list_size(lista); i++) {
 		script* script = list_get(lista, i);
 
@@ -231,20 +250,24 @@ void mostrarListaScripts(t_list* lista) {
 
 		free(nombre);
 	}
+
+	sem_post(&sem_movimientoScripts);
 }
 
 int moverScript(int scriptID, t_list* listaOrigen, t_list* listaDestino) {
 
-	int index = encontrarScriptEnLista(scriptID, listaOrigen);
+	script* unScript = encontrarScriptEnLista(scriptID, listaOrigen);
 
-	if (index == -1) {
+	if (unScript->idScript == -1) {
+		free(unScript);
 		return -1;
 	}
 
 	sem_wait(&sem_movimientoScripts);
-	script* script = list_get(listaOrigen, index);
+	script* script = unScript;
 
 	if ((removerScriptDeLista(scriptID, listaOrigen)) == -1) {
+		sem_post(&sem_movimientoScripts);
 		return -1;
 	}
 
@@ -326,19 +349,20 @@ int promedioDeTiemposDeOperaciones(t_list* tiempos) {
 }
 
 void limpiarListasTiempos() {
+	sem_wait(&sem_tiemposSelect);
+	sem_wait(&sem_tiemposInsert);
 	t_list* listaInsertAux = tiemposInsert;
 	t_list* listaSelectAux = tiemposSelect;
 
-	sem_wait(&sem_tiemposSelect);
-	tiemposSelect = filterCasero_esMasNuevoQue30Segundos(tiemposSelect);
-	sem_post(&sem_tiemposSelect);
 
-	sem_wait(&sem_tiemposInsert);
+	tiemposSelect = filterCasero_esMasNuevoQue30Segundos(tiemposSelect);
+
 	tiemposInsert = filterCasero_esMasNuevoQue30Segundos(tiemposInsert);
-	sem_post(&sem_tiemposInsert);
 
 	list_destroy(listaInsertAux);
 	list_destroy(listaSelectAux);
+	sem_post(&sem_tiemposSelect);
+	sem_post(&sem_tiemposInsert);
 }
 
 void matarListaScripts(t_list* scripts) {
@@ -412,7 +436,7 @@ int memoriaECSiguiente(int memoriaInicialEC) {
 	return memoriaInicialEC; //Si no encuentra otra devuelve la misma
 }
 
-int determinarAQueMemoriaEnviar(request* unaRequest) {
+int determinarAQueMemoriaEnviar(request* unaRequest) { //Synceado por afuera
 
 	int criterio = criterioDeTabla(devolverTablaDeRequest(unaRequest));
 
@@ -465,7 +489,7 @@ int determinarAQueMemoriaEnviar(request* unaRequest) {
 
 }
 
-int unaMemoriaCualquiera() //TODO: Repreguntar si tiene que tener criterio o no
+int unaMemoriaCualquiera() //TODO: Marca, una cualquiera es realmente cualquiera
 {
 	for (int i = 0; i < list_size(memorias); i++) {
 		memoriaEnLista* unaMemoria = list_get(memorias, 0);
@@ -501,11 +525,11 @@ void matarMemoria(int nombreMemoria) {
 	//Esto virtualmente borra la memoria del sistema, no la borra completamente para que
 	//las cosas que la estan usando en el momento de borrarla no rompan pero que se enteren que se borro.
 
+	sem_wait(&sem_borradoMemoria);
 	for (int i = 0; i < list_size(memorias); i++) {
 		memoriaEnLista* unaMemoria = list_get(memorias, i);
 
 		if (unaMemoria->nombre == nombreMemoria) {
-			sem_wait(&sem_borradoMemoria);
 
 			list_remove(memorias, i);
 
@@ -525,8 +549,6 @@ void matarMemoria(int nombreMemoria) {
 			free(unaMemoria->ip);
 
 			close(unaMemoria->socket);
-			sem_post(&sem_borradoMemoria);
-
 			sem_wait(&unaMemoria->sem_cambioScriptsEsperando);
 			while (list_size(unaMemoria->scriptsEsperando) != 0) {
 
@@ -535,9 +557,7 @@ void matarMemoria(int nombreMemoria) {
 
 				int respuesta = ERROR;
 
-				int index = encontrarScriptEnLista(*nombreScript, listaEXEC);
-
-				script* elScript = list_get(listaEXEC, index);
+				script* elScript = encontrarScriptEnLista(*nombreScript, listaEXEC);
 
 				elScript->resultadoDeEnvio = malloc(sizeof(int));
 				memcpy(elScript->resultadoDeEnvio, &respuesta, sizeof(int));
@@ -546,25 +566,34 @@ void matarMemoria(int nombreMemoria) {
 			}
 			sem_post(&unaMemoria->sem_cambioScriptsEsperando);
 
+			sem_post(&sem_borradoMemoria);
+
 			return;
 		}
 	}
+
+	sem_post(&sem_borradoMemoria);
 }
 
 int seedYaExiste(seed* unaSeed) {
+
+	sem_wait(&sem_borradoMemoria);
+
 	for (int i = 0; i < list_size(memorias); i++) {
 		memoriaEnLista* unaMemoria = list_get(memorias, i);
 
 		if (!unaMemoria->estaViva) {
+
 			continue;
 		}
 
 		if (!(strcmp(unaMemoria->ip, unaSeed->ip))
 				&& (unaSeed->puerto == unaMemoria->puerto)) {
-
+			sem_post(&sem_borradoMemoria);
 			return 1;
 		}
 	}
+	sem_post(&sem_borradoMemoria);
 	return 0;
 }
 
@@ -630,9 +659,9 @@ int manejarRespuestaDeMemoria(script* elScript, request* laRequest, int memoria)
 		memoriaEnLista* laMemoria = list_get(memorias,
 				encontrarPosicionDeMemoria(memoria));
 
-//		sem_wait(&sem_cambioSleepEjecucion);
+//		sem_wait(&sem_refreshConfig);   //TODO: Marca, no hay sleep en multiples lineas
 //		int tiempoDeSleep = sleepEjecucion;
-//		sem_wait(&sem_cambioSleepEjecucion);
+//		sem_wait(&sem_refreshConfig);
 //
 //		sleep(tiempoDeSleep);
 
@@ -685,9 +714,7 @@ int manejarRespuestaDeMemoria(script* elScript, request* laRequest, int memoria)
 				actualizarMetadatas(metadatas);
 			} else {
 				metadataTablaLFS* laMetadata = list_get(metadatas, 0);
-				sem_wait(&sem_actualizacionMetadatas);
 				agregarUnaMetadata(laMetadata);
-				sem_post(&sem_actualizacionMetadatas);
 
 				list_destroy(metadatas);
 			}

@@ -14,20 +14,18 @@ int quantum;
 int multiprocesamiento;
 int proximaMemoriaEC;
 int sleepEjecucion;
+int intervaloDeRefreshMetadata;
 sem_t sem_multiprocesamiento;
 sem_t sem_cambioId;
 sem_t sem_disponibleColaREADY;
-sem_t sem_operacionesTotales;
 sem_t sem_tiemposInsert;
 sem_t sem_tiemposSelect;
-sem_t sem_actualizacionMetadatas;
-sem_t sem_cambioSleepEjecucion;
+sem_t sem_refreshConfig;
 sem_t sem_cambioMemoriaEC;
 sem_t sem_movimientoScripts;
 sem_t sem_borradoMemoria;
+sem_t sem_actualizacionMetadatas;
 script* scriptRefreshMetadata;
-
-//TODO: sincronizar el gossiping
 
 int main() {
 
@@ -37,6 +35,8 @@ int main() {
 	quantum = config_get_int_value(config, "QUANTUM");
 	multiprocesamiento = config_get_int_value(config, "MULTIPROCESAMIENTO");
 	sleepEjecucion = config_get_int_value(config, "SLEEP_EJECUCION");
+	intervaloDeRefreshMetadata = config_get_int_value(config,
+			"METADATA_REFRESH");
 
 	colaNEW = list_create();
 	colaREADY = list_create();
@@ -61,20 +61,18 @@ int main() {
 	pthread_t h_planificador;
 	pthread_t h_primeraConexion;
 	pthread_t h_refreshMetadatas;
-	pthread_t h_refreshSleep;
+	pthread_t h_refreshConfig;
 
 	sem_init(&sem_multiprocesamiento, 0, multiprocesamiento);
 	sem_init(&sem_cambioId, 0, 1);
 	sem_init(&sem_disponibleColaREADY, 0, 0);
-	sem_init(&sem_operacionesTotales, 0, 1);
 	sem_init(&sem_tiemposInsert, 0, 1);
 	sem_init(&sem_tiemposSelect, 0, 1);
-//	sem_init(&sem_gossiping, 0, 1);
-	sem_init(&sem_actualizacionMetadatas, 0, 1);
-	sem_init(&sem_cambioSleepEjecucion, 0, 1);
+	sem_init(&sem_refreshConfig, 0, 1);
 	sem_init(&sem_cambioMemoriaEC,0,1);
 	sem_init(&sem_movimientoScripts,0,1);
 	sem_init(&sem_borradoMemoria,0,1);
+	sem_init(&sem_actualizacionMetadatas,0,1);
 
 	char* ipMemoriaPrincipal = string_duplicate(config_get_string_value(config, "IP_MEMORIA"));
 	int puertoMemoriaPrincipal = config_get_int_value(config, "PUERTO_MEMORIA");
@@ -98,9 +96,9 @@ int main() {
 	NULL);
 	pthread_detach(h_refreshMetadatas);
 
-	pthread_create(&h_refreshSleep, NULL, (void *) refreshSleep,
+	pthread_create(&h_refreshConfig, NULL, (void *) refreshConfig,
 	NULL);
-	pthread_detach(h_refreshSleep);
+	pthread_detach(h_refreshConfig);
 
 	pthread_create(&h_consola, NULL, (void *) consola, NULL);
 	pthread_join(h_consola, NULL);
@@ -112,7 +110,6 @@ int main() {
 	sem_destroy(&sem_multiprocesamiento);
 	sem_destroy(&sem_cambioId);
 	sem_destroy(&sem_disponibleColaREADY);
-	sem_destroy(&sem_operacionesTotales);
 	sem_destroy(&sem_tiemposInsert);
 	sem_destroy(&sem_tiemposSelect);
 

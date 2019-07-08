@@ -12,10 +12,14 @@ extern sem_t sem_disponibleColaREADY;
 extern sem_t sem_cambioSleepEjecucion;
 extern sem_t sem_cambioMemoriaEC;
 extern sem_t sem_borradoMemoria;
+extern sem_t sem_refreshConfig;
 extern t_log* logger;
 extern int idInicial;
 extern int proximaMemoriaEC;
 extern int sleepEjecucion;
+extern int quantum;
+extern int sleepEjecucion;
+extern int intervaloDeRefreshMetadata;
 extern script* scriptRefreshMetadata;
 
 int crearScript(request* nuevaRequest) {
@@ -70,21 +74,24 @@ int crearScript(request* nuevaRequest) {
 }
 
 void journal() {
+
+	sem_wait(&sem_borradoMemoria);
+
 	for (int i = 0; i < list_size(memorias); i++) {
 		memoriaEnLista* unaMemoria = list_get(memorias, i);
 
-		if (laMemoriaTieneConsistencias(unaMemoria)) //TODO: Repreguntar esto.
+		if (laMemoriaTieneConsistencias(unaMemoria)) //TODO: Marca, va a todas
 				{
-			sem_wait(&sem_borradoMemoria);
 
 			if (unaMemoria->estaViva) {
 				enviarInt(unaMemoria->socket, OP_JOURNAL);
 			}
 
-			sem_post(&sem_borradoMemoria);
 		}
 
 	}
+
+	sem_post(&sem_borradoMemoria);
 
 	log_info(logger,
 			"Se ha mandado el JOURNAL a todas las memorias conocidas.");
@@ -115,20 +122,18 @@ int ejecutarRequest(request* requestAEjecutar, script* elScript) {
 			|| requestAEjecutar->requestEnInt == SELECT
 			|| requestAEjecutar->requestEnInt == INSERT) {
 
-		char** parametros = string_split(requestAEjecutar->parametros," ");
+		char** parametros = string_split(requestAEjecutar->parametros, " ");
 		char* tabla = string_duplicate(parametros[0]);
 
 		liberarArrayDeStrings(parametros);
 
-		if(!existeTabla(tabla))
-		{
-			log_error(logger,"No se encontro la tabla %s.",tabla);
+		if (!existeTabla(tabla)) {
+			log_error(logger, "No se encontro la tabla %s.", tabla);
 			free(tabla);
 			return -1;
 		}
 
 		free(tabla);
-
 
 	}
 
@@ -139,13 +144,14 @@ int ejecutarRequest(request* requestAEjecutar, script* elScript) {
 		log_error(logger,
 				"No hay memorias conectadas para ejecutar la request %i.",
 				requestAEjecutar->requestEnInt);
+		sem_post(&sem_borradoMemoria);
 		return -1;
 	}
 
 	int memoria;
 
 	if (requestAEjecutar->requestEnInt == CREATE
-			|| requestAEjecutar->requestEnInt == DESCRIBE) { //Preguntar esto
+			|| requestAEjecutar->requestEnInt == DESCRIBE) { //TODO: Marca, create y describe van a cualquiera
 		memoria = unaMemoriaCualquiera();
 
 	} else {
@@ -157,6 +163,7 @@ int ejecutarRequest(request* requestAEjecutar, script* elScript) {
 		log_error(logger,
 				"No se conoce una memoria que pueda ejecutar la request %i.",
 				requestAEjecutar->requestEnInt);
+		sem_post(&sem_borradoMemoria);
 		return -1;
 	}
 
@@ -165,9 +172,11 @@ int ejecutarRequest(request* requestAEjecutar, script* elScript) {
 
 	time_t tiempoInicial = time(NULL);
 
-	sem_wait(&sem_cambioSleepEjecucion);
+	sem_wait(&sem_refreshConfig);
 	int tiempoDeSleep = sleepEjecucion;
-	sem_post(&sem_cambioSleepEjecucion);
+	sem_wait(&sem_refreshConfig);
+
+	sleep(tiempoDeSleep);
 
 	sem_post(&sem_borradoMemoria);
 
@@ -288,11 +297,13 @@ int add(char* chocloDeCosas) {
 	if (posicionMemoria == -1) {
 		printf("%s%i%s", "No se pudo encontrar la memoria ", nombreMemoria,
 				"\n");
+		sem_post(&sem_borradoMemoria);
 		return -1;
 	}
 	memoriaEnLista* memoria = list_get(memorias, posicionMemoria);
 
 	if (!memoria->estaViva) {
+		sem_post(&sem_borradoMemoria);
 		return -1;
 	}
 
@@ -320,21 +331,24 @@ void refreshMetadatas() {
 	request* requestMetadata = crearStructRequest("DESCRIBE");
 
 	while (1) {
-		t_config* config = config_create(DIRCONFIG);
-		int intervaloDeRefresh = config_get_int_value(config,
-				"METADATA_REFRESH");
-		config_destroy(config);
+
+		sem_wait(&sem_refreshConfig);
+		int intervaloDeRefresh = intervaloDeRefreshMetadata;
+		sem_post(&sem_refreshConfig);
 
 		sleep(intervaloDeRefresh);
+		sem_wait(&sem_borradoMemoria);
 
 		int memoria = unaMemoriaCualquiera();
 
 		if (memoria == -1) {
+			sem_post(&sem_borradoMemoria);
 			continue;
 		}
 
 		memoriaEnLista* laMemoria = list_get(memorias,
 				encontrarPosicionDeMemoria(memoria));
+		sem_post(&sem_borradoMemoria);
 
 		enviarRequestConHeaderEId(laMemoria->socket, requestMetadata,
 		REQUEST, scriptRefreshMetadata->idScript);
@@ -353,33 +367,25 @@ void refreshMetadatas() {
 
 }
 
-void refreshSleep() { //TODO: Arreglar esto
-	int elConfig = inotify_init();
-
-	inotify_add_watch(elConfig, DIRCONFIG, IN_MODIFY);
-
-	int bufferSize = sizeof(struct inotify_event);
+void refreshConfig() {
 
 	while (1) {
+		esperarModificacionDeArchivo(DIRCONFIG);
 
-		struct inotify_event* descriptor = malloc(sizeof(struct inotify_event));
-
-		read(elConfig, descriptor, bufferSize);
+		sem_wait(&sem_refreshConfig);
 
 		t_config* config = config_create(DIRCONFIG);
 
-		sem_wait(&sem_cambioSleepEjecucion);
-
+		quantum = config_get_int_value(config, "QUANTUM");
 		sleepEjecucion = config_get_int_value(config, "SLEEP_EJECUCION");
-
-		sem_post(&sem_cambioSleepEjecucion);
+		intervaloDeRefreshMetadata = config_get_int_value(config,
+				"METADATA_REFRESH");
 
 		config_destroy(config);
 
-		log_info(logger, "Se cambio el sleep");
+		sem_post(&sem_refreshConfig);
 
-		free(descriptor);
-
+//		log_info(logger, "hice algo");
 	}
 
 }

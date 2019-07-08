@@ -22,14 +22,7 @@ void consola() {
 
 		int requestEnInt = queRequestEs(requestYParametros[0]);
 
-		if (!strcmp(requestYParametros[0],"probar")){
-			enviarPeticionesDeGossip();
-			continue;
-		}
-
 		if (!strcmp(requestYParametros[0], "EXIT")) {
-			//TODO: Aca hay que matar a los hijos, si se puede
-
 			liberarArrayDeStrings(requestYParametros);
 			free(lectura);
 			return;
@@ -68,8 +61,6 @@ void consola() {
 					requestParaHilo); //El hilo se encarga de liberarlo
 
 			pthread_detach(h_script);
-
-			//Agregar lista de hilos?
 
 		}
 

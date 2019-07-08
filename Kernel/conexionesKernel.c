@@ -2,7 +2,7 @@
 
 extern t_log* logger;
 extern t_list* memorias;
-extern sem_t sem_gossiping;
+extern sem_t sem_borradoMemoria;
 extern t_list* listaEXEC;
 extern script* scriptRefreshMetadata;
 
@@ -62,7 +62,11 @@ void conectarseAUnaMemoria(seed* unaSeed) {
 
 	free(unaSeed);
 
+	sem_wait(&sem_borradoMemoria);
+
 	list_add(memorias, nuevaMemoria);
+
+	sem_post(&sem_borradoMemoria);
 
 	log_info(logger, "Se acaba de conectar la memoria %i",
 			nuevaMemoria->nombre);
@@ -78,6 +82,7 @@ void manejoErrorMemoria(int nombreMemoria) {
 
 void enviarPeticionesDeGossip()
 {
+	sem_wait(&sem_borradoMemoria);
 	for (int i = 0; i<list_size(memorias);i++)
 	{
 
@@ -85,6 +90,7 @@ void enviarPeticionesDeGossip()
 		enviarInt(unaMemoria->socket,GOSSIPING);
 
 	}
+	sem_post(&sem_borradoMemoria);
 }
 
 void agregarMemorias(t_list* seeds) {
@@ -123,17 +129,16 @@ void comunicacionConMemoria(memoriaEnLista* memoria) {
 		case RESPUESTA: {
 			int idScript = recibirInt(socketMemoria, logger);
 
-			int index = encontrarScriptEnLista(idScript, listaEXEC);
+			script* unScript = encontrarScriptEnLista(idScript, listaEXEC);
 
-			if (idScript == -1 || index == -1) {
+			if (idScript == -1 || unScript->idScript == -1) {
 
+				free(unScript);
 				manejoErrorMemoria(memoria->nombre);
 				return;
 
 			}
-
-			script* scriptReceptor = list_get(listaEXEC, index);
-
+			script* scriptReceptor = unScript;
 			int tipoDeRespuesta = recibirInt(socketMemoria, logger);
 
 			int respuesta;
@@ -177,14 +182,15 @@ void comunicacionConMemoria(memoriaEnLista* memoria) {
 
 			int idScript = recibirInt(socketMemoria, logger);
 
-			int index = encontrarScriptEnLista(idScript, listaEXEC);
+			script* unScript = encontrarScriptEnLista(idScript, listaEXEC);
 
-			if (idScript == -1 || index == -1) {
+			if (idScript == -1 || unScript->idScript == -1) {
+				free(unScript);
 				manejoErrorMemoria(memoria->nombre);
 				return;
 			}
 
-			script* scriptReceptor = list_get(listaEXEC, index);
+			script* scriptReceptor = unScript;
 
 			char* datoRecibido = recibirString(socketMemoria, logger);
 
@@ -243,14 +249,15 @@ void comunicacionConMemoria(memoriaEnLista* memoria) {
 				scriptReceptor = scriptRefreshMetadata;
 			} else {
 
-				int index = encontrarScriptEnLista(idScript, listaEXEC);
+				script* unScript = encontrarScriptEnLista(idScript, listaEXEC);
 
-				if (idScript == -1 || index == -1) {
+				if (idScript == -1 || unScript->idScript == -1) {
+					free(unScript);
 					manejoErrorMemoria(memoria->nombre);
 					return;
 				}
 
-				scriptReceptor = list_get(listaEXEC, index);
+				scriptReceptor = unScript;
 			}
 
 			t_list* metadatas = recibirMetadatas(socketMemoria, logger);

@@ -2,10 +2,12 @@
 
 extern sem_t sem_disponibleColaREADY;
 extern sem_t sem_multiprocesamiento;
+extern sem_t sem_refreshConfig;
 extern t_list* colaREADY;
 extern t_list* listaEXEC;
 extern t_list* listaEXIT;
 extern t_log* logger;
+extern int quantum;
 
 void planificadorREADYAEXEC() {
 
@@ -31,19 +33,15 @@ void planificadorREADYAEXEC() {
 
 }
 
-void planificadorEXEC(int IdScript) {
+void planificadorEXEC(int idScript) {
 
-	int index = encontrarScriptEnLista(IdScript, listaEXEC);
+	script* scriptEXEC = encontrarScriptEnLista(idScript, listaEXEC);
 
-	script* scriptEXEC = list_get(listaEXEC, index);
+	sem_wait(&sem_refreshConfig);
+	int elQuantum = quantum;
+	sem_post(&sem_refreshConfig);
 
-	t_config* config = config_create(DIRCONFIG);
-
-	int quantum = config_get_int_value(config, "QUANTUM");
-
-	config_destroy(config);
-
-	for (int i = 0; i < quantum; i++) {
+	for (int i = 0; i < elQuantum; i++) {
 
 		char* linea = leerLinea(scriptEXEC->direccionScript,
 				scriptEXEC->lineasLeidas);
@@ -76,6 +74,11 @@ void planificadorEXEC(int IdScript) {
 		}
 
 		request* requestAEjecutar = crearStructRequest(linea);
+
+		if (requestAEjecutar->requestEnInt == -1)
+		{
+			log_error(logger,"Error sintactico en el script %i.",idScript);
+		}
 
 		int resultado = ejecutarRequest(requestAEjecutar, scriptEXEC);
 
@@ -114,7 +117,7 @@ void planificadorEXEC(int IdScript) {
 
 		if (!strcmp(proximaLinea, "fin")) {
 			log_info(logger, "%s%i",
-					"Termino de ejecutar exitosamente el script ", IdScript);
+					"Termino de ejecutar exitosamente el script ", idScript);
 
 			free(proximaLinea); //Aca se solia romper ok
 			free(linea);
