@@ -87,8 +87,11 @@ void enviarPeticionesDeGossip()
 	{
 
 		memoriaEnLista* unaMemoria = list_get(memorias,i);
-		enviarInt(unaMemoria->socket,GOSSIPING);
 
+		if(unaMemoria->estaViva)
+		{
+			enviarInt(unaMemoria->socket,GOSSIPING);
+		}
 	}
 	sem_post(&sem_borradoMemoria);
 }

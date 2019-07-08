@@ -1,4 +1,8 @@
 #include "funcionesKernel.h"
+extern int sleepEjecucion;
+extern int intervaloDeRefreshMetadata;
+extern int quantum;
+extern sem_t sem_refreshConfig;
 
 void consola() {
 
@@ -38,6 +42,27 @@ void consola() {
 
 		} else if (!strcmp(requestYParametros[0], "JOURNAL")) {
 			journal();
+		} else if (!strcmp(requestYParametros[0], "SLEEP")) {
+			if (requestYParametros[1] != NULL
+					&& esUnNumero(requestYParametros[1])) {
+				sem_wait(&sem_refreshConfig);
+				sleepEjecucion = atoi(requestYParametros[1]);
+				sem_post(&sem_refreshConfig);
+			}
+		} else if (!strcmp(requestYParametros[0], "METADATA_REFRESH")) {
+			if (requestYParametros[1] != NULL
+					&& esUnNumero(requestYParametros[1])) {
+				sem_wait(&sem_refreshConfig);
+				intervaloDeRefreshMetadata = atoi(requestYParametros[1]);
+				sem_post(&sem_refreshConfig);
+			}
+		} else if (!strcmp(requestYParametros[0], "QUANTUM")) {
+			if (requestYParametros[1] != NULL
+					&& esUnNumero(requestYParametros[1])) {
+				sem_wait(&sem_refreshConfig);
+				quantum = atoi(requestYParametros[1]);
+				sem_post(&sem_refreshConfig);
+			}
 		}
 
 		else if (!esUnaRequestValida(lectura)) {

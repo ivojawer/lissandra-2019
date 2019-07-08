@@ -280,6 +280,26 @@ void status() {
 	mostrarListaScripts(listaEXEC);
 	printf("\n\n----EXIT----\n\n");
 	mostrarListaScripts(listaEXIT);
+	printf("\n\n------------\n\n");
+	sem_wait(&sem_refreshConfig);
+	printf("QUANTUM: %i\n",quantum);
+	printf("SLEEP EJECUCION: %i\n", sleepEjecucion);
+	printf("REFRESH METADATA: %i\n", intervaloDeRefreshMetadata);
+	sem_post(&sem_refreshConfig);
+	printf("Memorias conectadas:");
+	sem_wait(&sem_borradoMemoria);
+
+	for (int i = 0; i<list_size(memorias);i++)
+	{
+		memoriaEnLista* unaMemoria = list_get(memorias,i);
+
+		if (unaMemoria->estaViva)
+		{
+			printf(" %i,",unaMemoria->nombre);
+		}
+
+	}
+	sem_post(&sem_borradoMemoria);
 	printf("\n\n");
 }
 

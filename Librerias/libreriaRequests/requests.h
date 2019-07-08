@@ -95,6 +95,7 @@ int lista_vacia(t_list *lista);
 void liberarArrayDeStrings(char** array);
 void describirMetadatas(t_list* metadatas);
 void esperarModificacionDeArchivo(char* direccionArchivo);
+int esUnNumero(char* string);
 
 //Comunicacion:
 void enviarInt(int aQuien, int intAEnviar);
