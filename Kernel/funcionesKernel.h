@@ -17,6 +17,7 @@ int add(char* chocloDeCosas);
 void journal();
 void refreshMetadatas();
 void refreshConfig();
+void metricsAutomatico();
 
 
 #endif /* FUNCIONESKERNEL_H_ */

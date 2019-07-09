@@ -58,6 +58,12 @@ void conectarseAUnaMemoria(seed* unaSeed) {
 
 	list_create(nuevaMemoria->scriptsEsperando);
 
+	nuevaMemoria->estadisticas.insertsCompletos = 0;
+	nuevaMemoria->estadisticas.insertsFallidos = 0;
+	nuevaMemoria->estadisticas.selectsCompletos = 0;
+	nuevaMemoria->estadisticas.selectsFallidos = 0;
+	nuevaMemoria->estadisticas.operacionesTotalesEnMemoria = 0;
+
 	free(unaSeed->ip);
 
 	free(unaSeed);
@@ -125,7 +131,7 @@ void comunicacionConMemoria(memoriaEnLista* memoria) {
 	int socketMemoria = memoria->socket;
 
 	while (1) {
-		int operacion = recibirInt(socketMemoria, logger); //Recibir header
+		int operacion = recibirInt(socketMemoria, logger); //Header
 
 		switch (operacion) {
 

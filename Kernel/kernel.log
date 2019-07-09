@@ -339,3 +339,18 @@
 [ERROR] 17:40:22:439 kernel/(6467:6499): Hubo un error en la ejecucion del script 1000
 [INFO] 17:40:22:439 kernel/(6467:6499): 1000: EXEC->EXIT
 [INFO] 17:40:29:894 kernel/(6467:6501): 1001: NEW->READY
+[INFO] 15:40:43:479 kernel/(6667:6735): ----METRICS----
+[INFO] 15:40:43:479 kernel/(6667:6735): Read latency: ---
+[INFO] 15:40:43:479 kernel/(6667:6735): Write latency: ---
+[INFO] 15:40:43:479 kernel/(6667:6735): Reads: 0
+[INFO] 15:40:43:479 kernel/(6667:6735): Writes: 0
+[INFO] 15:40:43:479 kernel/(6667:6735): Operaciones totales: 0
+[INFO] 15:40:45:741 kernel/(6765:6788): 1000: NEW->READY
+[INFO] 15:40:53:629 kernel/(6765:6785): ----METRICS----
+[INFO] 15:40:53:629 kernel/(6765:6785): Read latency: ---
+[INFO] 15:40:53:629 kernel/(6765:6785): Write latency: ---
+[INFO] 15:40:53:629 kernel/(6765:6785): Reads: 0
+[INFO] 15:40:53:629 kernel/(6765:6785): Writes: 0
+[INFO] 15:40:53:629 kernel/(6765:6785): Operaciones totales: 0
+[INFO] 15:53:32:914 kernel/(7099:7115): 1000: NEW->READY
+[INFO] 15:53:32:914 kernel/(7099:7109): 1000: READY->EXEC

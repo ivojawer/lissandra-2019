@@ -3,12 +3,13 @@
 extern sem_t sem_disponibleColaREADY;
 extern sem_t sem_multiprocesamiento;
 extern sem_t sem_refreshConfig;
+extern sem_t sem_operacionesTotales;
 extern t_list* colaREADY;
 extern t_list* listaEXEC;
 extern t_list* listaEXIT;
 extern t_log* logger;
 extern int quantum;
-
+extern int operacionesTotales;
 void planificadorREADYAEXEC() {
 
 	while (1) {
@@ -59,8 +60,8 @@ void planificadorEXEC(int idScript) {
 
 			if (scriptEXEC->esPorConsola) {
 
-				char* laRequestEnString = leerLinea(
-						scriptEXEC->direccionScript,0);
+				char* laRequestEnString = leerLinea(scriptEXEC->direccionScript,
+						0);
 
 				remove(scriptEXEC->direccionScript);
 
@@ -75,12 +76,35 @@ void planificadorEXEC(int idScript) {
 
 		request* requestAEjecutar = crearStructRequest(linea);
 
-		if (requestAEjecutar->requestEnInt == -1)
-		{
-			log_error(logger,"Error sintactico en el script %i.",idScript);
+		if (requestAEjecutar->requestEnInt == -1) {
+			log_error(logger, "Error sintactico en el script %i.", idScript);
+
+			free(linea);
+			log_info(logger, "%i%s", scriptEXEC->idScript, ": EXEC->EXIT");
+			moverScript(scriptEXEC->idScript, listaEXEC, listaEXIT);
+
+			sem_post(&sem_multiprocesamiento);
+			liberarRequest(requestAEjecutar);
+
+			if (scriptEXEC->esPorConsola) {
+
+				char* laRequestEnString = leerLinea(scriptEXEC->direccionScript,
+						0);
+
+				remove(scriptEXEC->direccionScript);
+
+				free(scriptEXEC->direccionScript);
+
+				scriptEXEC->direccionScript = laRequestEnString;
+			}
+			return;
 		}
 
 		int resultado = ejecutarRequest(requestAEjecutar, scriptEXEC);
+
+		sem_wait(&sem_operacionesTotales);
+		operacionesTotales++;
+		sem_post(&sem_operacionesTotales);
 
 		if (resultado == -1) {
 
@@ -96,11 +120,10 @@ void planificadorEXEC(int idScript) {
 			sem_post(&sem_multiprocesamiento);
 
 			if (scriptEXEC->esPorConsola) {
-				char* laRequestEnString = leerLinea(
-						scriptEXEC->direccionScript,0);
+				char* laRequestEnString = leerLinea(scriptEXEC->direccionScript,
+						0);
 
 				remove(scriptEXEC->direccionScript);
-
 
 				free(scriptEXEC->direccionScript);
 
@@ -128,8 +151,8 @@ void planificadorEXEC(int idScript) {
 			sem_post(&sem_multiprocesamiento);
 
 			if (scriptEXEC->esPorConsola) {
-				char* laRequestEnString = leerLinea(
-						scriptEXEC->direccionScript,0);
+				char* laRequestEnString = leerLinea(scriptEXEC->direccionScript,
+						0);
 
 				remove(scriptEXEC->direccionScript);
 

@@ -42,12 +42,21 @@ typedef struct {
 } tiempoDeOperacion;
 
 typedef struct {
+	int insertsCompletos;
+	int insertsFallidos;
+	int selectsCompletos;
+	int selectsFallidos;
+	int operacionesTotalesEnMemoria;
+} estadisticasMemoria;
+
+typedef struct {
 	char* ip;
 	int puerto;
 	int* consistencias;
 	int nombre;
 	int socket;
 	int estaViva;
+	estadisticasMemoria estadisticas;
 	t_list* scriptsEsperando;
 	sem_t sem_cambioScriptsEsperando;
 } memoriaEnLista;

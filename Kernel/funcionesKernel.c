@@ -9,10 +9,10 @@ extern t_list* tiemposSelect;
 extern t_list* memorias;
 extern sem_t sem_cambioId;
 extern sem_t sem_disponibleColaREADY;
-extern sem_t sem_cambioSleepEjecucion;
 extern sem_t sem_cambioMemoriaEC;
 extern sem_t sem_borradoMemoria;
 extern sem_t sem_refreshConfig;
+extern sem_t sem_operacionesTotales;
 extern t_log* logger;
 extern int idInicial;
 extern int proximaMemoriaEC;
@@ -20,6 +20,7 @@ extern int sleepEjecucion;
 extern int quantum;
 extern int sleepEjecucion;
 extern int intervaloDeRefreshMetadata;
+extern int operacionesTotales;
 extern script* scriptRefreshMetadata;
 
 int crearScript(request* nuevaRequest) {
@@ -84,6 +85,7 @@ void journal() {
 				{
 
 			if (unaMemoria->estaViva) {
+				unaMemoria->estadisticas.operacionesTotalesEnMemoria++;
 				enviarInt(unaMemoria->socket, OP_JOURNAL);
 			}
 
@@ -98,6 +100,12 @@ void journal() {
 }
 
 int ejecutarRequest(request* requestAEjecutar, script* elScript) {
+
+	sem_wait(&sem_refreshConfig);
+		int tiempoDeSleep = sleepEjecucion / 1000;
+		sem_post(&sem_refreshConfig);
+
+		sleep(tiempoDeSleep); //TODO: Marca, el sleep esta al principio de la ejecucion
 
 	switch (requestAEjecutar->requestEnInt) {
 
@@ -172,28 +180,19 @@ int ejecutarRequest(request* requestAEjecutar, script* elScript) {
 
 	time_t tiempoInicial = time(NULL);
 
-	sem_wait(&sem_refreshConfig);
-	int tiempoDeSleep = sleepEjecucion;
-	sem_wait(&sem_refreshConfig);
-
-	sleep(tiempoDeSleep);
-
-	sem_post(&sem_borradoMemoria);
-
-	sleep(tiempoDeSleep);
-
-	sem_wait(&sem_borradoMemoria);
-
 	if (!laMemoria->estaViva) {
 		time_t tiempoFinal = time(NULL);
 
 		insertarTiempo(tiempoInicial, tiempoFinal,
 				requestAEjecutar->requestEnInt);
+		sem_post(&sem_borradoMemoria);
 		return -1;
 	}
 
 	enviarRequestConHeaderEId(laMemoria->socket, requestAEjecutar, REQUEST,
 			elScript->idScript);
+
+	laMemoria->estadisticas.operacionesTotalesEnMemoria++;
 
 	list_add(laMemoria->scriptsEsperando, &elScript->idScript);
 
@@ -215,9 +214,7 @@ int ejecutarRequest(request* requestAEjecutar, script* elScript) {
 	return respuesta;
 }
 
-void metrics(int loggear) //TODO: Faltan los memory loads
-//TODO: Agregar inserts selects fallidos
-{
+void metrics(int loggear) {
 
 	t_list* tiemposSelectAux = filterCasero_esMasNuevoQue30Segundos(
 			tiemposSelect);
@@ -229,46 +226,101 @@ void metrics(int loggear) //TODO: Faltan los memory loads
 
 	if (loggear) {
 
-		log_info(logger, "\n\n----METRICS----");
+		log_info(logger, "----METRICS----");
 		if (promedioSelect == -1) {
-			log_info(logger, "\n\nRead latency: ---");
+			log_info(logger, "Read latency: ---");
 		} else {
-			log_info(logger, "%s%i", "\n\nRead latency: ", promedioSelect);
+			log_info(logger, "Read latency: %i", promedioSelect);
 		}
 
 		if (promedioInsert == -1) {
-			log_info(logger, "\n\nWrite latency: ---");
+			log_info(logger, "Write latency: ---");
 		} else {
-			log_info(logger, "%s%i", "\n\nWrite latency: ", promedioInsert);
+			log_info(logger, "Write latency: %i", promedioInsert);
 		}
 
-		log_info(logger, "%s%i", "\n\nReads: ", list_size(tiemposSelectAux));
-		log_info(logger, "%s%i", "\n\nWrites: ", list_size(tiemposInsertAux));
+		log_info(logger, "Reads: %i", list_size(tiemposSelectAux));
+		log_info(logger, "Writes: %i", list_size(tiemposInsertAux));
+
+		sem_wait(&sem_operacionesTotales);
+		log_info(logger, "Operaciones totales: %i", operacionesTotales);
+		sem_post(&sem_operacionesTotales);
+
+		sem_wait(&sem_borradoMemoria);
+
+		for (int i = 0; i < list_size(memorias); i++) {
+			memoriaEnLista* unaMemoria = list_get(memorias, i);
+
+			if (unaMemoria->estaViva) {
+				log_info(logger,
+						"--Memoria %i-- \nInserts Completos: %i \nInserts Fallidos: %i \nSelects Completos: %i \nSelects Fallidos: %i \nOperaciones totales: %i",
+						unaMemoria->nombre,
+						unaMemoria->estadisticas.insertsCompletos,
+						unaMemoria->estadisticas.insertsFallidos,
+						unaMemoria->estadisticas.selectsCompletos,
+						unaMemoria->estadisticas.selectsFallidos,
+						unaMemoria->estadisticas.operacionesTotalesEnMemoria);
+			}
+
+		}
+
+		sem_post(&sem_borradoMemoria);
 
 	} else {
 		printf("\n\n----METRICS----");
 		if (promedioSelect == -1) {
-			printf("\n\nRead latency: ---");
+			printf("\nRead latency: ---");
 		} else {
-			printf("%s%i", "\n\nRead latency: ", promedioSelect);
+			printf("\nRead latency: %i", promedioSelect);
 		}
 
 		if (promedioInsert == -1) {
-			printf("\n\nWrite latency: ---");
+			printf("\nWrite latency: ---");
 		} else {
-			printf("%s%i", "\n\nWrite latency: ", promedioInsert);
+			printf("\nWrite latency: %i", promedioInsert);
 		}
 
-		printf("%s%i", "\n\nReads: ", list_size(tiemposSelectAux));
-		printf("%s%i", "\n\nWrites: ", list_size(tiemposInsertAux));
-		printf("\n\n");
+		printf("\nReads: %i", list_size(tiemposSelectAux));
+		printf("\nWrites: %i", list_size(tiemposInsertAux));
+
+		sem_wait(&sem_operacionesTotales);
+		printf("\nOperaciones totales: %i", operacionesTotales);
+		sem_post(&sem_operacionesTotales);
+
+		sem_wait(&sem_borradoMemoria);
+		for (int i = 0; i < list_size(memorias); i++) {
+			memoriaEnLista* unaMemoria = list_get(memorias, i);
+
+			if (unaMemoria->estaViva) {
+				printf(
+						"\n\n--Memoria %i-- \nInserts Completos: %i \nInserts Fallidos: %i \nSelects Completos: %i \nSelects Fallidos: %i \nOperaciones totales: %i",
+						unaMemoria->nombre,
+						unaMemoria->estadisticas.insertsCompletos,
+						unaMemoria->estadisticas.insertsFallidos,
+						unaMemoria->estadisticas.selectsCompletos,
+						unaMemoria->estadisticas.selectsFallidos,
+						unaMemoria->estadisticas.operacionesTotalesEnMemoria);
+			}
+		}
+		sem_post(&sem_borradoMemoria);
+
 	}
+
+
+	printf("\n\n");
 
 	list_destroy(tiemposSelectAux);
 	list_destroy(tiemposInsertAux);
 
 	limpiarListasTiempos();
+}
 
+void metricsAutomatico() {
+
+	while (1) {
+		sleep(30);
+		metrics(1);
+	}
 }
 
 void status() {
@@ -282,20 +334,18 @@ void status() {
 	mostrarListaScripts(listaEXIT);
 	printf("\n\n------------\n\n");
 	sem_wait(&sem_refreshConfig);
-	printf("QUANTUM: %i\n",quantum);
+	printf("QUANTUM: %i\n", quantum);
 	printf("SLEEP EJECUCION: %i\n", sleepEjecucion);
 	printf("REFRESH METADATA: %i\n", intervaloDeRefreshMetadata);
 	sem_post(&sem_refreshConfig);
 	printf("Memorias conectadas:");
 	sem_wait(&sem_borradoMemoria);
 
-	for (int i = 0; i<list_size(memorias);i++)
-	{
-		memoriaEnLista* unaMemoria = list_get(memorias,i);
+	for (int i = 0; i < list_size(memorias); i++) {
+		memoriaEnLista* unaMemoria = list_get(memorias, i);
 
-		if (unaMemoria->estaViva)
-		{
-			printf(" %i,",unaMemoria->nombre);
+		if (unaMemoria->estaViva) {
+			printf(" %i,", unaMemoria->nombre);
 		}
 
 	}
@@ -329,6 +379,21 @@ int add(char* chocloDeCosas) {
 
 	memoria->consistencias[consistencia] = consistencia; //La consistencia esta en la misma posicion del numero que lo representa (0,1 o 2);
 
+	if (consistencia == SHC) { //Journal a todas las SHC
+
+		for (int i = 0; i < list_size(memorias); i++) {
+
+			memoriaEnLista* unaMemoria = list_get(memorias, i);
+
+			if (unaMemoria->consistencias[SHC] == SHC && unaMemoria->estaViva) {
+				unaMemoria->estadisticas.operacionesTotalesEnMemoria++;
+				enviarInt(unaMemoria->socket, OP_JOURNAL);
+
+			}
+
+		}
+	}
+
 	if ((consistencia == EC) && (proximaMemoriaEC == -1)) {
 		sem_wait(&sem_cambioMemoriaEC);
 		proximaMemoriaEC = memoria->nombre;
@@ -353,7 +418,7 @@ void refreshMetadatas() {
 	while (1) {
 
 		sem_wait(&sem_refreshConfig);
-		int intervaloDeRefresh = intervaloDeRefreshMetadata;
+		int intervaloDeRefresh = intervaloDeRefreshMetadata / 1000; //TODO: Marca, se considera milisegundos
 		sem_post(&sem_refreshConfig);
 
 		sleep(intervaloDeRefresh);

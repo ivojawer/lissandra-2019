@@ -40,20 +40,16 @@ script* encontrarScriptEnLista(int id, t_list* lista) {
 
 int removerScriptDeLista(int id, t_list* lista) {
 
-	sem_wait(&sem_movimientoScripts);
-		for (int i = 0; i < list_size(lista); i++) {
+	for (int i = 0; i < list_size(lista); i++) {
 
-			script* script = list_get(lista, i);
-			if (script->idScript == id) {
-				list_remove(lista,i);
-				sem_post(&sem_movimientoScripts);
-				return 1;
-			}
-
+		script* script = list_get(lista, i);
+		if (script->idScript == id) {
+			list_remove(lista, i);
+			return 1;
 		}
 
-		sem_post(&sem_movimientoScripts);
-		return -1;
+	}
+	return -1;
 }
 
 int criterioDeTabla(char* nombreTabla) {
@@ -308,9 +304,8 @@ int esMasNuevoQue30Segundos(tiempoDeOperacion tiempoOperacion) {
 }
 
 t_list* filterCasero_esMasNuevoQue30Segundos(t_list* tiempos) {
-	t_list* tiemposAux = list_create();
 
-	tiemposAux = list_duplicate(tiempos);
+	t_list* tiemposAux = list_duplicate(tiempos);
 
 	for (int i = 0; i < list_size(tiemposAux); i++) {
 		tiempoDeOperacion* elemento = list_get(tiemposAux, i); //Hay que liberar esto?
@@ -354,7 +349,6 @@ void limpiarListasTiempos() {
 	t_list* listaInsertAux = tiemposInsert;
 	t_list* listaSelectAux = tiemposSelect;
 
-
 	tiemposSelect = filterCasero_esMasNuevoQue30Segundos(tiemposSelect);
 
 	tiemposInsert = filterCasero_esMasNuevoQue30Segundos(tiemposInsert);
@@ -390,7 +384,6 @@ void matarListas() {
 
 int encontrarPosicionDeMemoria(int memoriaAEncontrar) {
 
-
 	for (int i = 0; i < list_size(memorias); i++) {
 		memoriaEnLista* memoria = list_get(memorias, i);
 
@@ -399,12 +392,10 @@ int encontrarPosicionDeMemoria(int memoriaAEncontrar) {
 		}
 	}
 
-
 	return -1;
 }
 
 int memoriaECSiguiente(int memoriaInicialEC) {
-
 
 	int posicionMemoriaInicialEnLista = encontrarPosicionDeMemoria(
 			memoriaInicialEC);
@@ -414,14 +405,13 @@ int memoriaECSiguiente(int memoriaInicialEC) {
 
 		memoriaEnLista* unaMemoria = list_get(memorias, i);
 
-
 		if (unaMemoria->consistencias[EC] == EC) {
 			return unaMemoria->nombre;
 		}
 	}
 
 	if (posicionMemoriaInicialEnLista == -1) //El for anterior recorre toda la lista
-	{
+			{
 		return -1;
 	}
 
@@ -533,6 +523,21 @@ void matarMemoria(int nombreMemoria) {
 
 			list_remove(memorias, i);
 
+			if (unaMemoria->consistencias[SHC] == SHC) { //Journal a todas las SHC
+
+				for (int d = 0; d < list_size(memorias); d++) {
+
+					memoriaEnLista* unaMemoria = list_get(memorias, d);
+
+					if (unaMemoria->consistencias[SHC] == SHC
+							&& unaMemoria->estaViva) {
+						enviarInt(unaMemoria->socket, OP_JOURNAL);
+
+					}
+
+				}
+			}
+
 			if (unaMemoria->nombre == proximaMemoriaEC) {
 
 				sem_wait(&sem_cambioMemoriaEC);
@@ -557,7 +562,8 @@ void matarMemoria(int nombreMemoria) {
 
 				int respuesta = ERROR;
 
-				script* elScript = encontrarScriptEnLista(*nombreScript, listaEXEC);
+				script* elScript = encontrarScriptEnLista(*nombreScript,
+						listaEXEC);
 
 				elScript->resultadoDeEnvio = malloc(sizeof(int));
 				memcpy(elScript->resultadoDeEnvio, &respuesta, sizeof(int));
@@ -637,6 +643,27 @@ int manejarRespuestaDeMemoria(script* elScript, request* laRequest, int memoria)
 	memcpy(&respuesta, elScript->resultadoDeEnvio, sizeof(int));
 
 	if (respuesta == ERROR) {
+
+		if (laRequest->requestEnInt == SELECT
+				|| laRequest->requestEnInt == INSERT) {
+			sem_wait(&sem_borradoMemoria);
+			int index = encontrarPosicionDeMemoria(memoria);
+
+			if (index != -1) {
+				memoriaEnLista* laMemoria = list_get(memorias,
+						encontrarPosicionDeMemoria(memoria));
+
+				if (laRequest->requestEnInt == SELECT) {
+					laMemoria->estadisticas.selectsFallidos++;
+				} else if (laRequest->requestEnInt == INSERT) {
+					laMemoria->estadisticas.insertsFallidos++;
+				}
+
+			}
+			sem_post(&sem_borradoMemoria);
+
+		}
+
 		log_error(logger, "%s: No se pudo realizar. (Enviado a %i)",
 				requestStructAString(laRequest), memoria);
 	}
@@ -667,6 +694,8 @@ int manejarRespuestaDeMemoria(script* elScript, request* laRequest, int memoria)
 
 		enviarRequestConHeaderEId(laMemoria->socket, laRequest, REQUEST,
 				elScript->idScript);
+
+		laMemoria->estadisticas.operacionesTotalesEnMemoria++; //TODO: Marca, las operaciones intermedias cuentan como operaciones
 
 		list_add(laMemoria->scriptsEsperando, &elScript->idScript);
 
@@ -700,6 +729,19 @@ int manejarRespuestaDeMemoria(script* elScript, request* laRequest, int memoria)
 			log_info(logger, "%s: %s (Enviado a %i)",
 					requestStructAString(laRequest), resultadoSelect, memoria);
 
+			sem_wait(&sem_borradoMemoria);
+
+			int index = encontrarPosicionDeMemoria(memoria);
+
+			if (index != -1) {
+				memoriaEnLista* laMemoria = list_get(memorias,
+						encontrarPosicionDeMemoria(memoria));
+
+				laMemoria->estadisticas.selectsCompletos++;
+
+			}
+
+			sem_post(&sem_borradoMemoria);
 			break;
 
 		}
@@ -722,6 +764,23 @@ int manejarRespuestaDeMemoria(script* elScript, request* laRequest, int memoria)
 			/* no break */
 
 		default: {
+
+			if (laRequest->requestEnInt == INSERT) {
+
+				sem_wait(&sem_borradoMemoria);
+
+				int index = encontrarPosicionDeMemoria(memoria);
+
+				if (index != -1) {
+					memoriaEnLista* laMemoria = list_get(memorias,
+							encontrarPosicionDeMemoria(memoria));
+
+					laMemoria->estadisticas.insertsCompletos++;
+
+				}
+
+				sem_post(&sem_borradoMemoria);
+			}
 
 			log_info(logger, "%s: Se pudo realizar. (Enviado a %i)",
 					requestStructAString(laRequest), memoria);

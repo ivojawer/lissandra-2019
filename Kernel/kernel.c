@@ -15,6 +15,7 @@ int multiprocesamiento;
 int proximaMemoriaEC;
 int sleepEjecucion;
 int intervaloDeRefreshMetadata;
+int operacionesTotales;
 sem_t sem_multiprocesamiento;
 sem_t sem_cambioId;
 sem_t sem_disponibleColaREADY;
@@ -25,6 +26,7 @@ sem_t sem_cambioMemoriaEC;
 sem_t sem_movimientoScripts;
 sem_t sem_borradoMemoria;
 sem_t sem_actualizacionMetadatas;
+sem_t sem_operacionesTotales;
 script* scriptRefreshMetadata;
 
 int main() {
@@ -49,6 +51,7 @@ int main() {
 
 	idInicial = 1000;
 	proximaMemoriaEC = -1;
+	operacionesTotales = 0;
 
 	scriptRefreshMetadata = malloc(sizeof(script));
 
@@ -62,6 +65,7 @@ int main() {
 	pthread_t h_primeraConexion;
 	pthread_t h_refreshMetadatas;
 	pthread_t h_refreshConfig;
+	pthread_t h_metricsAutomatico;
 
 	sem_init(&sem_multiprocesamiento, 0, multiprocesamiento);
 	sem_init(&sem_cambioId, 0, 1);
@@ -73,6 +77,7 @@ int main() {
 	sem_init(&sem_movimientoScripts,0,1);
 	sem_init(&sem_borradoMemoria,0,1);
 	sem_init(&sem_actualizacionMetadatas,0,1);
+	sem_init(&sem_operacionesTotales,0,1);
 
 	char* ipMemoriaPrincipal = string_duplicate(config_get_string_value(config, "IP_MEMORIA"));
 	int puertoMemoriaPrincipal = config_get_int_value(config, "PUERTO_MEMORIA");
@@ -100,6 +105,10 @@ int main() {
 	NULL);
 	pthread_detach(h_refreshConfig);
 
+	pthread_create(&h_metricsAutomatico, NULL, (void *) metricsAutomatico,
+		NULL);
+		pthread_detach(h_metricsAutomatico);
+
 	pthread_create(&h_consola, NULL, (void *) consola, NULL);
 	pthread_join(h_consola, NULL);
 
@@ -112,6 +121,15 @@ int main() {
 	sem_destroy(&sem_disponibleColaREADY);
 	sem_destroy(&sem_tiemposInsert);
 	sem_destroy(&sem_tiemposSelect);
+	sem_destroy(&sem_refreshConfig);
+	sem_destroy(&sem_cambioMemoriaEC);
+	sem_destroy(&sem_movimientoScripts);
+	sem_destroy(&sem_borradoMemoria);
+	sem_destroy(&sem_actualizacionMetadatas);
+	sem_destroy(&sem_operacionesTotales);
+
+	free(ipMemoriaPrincipal);
+	free(seedPrincipal);
 
 	matarListas();
 
