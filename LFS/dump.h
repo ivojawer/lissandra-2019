@@ -27,7 +27,6 @@ void agregar_bloque_lista_tmp(t_list *bloques, int bloque_dump);
 void grabar_registro(char *root, char *registro_completo, int length_registro, int space_full, int index, int table_change,
 					 struct bloques_tmp *bloques_tmp, int flag_close_file);
 void guardar_registros_en_bloques(t_registro *registro_recv, int table_change, struct bloques_tmp *bloques_tmp_tabla);
-int contar_temporales(char *root);
 int obtener_size(char *size_array);
 int archivo_vacio(FILE *fp);
 void agregar_bloque_particion(void *elemento);

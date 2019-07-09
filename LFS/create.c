@@ -66,7 +66,7 @@ void crear_particiones(char *dir, int particiones)
 	string_append(&root_aux, "/part");
 
 	char* size_text = string_new();
-	string_append(&size_text, "Size=");
+	string_append(&size_text, "SIZE=");
 	string_append(&size_text, "0");
 	string_append(&size_text, "\n");
 
@@ -85,7 +85,7 @@ void crear_particiones(char *dir, int particiones)
 			printf("No hay bloques libres\n");
 		} else {
 			fputs(size_text, fp);
-			fprintf(fp, "%s", "Block=[");
+			fprintf(fp, "%s", "BLOCKS=[");
 
 			fputs(string_itoa(free_block), fp);
 			fprintf(fp, "%s", "]");

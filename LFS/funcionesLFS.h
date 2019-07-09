@@ -108,6 +108,7 @@ void tabla_destroy(t_tabla *self);
 t_list* cola_requests;
 void cargar_op_control_tablas();
 void modificar_op_control(char *tabla, int mod_flag);
+int contar_archivos_con_extension(char *root,char* extension);
 
 //funciones para obtener campos individuales de una request
 char* get_tabla(char* comando);
@@ -166,6 +167,7 @@ void eliminar_tabla(char *tabla);
 //DUMP
 void ejecutar_dump();
 sem_t dump_semaphore;
+
 
 
 #endif /* FUNCIONESLFS_H_ */

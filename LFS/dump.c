@@ -154,23 +154,6 @@ void guardar_registros_en_bloques(t_registro *registro_recv, int table_change,
 					0, table_change, bloques_tmp_tabla, 0);
 }
 
-int contar_temporales(char *root) {
-	int cont = 0;
-	DIR * dir;
-	dir = opendir(root);
-	struct dirent *entrada;
-	char **entrada_aux;
-	while ((entrada = readdir(dir)) != NULL) {
-		entrada_aux = string_split(entrada->d_name, ".");
-		if (entrada_aux[1] != NULL) {
-			if (strcmp(entrada_aux[1], "tmp") == 0) {
-				cont++;
-			}
-		}
-	}
-	closedir(dir);
-	return cont;
-}
 
 int obtener_size(char *size_array) //Se puede usar en COMPACTACION. Recibe la primer linea leída
 {
@@ -199,7 +182,7 @@ void agregar_bloque_particion(void *elemento) {
 	char* root = string_duplicate(puntoDeMontaje);
 	string_append(&root, "Tablas/");
 	string_append(&root, blocks_info->tabla);
-	next_tmp = contar_temporales(root) + 1;
+	next_tmp = contar_archivos_con_extension(root,"tmp");// + 1;
 
 	free(root);
 

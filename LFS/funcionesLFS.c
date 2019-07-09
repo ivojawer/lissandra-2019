@@ -408,3 +408,20 @@ void modificar_op_control(char *tabla, int mod_flag)
 	}
 }
 
+int contar_archivos_con_extension(char *root,char* extension) {
+	int cont = 0;
+	DIR * dir;
+	dir = opendir(root);
+	struct dirent *entrada;
+	char **entrada_aux;
+	while ((entrada = readdir(dir)) != NULL) {
+		entrada_aux = string_split(entrada->d_name, ".");
+		if (entrada_aux[1] != NULL) {
+			if (strcmp(entrada_aux[1], extension) == 0) {
+				cont++;
+			}
+		}
+	}
+	closedir(dir);
+	return cont;
+}
