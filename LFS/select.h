@@ -8,7 +8,6 @@ static void agregar_bloque_busqueda(t_list *lista_agregar, t_bloque *bloque_busc
 t_par_valor_timestamp *crear_valor_timestamp_buscar(unsigned long timestamp, char *valor);
 static void agregar_valor_timestamp(t_list *timestamp_valor, t_par_valor_timestamp *par_valor_timestamp);
 int buscar_tabla_FS(char *tabla_name);
-int nr_particion_key(uint16_t key, int nr_particiones_metadata);
 void buscar_key_bloques(char* bloque_nr, uint16_t key, t_list *timestamp_valor, int flag_last_bloque, int size_bloque);
 void cargar_timestamp_value(t_list *bloques_buscar, t_list *timestamp_valor, uint16_t key);
 int existe_tabla(char *tabla);

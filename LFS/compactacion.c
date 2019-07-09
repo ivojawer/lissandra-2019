@@ -4,7 +4,7 @@ extern char* puntoDeMontaje;
 extern int tamanioBloques;
 
 void mostrarRegistro(t_registro* reg){
-	printf("		key:%u;ts:%%lu;value:%s\n",reg->key,reg->timestamp,reg->value);
+	printf("		key:%d;ts:%lu;value:%s\n",reg->key,reg->timestamp,reg->value);
 }
 
 void mostrarListaDeRegistros(t_list* listReg){
@@ -13,6 +13,21 @@ void mostrarListaDeRegistros(t_list* listReg){
 }
 
 void mostrarListaDeListasDeRegistros(t_list* lista){
+	printf("LISTA:\n");
+	list_iterate(lista,(void*)mostrarListaDeRegistros);
+}
+
+
+void mostrarString(char* str){
+	printf("		%s\n",str);
+}
+
+void mostrarListaDeStrings(t_list* listStr){
+	printf("	PARTICION:\n");
+	list_iterate(listStr,(void*)mostrarRegistro);
+}
+
+void mostrarListaDeListasDeStrings(t_list* lista){
 	printf("LISTA:\n");
 	list_iterate(lista,(void*)mostrarListaDeRegistros);
 }
@@ -82,6 +97,7 @@ void compactar(char* tabla){
 
 	analizarListaDeListasDeRegistrosEnBloques(tablaParticiones);
 
+	mostrarListaDeListasDeStrings(tablaParticiones);
 }
 
 
@@ -296,7 +312,4 @@ t_list* traerRegistrosBloques(char** bloques){
 	return registros;
 }
 
-int nr_particion_key(uint16_t key, int nr_particiones_metadata)
-{
-	return key%nr_particiones_metadata;
-}
+

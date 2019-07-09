@@ -106,10 +106,6 @@ int obtener_size_particion(char *tabla, int particion_buscar)
 	config_destroy(config);
 }
 
-int nr_particion_key(uint16_t key, int nr_particiones_metadata)
-{
-	return key%nr_particiones_metadata;
-}
 
 
 void comparar_key_y_agregar_valor (uint16_t key_recv, uint16_t key, char *valor, unsigned long timestamp, t_list *timestamp_valor)

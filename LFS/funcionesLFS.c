@@ -425,3 +425,8 @@ int contar_archivos_con_extension(char *root,char* extension) {
 	closedir(dir);
 	return cont;
 }
+
+int nr_particion_key(uint16_t key, int nr_particiones_metadata)
+{
+	return key%nr_particiones_metadata;
+}
