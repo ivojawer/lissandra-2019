@@ -110,6 +110,7 @@ void cargar_op_control_tablas();
 void modificar_op_control(char *tabla, int mod_flag);
 int contar_archivos_con_extension(char *root,char* extension);
 int nr_particion_key(uint16_t key, int nr_particiones_metadata);
+int controlar_bloques_disponibles(int cantArchivos);
 
 //funciones para obtener campos individuales de una request
 char* get_tabla(char* comando);

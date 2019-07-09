@@ -430,3 +430,18 @@ int nr_particion_key(uint16_t key, int nr_particiones_metadata)
 {
 	return key%nr_particiones_metadata;
 }
+
+
+//falta que abra el bitarray de forma generica aca no?
+int controlar_bloques_disponibles(int cantArchivos)
+{
+	int i;
+	int cont = 0;
+	for (i = 0; i < cantidadBloques; i++){
+		if (bitarray_test_bit(bitarray, i) == 0)
+			cont++;
+	}
+	if(cont >= cantArchivos)
+		return 1;
+	return 0;
+}

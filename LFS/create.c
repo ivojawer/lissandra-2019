@@ -44,18 +44,7 @@ int elegir_bloque_libre(int nr_bloques)
 }
 
 
-int controlar_nr_particiones(int particiones)
-{
-	int i;
-	int cont = 0;
-	for (i = 0; i < cantidadBloques; i++){
-		if (bitarray_test_bit(bitarray, i) == 0)
-			cont++;
-	}
-	if(cont >= particiones)
-		return 1;
-	return 0;
-}
+
 
 
 
@@ -166,9 +155,9 @@ void rutina_create(char* comando)
 	int compactacion = get_tiempo_compactacion(comando);
 	printf("Tiempo de compactacion: %d\n", compactacion);
 
-	if(controlar_nr_particiones(particiones) == 0){
-			printf("Se excede la cantidad de particiones disponibles\n");
-			return;
+	if(controlar_bloques_disponibles(particiones) == 0){
+		printf("Se excede la cantidad de particiones disponibles\n");
+		return;
 	}
 
 	if (existe_tabla(tabla)) {
