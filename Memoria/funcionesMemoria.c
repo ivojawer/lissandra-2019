@@ -135,7 +135,7 @@ pagina* ultimaPagina(t_list* tablaPaginas) { //para testear
 	return lastPagina;
 }
 
-void asignoPaginaEnMarco(uint16_t key, unsigned long timestamp, char* value,
+void asignoPaginaEnMarco(uint16_t key, unsigned long long timestamp, char* value,
 		void* comienzoMarco) {
 
 	//timestamp->key->value el orden importa
@@ -158,7 +158,7 @@ eliminarRegistro(segmento* seg, pagina* pagEnSeg){
 		return pag == pagEnSeg;
 	}
 	marcos[pagEnSeg->nroMarco].vacio = true;
-	if(pagEnSeg->flagModificado){
+	/*if(pagEnSeg->flagModificado){   //nunca va a estar modificado.
 		marco* datosPagina = getMarcoFromPagina(pagEnSeg);
 		registro* reg = malloc(sizeof(registro));
 		reg ->key=datosPagina->key;
@@ -166,23 +166,22 @@ eliminarRegistro(segmento* seg, pagina* pagEnSeg){
 		reg->value = malloc(sizeof(char) * string_length(&datosPagina->value));
 		reg->value = &datosPagina->value;
 		enviarRegistroComoInsert(reg);
-	}
+	}*/
 	list_remove_by_condition(seg->tablaDePaginas,(void*)encuentroPaginaPorKey);
 	free(pagEnSeg);
 }
 
 int marcoLRU(){
+	bool encontreLRU = false;
+
 	segmento* segmentoLRU = tablaSegmentos->head->data;
 	pagina* paginaLRU = segmentoLRU->tablaDePaginas->head->data;
-
-
-
-
 	void menorUltimoUsoPorSegmento(segmento* seg){
 		void menorUltimoUso(pagina* pag){
 				if(pag->ultimoUso < paginaLRU->ultimoUso){
 					paginaLRU=pag;
 					segmentoLRU=seg;
+					encontreLRU = true;
 				}
 		}
 		list_iterate(seg->tablaDePaginas,(void*)menorUltimoUso);
@@ -195,7 +194,10 @@ int marcoLRU(){
 
 	eliminarRegistro(segmentoLRU,paginaLRU);
 
-	return marcoLRU;
+	if(encontreLRU)
+		return marcoLRU;
+	else
+		return -1;
 }
 
 int numeroMarcoDondeAlocar() {
@@ -206,7 +208,15 @@ int numeroMarcoDondeAlocar() {
 			return i;
 		}
 	}
-	return marcoLRU(); //falta aplicar algoritmo LRU si no encontro ninguna libre
+	int marcoAlocar = marcoLRU();
+	if (marcoAlocar > -1)
+		return marcoAlocar;
+	else{
+		log_info(logger,"No hay marcos disponibles, ejecutando journal");
+		journal();
+		return numeroMarcoDondeAlocar();
+	}
+
 }
 
 pagina* nuevoDato(t_list* tablaPaginas, int flagModificado, int key,
@@ -313,7 +323,7 @@ char* Select(char* parametros) {
 
 }
 
-void actualizoDato(pagina* pagina, char* nuevoValue, unsigned long nuevoTimestamp) { //TODO: Cambiar tipos
+void actualizoDato(pagina* pagina, char* nuevoValue, unsigned long long nuevoTimestamp) { //TODO: Cambiar tipos
 	strcpy(&getMarcoFromPagina(pagina)->value, nuevoValue);
 	getMarcoFromPagina(pagina)->timestamp = nuevoTimestamp;
 
@@ -341,7 +351,7 @@ int insert(char* parametros) {  //TODO: Cambiar tipos
 	value = sacoComillas(value);
 
 	//value=string_substring_until(value,config_get_int_value(config,"CANT_MAX_CARAC")); //lo corta para que no ocupe mas de 20 caracteres
-	unsigned long timestamp = time(NULL) / 1000; //TODO: Hacer la adquisicion del timestamp consistente con el LFS
+	unsigned long long timestamp = time(NULL) / 1000; //TODO: Hacer la adquisicion del timestamp consistente con el LFS
 
 	log_info(logger, "INSERT: Tabla:%s - key:%d - timestamp:%d - value:%s\n",
 			tabla, key, timestamp, value);

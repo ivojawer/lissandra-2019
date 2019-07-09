@@ -51,7 +51,7 @@ int main() {
 	//divido en marcos
 
 
-	tamanioMarco = tamanioMarco * sizeof(char) + sizeof(int) + sizeof(int); //value + key + timestamp TODO: Cambiar timestamp si el tipo se distinto
+	tamanioMarco = tamanioMarco * sizeof(char) + sizeof(uint16_t) + sizeof(unsigned long long); //value + key + timestamp TODO: Cambiar timestamp si el tipo se distinto
 	log_info(logger,"el tamanio de mi marco es: %d", tamanioMarco);
 	cantMarcos = tamanioMemoria/tamanioMarco; //tamanio marco siempre es mult de 2 asi que da entero
 	log_info(logger,"cantidad de marcos: %d",cantMarcos);
