@@ -1,9 +1,10 @@
 #include "compactacion.h"
 
 extern char* puntoDeMontaje;
+extern int tamanioBloques;
 
 void mostrarRegistro(t_registro* reg){
-	printf("		key:%d;ts:%d;value:%s\n",reg->key,reg->timestamp,reg->value);
+	printf("		key:%u;ts:%%lu;value:%s\n",reg->key,reg->timestamp,reg->value);
 }
 
 void mostrarListaDeRegistros(t_list* listReg){
@@ -15,6 +16,9 @@ void mostrarListaDeListasDeRegistros(t_list* lista){
 	printf("LISTA:\n");
 	list_iterate(lista,(void*)mostrarListaDeRegistros);
 }
+////////////////////////////////////////////////////////////////
+
+
 
 void compactar(char* tabla){
 
@@ -22,7 +26,6 @@ void compactar(char* tabla){
 
 	if(cantidadTemporales < 1){
 		printf("no hay tmpc \n ");
-
 		return;
 	}
 
@@ -41,17 +44,75 @@ void compactar(char* tabla){
 		list_add(tablaTemporales, traerRegistrosBloques(bloquesTemporal));
 	}
 
-
 	mostrarListaDeListasDeRegistros(tablaParticiones);
 	mostrarListaDeListasDeRegistros(tablaTemporales);
 
 
-	//lista particiones
+	void evaluarRegistro(t_registro* reg){
 
-	//lista tmpc
+		int particionABuscar = nr_particion_key(reg->key, particiones);
+
+		t_list* listaRegistros = list_duplicate(list_get(tablaParticiones,particionABuscar));
+
+		int encontroLaKey = 0;
+
+		for(int i=0;i < list_size(listaRegistros);i++){
+			t_registro* registro = list_get(listaRegistros,i);
+			if(registro->key == reg->key){
+				encontroLaKey = 1;
+
+				if(reg->timestamp > registro->timestamp){
+					list_replace(list_get(tablaParticiones,particionABuscar),i, reg);
+				}
+			}
+		}
+
+		if(!encontroLaKey){
+			list_add(list_get(tablaParticiones,particionABuscar),reg);
+		}
+	}
+
+	void recorrerListaDeRegistros(t_list* listReg){
+		list_iterate(listReg,(void*)evaluarRegistro);
+	}
+
+	list_iterate(tablaTemporales,(void*)recorrerListaDeRegistros);
+
+	mostrarListaDeListasDeRegistros(tablaParticiones);
+
+	analizarListaDeListasDeRegistrosEnBloques(tablaParticiones);
+
+}
+
+
+void analizarListaDeListasDeRegistrosEnBloques(t_list* listaDeListas){
+
+	void transformarAStrings(t_list* lista){
+		list_map(lista, (void*)structRegistroAString);
+	}
+
+	list_iterate(listaDeListas,(void*)transformarAStrings);
+
+	int bytesAEscribir = 0;
+
+	void contarLargoRegistros(char* registro){
+		bytesAEscribir += string_length(registro);
+	}
+
+	void iterarLaLista(t_list* lista){
+		list_iterate(lista, (void*)contarLargoRegistros);
+	}
+
+	list_iterate(listaDeListas,(void*)iterarLaLista);
+
+	int cantidadBloquesNecesarios = bytesAEscribir / tamanioBloques;
+	if(bytesAEscribir % tamanioBloques != 0){
+		cantidadBloquesNecesarios += 1;
+	}
 
 
 }
+
 
 char** transformarParticionABloques(char* tabla,int nro_particion){
 
