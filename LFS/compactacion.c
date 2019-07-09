@@ -295,3 +295,8 @@ t_list* traerRegistrosBloques(char** bloques){
 	printf("termine de leer bloques de la particion\n");
 	return registros;
 }
+
+int nr_particion_key(uint16_t key, int nr_particiones_metadata)
+{
+	return key%nr_particiones_metadata;
+}
