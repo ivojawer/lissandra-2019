@@ -2,6 +2,20 @@
 
 extern char* puntoDeMontaje;
 
+void mostrarRegistro(t_registro* reg){
+	printf("		key:%d;ts:%d;value:%s\n",reg->key,reg->timestamp,reg->value);
+}
+
+void mostrarListaDeRegistros(t_list* listReg){
+	printf("	PARTICION:\n");
+	list_iterate(listReg,(void*)mostrarRegistro);
+}
+
+void mostrarListaDeListasDeRegistros(t_list* lista){
+	printf("LISTA:\n");
+	list_iterate(lista,(void*)mostrarListaDeRegistros);
+}
+
 void compactar(char* tabla){
 
 	int cantidadTemporales = renombrarATmpc(tabla);
@@ -28,6 +42,8 @@ void compactar(char* tabla){
 	}
 
 
+	mostrarListaDeListasDeRegistros(tablaParticiones);
+	mostrarListaDeListasDeRegistros(tablaTemporales);
 
 
 	//lista particiones
@@ -94,7 +110,6 @@ char** transformarTemporalABloques(char* tabla,int nro_temporal){
 	t_config* metadataTemporal = config_create(temporal);
 
 	char** bloques = config_get_array_value(metadataTemporal,"BLOCKS");
-	//printf("hola \n");
 	void contarBloques(char* unBloque){
 		cantBloques += 1;
 	}
@@ -103,6 +118,7 @@ char** transformarTemporalABloques(char* tabla,int nro_temporal){
 
 	char** pathsBloquesTemporal = (char**)malloc((cantBloques + 1) * (sizeof(char*)));
 
+	printf("primer bloque:%s\n",pathsBloquesTemporal[0]);
 	int i = 0;
 	void accionPorBloque(char* bloq){
 
@@ -115,7 +131,7 @@ char** transformarTemporalABloques(char* tabla,int nro_temporal){
 		printf("path de bloque: %s",pathsBloquesTemporal[i]);
 		i++;
 	}
-
+	string_iterate_lines(bloques,(void*)accionPorBloque);
 	pathsBloquesTemporal[cantBloques] = NULL;
 	config_destroy(metadataTemporal);
 
@@ -192,15 +208,15 @@ t_list* traerRegistrosBloques(char** bloques){
 		printf("bloque actual:%s\n",nombreBloque);
 		FILE* bloqueActual = fopen(nombreBloque,"r");
 		char nuevoCaracter = fgetc(bloqueActual);
-		while(nuevoCaracter != EOF){
-			//printf("caracter leido:%c\n",nuevoCaracter);
+		while(nuevoCaracter > EOF){
+			printf("caracter leido:%c\n",nuevoCaracter);
 			if(nuevoCaracter == '\n'){
 				printf("termino registro\n");
 				list_add(registros, stringRegistroAStruct(registroActual));
 				free(registroActual);
 				registroActual = string_new();
 			}else{
-				printf("agrego caracter a reg:%c\n",nuevoCaracter);
+				//printf("agrego caracter a reg:%c\n",nuevoCaracter);
 				string_append_char(registroActual,nuevoCaracter);
 				printf("registro con caracter agregado:%s\n", registroActual);
 			}
@@ -211,8 +227,10 @@ t_list* traerRegistrosBloques(char** bloques){
 	}
 
 	string_iterate_lines(bloques, (void*) leerBloque);
+	list_add(registros, stringRegistroAStruct(registroActual));
+
 
 	//free(registroActual);
-	printf("hola final\n");
+	printf("termine de leer bloques de la particion\n");
 	return registros;
 }
