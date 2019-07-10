@@ -111,6 +111,10 @@ void modificar_op_control(char *tabla, int mod_flag);
 int contar_archivos_con_extension(char *root,char* extension);
 int nr_particion_key(uint16_t key, int nr_particiones_metadata);
 int controlar_bloques_disponibles(int cantArchivos);
+void desmarcar_bloque_bitmap(t_bloque *elemento);
+t_bloque *crear_bloque_buscar(char *bloque);
+void bloque_destroy(t_bloque *self);
+
 
 //funciones para obtener campos individuales de una request
 char* get_tabla(char* comando);

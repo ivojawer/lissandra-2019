@@ -432,7 +432,6 @@ int nr_particion_key(uint16_t key, int nr_particiones_metadata)
 }
 
 
-//falta que abra el bitarray de forma generica aca no?
 int controlar_bloques_disponibles(int cantArchivos)
 {
 	int i;
@@ -444,4 +443,35 @@ int controlar_bloques_disponibles(int cantArchivos)
 	if(cont >= cantArchivos)
 		return 1;
 	return 0;
+}
+
+void desmarcar_bloque_bitmap(t_bloque *elemento) {
+
+	int block = atoi(elemento->name);
+	bitarray_clean_bit(bitarray, block);
+	guardar_bitarray(block);
+
+	char* block_root = string_new();
+	string_append(&block_root,puntoDeMontaje);
+	string_append(&block_root,"Bloques/bloque");
+	string_append(&block_root,string_itoa(block));
+	string_append(&block_root,".bin");
+	FILE *fp;
+	fp = fopen(block_root, "w+");
+	fclose(fp);
+
+	free(block_root);
+
+}
+
+t_bloque *crear_bloque_buscar(char *bloque)
+{
+	   t_bloque *new = malloc(sizeof(t_bloque));
+	   new->name=strdup(bloque);
+	   return new;
+}
+
+void bloque_destroy(t_bloque *self) {
+    free(self->name);
+    free(self);
 }

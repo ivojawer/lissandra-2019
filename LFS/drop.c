@@ -48,24 +48,6 @@ void eliminar_tabla_fisicamente(char *tabla) {
 	free(root);
 }
 
-void desmarcar_bloque_bitmap(t_bloque *elemento) {
-
-	int block = atoi(elemento->name);
-	bitarray_clean_bit(bitarray, block);
-	guardar_bitarray(block);
-
-	char* block_root = string_new();
-	string_append(&block_root,puntoDeMontaje);
-	string_append(&block_root,"Bloques/bloque");
-	string_append(&block_root,string_itoa(block));
-	string_append(&block_root,".bin");
-	FILE *fp;
-	fp = fopen(block_root, "w+");
-	fclose(fp);
-
-	free(block_root);
-
-}
 
 void liberar_bloques(t_list *bloques_buscar) {
 	void desmarcar_bloque(void *elemento) {

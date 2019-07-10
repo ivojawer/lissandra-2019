@@ -13,17 +13,7 @@ extern int control;
 extern char array_aux[128];
 extern int flag_key_value;
 
-t_bloque *crear_bloque_buscar(char *bloque)
-{
-	   t_bloque *new = malloc(sizeof(t_bloque));
-	   new->name=strdup(bloque);
-	   return new;
-}
 
-static void bloque_destroy(t_bloque *self) {
-    free(self->name);
-    free(self);
-}
 
 static void agregar_bloque_busqueda(t_list *lista_agregar, t_bloque *bloque_buscado)
 {
@@ -56,7 +46,7 @@ static void agregar_valor_timestamp(t_list *timestamp_valor, t_par_valor_timesta
 void liberar_bloques_buscar(t_list *lista_bloques)
 {
 	void liberar_elementos(void *elemento){
-		return(bloque_destroy((t_bloque *)elemento));
+		bloque_destroy(elemento);
 	}
 
 	list_iterate(lista_bloques, liberar_elementos);

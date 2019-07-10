@@ -9,7 +9,6 @@ extern int cantidadBloques;
 void compactar(char* tabla){
 
 	int cantidadTemporales = renombrarATmpc(tabla);
-
 	if(cantidadTemporales < 1){
 		printf("no hay tmpc \n ");
 		return;
@@ -29,9 +28,9 @@ void compactar(char* tabla){
 		char** bloquesTemporal = transformarTemporalABloques(tabla,i);
 		list_add(tablaTemporales, traerRegistrosBloques(bloquesTemporal));
 	}
-
-	//mostrarListaDeListasDeRegistros(tablaParticiones);
-	//mostrarListaDeListasDeRegistros(tablaTemporales);
+//
+//	mostrarListaDeListasDeRegistros(tablaParticiones);
+//	mostrarListaDeListasDeRegistros(tablaTemporales);
 
 
 	void evaluarRegistro(t_registro* reg){
@@ -64,103 +63,93 @@ void compactar(char* tabla){
 
 	list_iterate(tablaTemporales,(void*)recorrerListaDeRegistros);
 
-	//mostrarListaDeListasDeRegistros(tablaParticiones);
-	//mostrarListaDeListasDeStrings(tablaParticiones);
-
+	mostrarListaDeListasDeRegistros(tablaParticiones);
 
 	// aca se deberia: Bloquear la tabla para cualquier operación sobre la misma
 
 
 	//liberar bloques de todos:
-	void vaciarBloque(char* pathBloque){
-		fclose(fopen(pathBloque, "w"));
+	void vaciarBloque(char* bloque){
+		t_bloque* bloq = crear_bloque_buscar(bloque);
+		desmarcar_bloque_bitmap(bloq);
+		bloque_destroy(bloq);
 	}
-
 	for(int i = 0; i < particiones; i++){
-			liberarBloquesParticion(tabla,i);
-			char** bloquesParticion = transformarParticionABloques(tabla,i);
-			string_iterate_lines(bloquesParticion, (void*)vaciarBloque);
+		char** bloquesParticion = getBloquesParticion(tabla,i);
+		string_iterate_lines(bloquesParticion, (void*)vaciarBloque);
 
-		}
-	for(int i = 0; i < cantidadTemporales; i++){
-			liberarBloquesTemporal(tabla,i);
-			char** bloquesTemporal = transformarTemporalABloques(tabla,i);
-			string_iterate_lines(bloquesTemporal, (void*)vaciarBloque);
-		}
-	//
-
-	void transformarAStrings(t_list* lista){
-		list_map(lista, (void*)structRegistroAString);
 	}
+	for(int i = 0; i < cantidadTemporales; i++){
+		char** bloquesTemporal = getBloquesTemporal(tabla,i);
+		string_iterate_lines(bloquesTemporal, (void*)vaciarBloque);
+	}
+
+	t_list* particionesEnChar = list_create();
+	void transformarAStrings(t_list* lista){
+		list_add(particionesEnChar,list_map(lista, (void*)structRegistroAString));
+	}
+
 
 	list_iterate(tablaParticiones,(void*)transformarAStrings);
 
+	//list_destroy_and_destroy_elements(particionesEnChar,(void*)eliminarListaDeStrings);
+	tablaParticiones = particionesEnChar;
+	printf("lista transformada:\n");
+	mostrarListaDeListasDeStrings(tablaParticiones);
+
+
 	int bytesAEscribir = 0;
+	t_list* bytes_por_particion = list_create();
 
 	void contarLargoRegistros(char* registro){
+		printf("registro:%slongitud:%d\n",registro,string_length(registro));
 		bytesAEscribir += string_length(registro);
 	}
-
 	void iterarLaLista(t_list* lista){
-		list_iterate(lista, (void*)contarLargoRegistros);
-	}
 
+		list_iterate(lista, (void*)contarLargoRegistros);
+		int* punteroByte = malloc(sizeof(int));
+		*punteroByte= bytesAEscribir;
+		list_add(bytes_por_particion,punteroByte);
+		printf("contador bytes:%d\n",bytesAEscribir);
+		bytesAEscribir = 0;
+	}
 	list_iterate(tablaParticiones,(void*)iterarLaLista);
 
-	int cantidadBloquesNecesarios = bytesAEscribir / tamanioBloques;
-	if(bytesAEscribir % tamanioBloques != 0){
-		cantidadBloquesNecesarios += 1;
-	}
+	int cantidadBloquesNecesarios = 0;
 
-	if(controlar_bloques_disponibles(cantidadBloquesNecesarios) == 0){
+	void bloquesNecesariosPorParticion(int* bytesDeParticion){
+	cantidadBloquesNecesarios += *bytesDeParticion / tamanioBloques;
+	//printf("bdp:%d-tb:%d-bdp/tb:%d-bdp%tb:%d\n",*bytesDeParticion,tamanioBloques,*bytesDeParticion/tamanioBloques,*bytesDeParticion % tamanioBloques);
+		if(*bytesDeParticion % tamanioBloques > 0){
+			cantidadBloquesNecesarios += 1;
+		}
+	}
+	list_iterate(bytes_por_particion,(void*)bloquesNecesariosPorParticion);
+
+	/*if(controlar_bloques_disponibles(cantidadBloquesNecesarios) == 0){
 		printf("Se excede la cantidad de bloques necesaria para compactar \n");
 		//desbloquear en caso de que no se haga la compactacion
 		return;
-	}
+	}*/
 
+	//escribirEnBloquesRegistros
 	//solicitar nuevos bloques
 	//grabar datos
+	list_iterate(bytes_por_particion,(void*)mostrarBytes);
+	printf("cantidad de bloques necesarios: %i\n",cantidadBloquesNecesarios);
+
 
 	//Desbloquear la tabla y dejar un registro de cuánto tiempo estuvo bloqueada la tabla para realizar esta operatoria
 
 }
 
-void liberarBloque(char* numeroDeBloque){
-	int nroBloque = atoi(numeroDeBloque);
-	//falta sacar el bitarray
-	bitarray_clean_bit(bitarray, nroBloque);
+
+
+void eliminarListaDeStrings(t_list* list){
+	list_destroy_and_destroy_elements(list,free);
 }
 
-void liberarBloquesParticion(char* tabla,int nro_particion){
-
-	char* particion = string_duplicate(puntoDeMontaje);
-	string_append(&particion, "Tablas/");
-	string_append(&particion, tabla);
-	string_append(&particion, "/part");
-	string_append(&particion,string_itoa(nro_particion));
-	string_append(&particion,".bin");
-
-	t_config* metadataParticion = config_create(particion);
-	char** bloques = config_get_array_value(metadataParticion,"BLOCKS");
-
-	string_iterate_lines(bloques,(void*)liberarBloque);
-}
-
-void liberarBloquesTemporal(char* tabla,int nro_temporal){
-
-	char* temporal = string_duplicate(puntoDeMontaje);
-	string_append(&temporal, "Tablas/");
-	string_append(&temporal, tabla);
-	string_append(&temporal, "/");
-	string_append(&temporal, tabla);
-	string_append(&temporal,string_itoa(nro_temporal));
-	string_append(&temporal,".tmpc");
-
-	t_config* metadataTemporal = config_create(temporal);
-	char** bloques = config_get_array_value(metadataTemporal,"BLOCKS");
-
-	string_iterate_lines(bloques,(void*)liberarBloque);
-}
 
 int renombrarATmpc(char* tabla){
 
@@ -193,28 +182,30 @@ void string_append_char(char* string, char c){
 	string_append(&string,str);
 }
 
-
-
 t_list* traerRegistrosBloques(char** bloques){
 
 	t_list* registros = list_create();
 	char* registroActual = string_new();
 
+//	void show(char* bloque){
+//		printf("%s\n", bloque);
+//	}
+//	string_iterate_lines(bloques,(void*)show);
 	void leerBloque(char* nombreBloque){
-		printf("bloque actual:%s\n",nombreBloque);
+//		printf("bloque actual:%s\n",nombreBloque);
 		FILE* bloqueActual = fopen(nombreBloque,"r");
 		char nuevoCaracter = fgetc(bloqueActual);
 		while(nuevoCaracter > EOF){
-			printf("caracter leido:%c\n",nuevoCaracter);
+//			printf("caracter leido:%c\n",nuevoCaracter);
 			if(nuevoCaracter == '\n'){
-				printf("termino registro\n");
+//				printf("termino registro\n");
 				list_add(registros, stringRegistroAStruct(registroActual));
 				free(registroActual);
 				registroActual = string_new();
 			}else{
 				//printf("agrego caracter a reg:%c\n",nuevoCaracter);
 				string_append_char(registroActual,nuevoCaracter);
-				printf("registro con caracter agregado:%s\n", registroActual);
+//				printf("registro con caracter agregado:%s\n", registroActual);
 			}
 			nuevoCaracter = fgetc(bloqueActual);
 		}
@@ -223,7 +214,7 @@ t_list* traerRegistrosBloques(char** bloques){
 	}
 
 	string_iterate_lines(bloques, (void*) leerBloque);
-	list_add(registros, stringRegistroAStruct(registroActual));
+
 
 
 	//free(registroActual);
@@ -231,14 +222,56 @@ t_list* traerRegistrosBloques(char** bloques){
 	return registros;
 }
 
+
+
 //-----------------------------------------------------
 //--conversores array de numeroBloque --> path bloque--
 //-----------------------------------------------------
 
+char** transformarBloquesAPathBloques(char** nro_bloques){
+
+	int cantBloques = 0;
+	void contarBloques(char* unBloque){
+		cantBloques += 1;
+	}
+	string_iterate_lines(nro_bloques,(void*) contarBloques);
+
+	char** paths_bloques = (char**)malloc((cantBloques + 1) * (sizeof(char*)));
+	int i = 0;
+		void accionPorBloque(char* bloq){
+
+			char* bloque = string_duplicate(puntoDeMontaje);
+			string_append(&bloque,"Bloques/bloque");
+			string_append(&bloque, bloq);
+			string_append(&bloque, ".bin");
+			paths_bloques[i] = string_duplicate(bloque);
+			i++;
+		}
+
+	string_iterate_lines(nro_bloques,(void*)accionPorBloque);
+
+	paths_bloques[cantBloques] = NULL;
+	return paths_bloques;
+}
 
 char** transformarParticionABloques(char* tabla,int nro_particion){
 
-	int cantBloques = 0;
+	char** bloques = getBloquesParticion(tabla,nro_particion);
+	return transformarBloquesAPathBloques(bloques);
+}
+
+char** transformarTemporalABloques(char* tabla,int nro_temporal){
+	char** bloques = getBloquesTemporal(tabla,nro_temporal);
+	return transformarBloquesAPathBloques(bloques);
+}
+
+
+
+//-----------------------------------------------------
+// ---------- getters de nro Bloque en char* ----------
+//-----------------------------------------------------
+
+char** getBloquesParticion(char* tabla,int nro_particion){
 
 	char* particion = string_duplicate(puntoDeMontaje);
 	string_append(&particion, "Tablas/");
@@ -249,37 +282,12 @@ char** transformarParticionABloques(char* tabla,int nro_particion){
 
 	t_config* metadataParticion = config_create(particion);
 	char** bloques = config_get_array_value(metadataParticion,"BLOCKS");
-
-	void contarBloques(char* unBloque){
-		cantBloques += 1;
-	}
-
-	string_iterate_lines(bloques,(void*) contarBloques);
-
-	char** pathsBloquesParticion = (char**)malloc((cantBloques + 1) * (sizeof(char*)));
-	int i = 0;
-	void accionPorBloque(char* bloq){
-
-		char* bloque = string_duplicate(puntoDeMontaje);
-		string_append(&bloque,"Bloques/bloque");
-		string_append(&bloque, bloq);
-		string_append(&bloque, ".bin");
-		pathsBloquesParticion[i] = string_duplicate(bloque);
-		//printf("path de bloque: %s\n",pathsBloquesParticion[i]);
-		i++;
-	}
-
-	string_iterate_lines(bloques,(void*)accionPorBloque);
-
-	pathsBloquesParticion[cantBloques] = NULL;
 	config_destroy(metadataParticion);
-	return pathsBloquesParticion;
+
+	return bloques;
 }
 
-char** transformarTemporalABloques(char* tabla,int nro_temporal){
-
-	int cantBloques = 0;
-
+char** getBloquesTemporal(char* tabla,int nro_temporal){
 
 	char* temporal = string_duplicate(puntoDeMontaje);
 	string_append(&temporal, "Tablas/");
@@ -289,38 +297,12 @@ char** transformarTemporalABloques(char* tabla,int nro_temporal){
 	string_append(&temporal,string_itoa(nro_temporal));
 	string_append(&temporal,".tmpc");
 
-	//printf("path:%s\n",temporal);
 	t_config* metadataTemporal = config_create(temporal);
-
 	char** bloques = config_get_array_value(metadataTemporal,"BLOCKS");
-	void contarBloques(char* unBloque){
-		cantBloques += 1;
-	}
-
-	string_iterate_lines(bloques,(void*)contarBloques);
-
-	char** pathsBloquesTemporal = (char**)malloc((cantBloques + 1) * (sizeof(char*)));
-
-	printf("primer bloque:%s\n",pathsBloquesTemporal[0]);
-	int i = 0;
-	void accionPorBloque(char* bloq){
-
-		char* bloque = string_duplicate(puntoDeMontaje);
-		string_append(&bloque,"Bloques/bloque");
-		string_append(&bloque, bloq);
-		string_append(&bloque, ".bin");
-
-		pathsBloquesTemporal[i] = string_duplicate(bloque);
-		printf("path de bloque: %s",pathsBloquesTemporal[i]);
-		i++;
-	}
-	string_iterate_lines(bloques,(void*)accionPorBloque);
-	pathsBloquesTemporal[cantBloques] = NULL;
 	config_destroy(metadataTemporal);
 
-	return pathsBloquesTemporal;
+	return bloques;
 }
-
 
 
 //-----------------------------------------------------
@@ -353,7 +335,6 @@ char* structRegistroAString(t_registro* registro){
 	string_append(&reg, ";");
 	string_append(&reg, unValue);
 	string_append(&reg, "\n");
-
 	return reg;
 }
 
@@ -382,10 +363,14 @@ void mostrarString(char* str){
 
 void mostrarListaDeStrings(t_list* listStr){
 	printf("	PARTICION:\n");
-	list_iterate(listStr,(void*)mostrarRegistro);
+	list_iterate(listStr,(void*)mostrarString);
 }
 
 void mostrarListaDeListasDeStrings(t_list* lista){
 	printf("LISTA:\n");
-	list_iterate(lista,(void*)mostrarListaDeRegistros);
+	list_iterate(lista,(void*)mostrarListaDeStrings);
+}
+
+void mostrarBytes(int* bytes){
+	printf( "bytes de particion %d\n",*bytes);
 }
