@@ -11,6 +11,7 @@ sem_t sem_gossiping;
 sem_t sem_cargarSeeds;
 sem_t sem_journal;
 int nombreMemoria;
+int socketKernel;
 
 int main() {
 
@@ -34,6 +35,7 @@ int main() {
 	config_destroy(config);
 
 	int caracMaxDeValue = primeraConexionLFS();
+	socketKernel = -1; //Para luego comprobar si se conecto o no
 
 //	if (caracMaxDeValue == -1)
 //	{
@@ -78,6 +80,14 @@ int main() {
 	pthread_detach(h_conexiones);
 	pthread_detach(h_refreshGossiping);
 	pthread_join(h_consola, NULL);
+
+	//Se cerro la consola
+
+	if(socketKernel != -1)
+	{
+		enviarInt(socketKernel,-1); //Si el kernel alguna vez recibe -1, mata la memoria.
+		close(socketKernel);
+	}
 
 	log_destroy(logger);
 	free(comienzoMemoria);

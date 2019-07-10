@@ -9,6 +9,8 @@ t_list* listaTablas;
 t_list* tiemposInsert;
 t_list* tiemposSelect;
 t_list* memorias;
+t_list* seedsMemorias;
+t_list* seedsSiendoCreadas;
 int idInicial;
 int quantum;
 int multiprocesamiento;
@@ -16,6 +18,7 @@ int proximaMemoriaEC;
 int sleepEjecucion;
 int intervaloDeRefreshMetadata;
 int operacionesTotales;
+int retardoGossiping;
 sem_t sem_multiprocesamiento;
 sem_t sem_cambioId;
 sem_t sem_disponibleColaREADY;
@@ -27,6 +30,8 @@ sem_t sem_movimientoScripts;
 sem_t sem_borradoMemoria;
 sem_t sem_actualizacionMetadatas;
 sem_t sem_operacionesTotales;
+sem_t sem_gossiping;
+sem_t sem_seedSiendoCreada;
 script* scriptRefreshMetadata;
 
 int main() {
@@ -39,6 +44,8 @@ int main() {
 	sleepEjecucion = config_get_int_value(config, "SLEEP_EJECUCION");
 	intervaloDeRefreshMetadata = config_get_int_value(config,
 			"METADATA_REFRESH");
+	retardoGossiping = config_get_int_value(config,
+				"GOSSIP_SLEEP");
 
 	colaNEW = list_create();
 	colaREADY = list_create();
@@ -48,6 +55,8 @@ int main() {
 	tiemposInsert = list_create();
 	tiemposSelect = list_create();
 	memorias = list_create();
+	seedsMemorias = list_create();
+	seedsSiendoCreadas = list_create();
 
 	idInicial = 1000;
 	proximaMemoriaEC = -1;
@@ -66,6 +75,7 @@ int main() {
 	pthread_t h_refreshMetadatas;
 	pthread_t h_refreshConfig;
 	pthread_t h_metricsAutomatico;
+	pthread_t h_gossiping;
 
 	sem_init(&sem_multiprocesamiento, 0, multiprocesamiento);
 	sem_init(&sem_cambioId, 0, 1);
@@ -78,6 +88,8 @@ int main() {
 	sem_init(&sem_borradoMemoria,0,1);
 	sem_init(&sem_actualizacionMetadatas,0,1);
 	sem_init(&sem_operacionesTotales,0,1);
+	sem_init(&sem_gossiping,0,1);
+	sem_init(&sem_seedSiendoCreada,0,1);
 
 	char* ipMemoriaPrincipal = string_duplicate(config_get_string_value(config, "IP_MEMORIA"));
 	int puertoMemoriaPrincipal = config_get_int_value(config, "PUERTO_MEMORIA");
@@ -107,7 +119,10 @@ int main() {
 
 	pthread_create(&h_metricsAutomatico, NULL, (void *) metricsAutomatico,
 		NULL);
-		pthread_detach(h_metricsAutomatico);
+	pthread_detach(h_metricsAutomatico);
+
+	pthread_create(&h_gossiping, NULL, (void *) gossipingAutomatico,NULL);
+	pthread_detach(h_gossiping);
 
 	pthread_create(&h_consola, NULL, (void *) consola, NULL);
 	pthread_join(h_consola, NULL);

@@ -21,6 +21,7 @@ extern int quantum;
 extern int sleepEjecucion;
 extern int intervaloDeRefreshMetadata;
 extern int operacionesTotales;
+extern int retardoGossiping;
 extern script* scriptRefreshMetadata;
 
 int crearScript(request* nuevaRequest) {
@@ -465,6 +466,8 @@ void refreshConfig() {
 		sleepEjecucion = config_get_int_value(config, "SLEEP_EJECUCION");
 		intervaloDeRefreshMetadata = config_get_int_value(config,
 				"METADATA_REFRESH");
+		retardoGossiping = config_get_int_value(config,
+				"GOSSIP_SLEEP");
 
 		config_destroy(config);
 
@@ -473,5 +476,20 @@ void refreshConfig() {
 //		log_info(logger, "hice algo");
 	}
 
+}
+
+void gossipingAutomatico(){
+	while(1)
+	{
+		sem_wait(&sem_refreshConfig);
+		int retardoGossip = retardoGossiping; //En segundos
+		sem_post(&sem_refreshConfig);
+
+		sleep(retardoGossip);
+
+		conectarseASeedsDesconectadas();
+
+		enviarPeticionesDeGossip();
+	}
 }
 

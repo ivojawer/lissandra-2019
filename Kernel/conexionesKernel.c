@@ -2,12 +2,16 @@
 
 extern t_log* logger;
 extern t_list* memorias;
-extern sem_t sem_borradoMemoria;
 extern t_list* listaEXEC;
+extern t_list* seedsMemorias;
+extern t_list* seedsSiendoCreadas;
+extern sem_t sem_borradoMemoria;
+extern sem_t sem_gossiping;
+extern sem_t sem_seedSiendoCreada;
+extern sem_t sem_gossiping;
 extern script* scriptRefreshMetadata;
 
 void conectarseAUnaMemoria(seed* unaSeed) {
-
 	int socketMemoria = conectarseAServidor(unaSeed->ip, unaSeed->puerto);
 
 	if (socketMemoria == -1) {
@@ -50,7 +54,7 @@ void conectarseAUnaMemoria(seed* unaSeed) {
 	nuevaMemoria->socket = socketMemoria;
 	nuevaMemoria->consistencias = nuevaConsistencia;
 
-	nuevaMemoria->ip = string_duplicate(unaSeed->ip);
+	nuevaMemoria->ip = unaSeed->ip;
 	nuevaMemoria->puerto = unaSeed->puerto;
 
 	nuevaMemoria->estaViva = 1;
@@ -64,15 +68,14 @@ void conectarseAUnaMemoria(seed* unaSeed) {
 	nuevaMemoria->estadisticas.selectsFallidos = 0;
 	nuevaMemoria->estadisticas.operacionesTotalesEnMemoria = 0;
 
-	free(unaSeed->ip);
-
-	free(unaSeed);
-
 	sem_wait(&sem_borradoMemoria);
 
 	list_add(memorias, nuevaMemoria);
 
 	sem_post(&sem_borradoMemoria);
+
+	sacarSeedDeMemoriasEnCreacion(unaSeed);
+
 
 	log_info(logger, "Se acaba de conectar la memoria %i",
 			nuevaMemoria->nombre);
@@ -104,6 +107,8 @@ void enviarPeticionesDeGossip()
 
 void agregarMemorias(t_list* seeds) {
 
+	sem_wait(&sem_gossiping);
+
 	while (list_size(seeds) != 0) {
 
 		seed* unaSeed = list_remove(seeds, 0);
@@ -114,17 +119,47 @@ void agregarMemorias(t_list* seeds) {
 			continue;
 		}
 
+		list_add(seedsMemorias,unaSeed);
+		sem_wait(&sem_seedSiendoCreada);
+		list_add(seedsSiendoCreadas,unaSeed);
+		sem_post(&sem_seedSiendoCreada);
+
 		pthread_t h_nuevaConexion;
 
 		pthread_create(&h_nuevaConexion, NULL, (void *) conectarseAUnaMemoria,
-				seeds);
+				unaSeed);
 
 		pthread_detach(h_nuevaConexion);
 
 	}
 
 	list_destroy(seeds);
+	sem_post(&sem_gossiping);
 
+}
+
+void conectarseASeedsDesconectadas() {
+
+	sem_wait(&sem_gossiping);
+
+	for (int i = 0; i < list_size(seedsMemorias); i++) {
+		seed* unaSeed = list_get(seedsMemorias, i);
+
+		if (!seedYaEstaConectada(unaSeed) && memoriaEstaSiendoCreada(unaSeed)) {
+
+			sem_wait(&sem_seedSiendoCreada);
+			list_add(seedsSiendoCreadas,unaSeed);
+			sem_post(&sem_seedSiendoCreada);
+
+			pthread_t h_nuevaConexion;
+
+			pthread_create(&h_nuevaConexion, NULL,
+					(void *) conectarseAUnaMemoria, unaSeed);
+
+			pthread_detach(h_nuevaConexion);
+		}
+	}
+	sem_post(&sem_gossiping);
 }
 
 void comunicacionConMemoria(memoriaEnLista* memoria) {

@@ -18,6 +18,11 @@ void consola() {
 			continue;
 		}
 
+		if (!strcmp(lectura,"EXIT"))
+		{
+			return;
+		}
+
 		char** requestYParametros = string_n_split(lectura, 2, " ");
 
 		int requestEnInt = queRequestEs(requestYParametros[0]);

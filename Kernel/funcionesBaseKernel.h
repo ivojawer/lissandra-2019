@@ -89,7 +89,9 @@ int determinarAQueMemoriaEnviar(request* unaRequest);
 int unaMemoriaCualquiera();
 int memoriaHash(int key);
 void matarMemoria(int nombreMemoria);
+int seedYaEstaConectada(seed* unaSeed);
 int seedYaExiste(seed* unaSeed);
+void conectarseASeedsDesconectadas();
 void actualizarMetadatas(t_list* metadatas);
 void agregarUnaMetadata(metadataTablaLFS* unaMetadata);
 int manejarRespuestaDeMemoria(script* elScript, request* laRequest, int memoria);
@@ -97,5 +99,6 @@ int laMemoriaTieneConsistencias(memoriaEnLista* unaMemoria);
 void sacarScriptDeEspera(int nombreScript, memoriaEnLista* laMemoria);
 int existeTabla(char* nombreTabla);
 void enviarPeticionesDeGossip();
+int memoriaEstaSiendoCreada(seed* unaSeed);
 
 #endif /* FUNCIONESBASEKERNEL_H_ */

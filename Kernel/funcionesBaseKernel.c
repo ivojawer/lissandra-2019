@@ -1,5 +1,6 @@
 #include "funcionesBaseKernel.h"
 
+extern t_log* logger;
 extern t_list* listaTablas;
 extern t_list* tiemposInsert;
 extern t_list* tiemposSelect;
@@ -9,14 +10,18 @@ extern t_list* listaTablas;
 extern t_list* listaEXEC;
 extern t_list* listaEXIT;
 extern t_list* memorias;
+extern t_list* seedsMemorias;
+extern t_list* seedsSiendoCreadas;
 extern sem_t sem_tiemposInsert;
 extern sem_t sem_tiemposSelect;
 extern sem_t sem_actualizacionMetadatas;
 extern sem_t sem_movimientoScripts;
 extern sem_t sem_borradoMemoria;
 extern sem_t sem_cambioMemoriaEC;
+extern sem_t sem_seedSiendoCreada;
 extern int proximaMemoriaEC;
-extern t_log* logger;
+
+//TODO: Si algun dia hay tiempo, separar esto en varios archivos, ya son muchas LINEAAAAAAAAAAAS
 
 script* encontrarScriptEnLista(int id, t_list* lista) {
 	sem_wait(&sem_movimientoScripts);
@@ -551,7 +556,7 @@ void matarMemoria(int nombreMemoria) {
 			}
 
 			unaMemoria->estaViva = 0;
-			free(unaMemoria->ip);
+//			free(unaMemoria->ip); es referencia a la seed, que tiene que estar siempre
 
 			close(unaMemoria->socket);
 			sem_wait(&unaMemoria->sem_cambioScriptsEsperando);
@@ -581,7 +586,7 @@ void matarMemoria(int nombreMemoria) {
 	sem_post(&sem_borradoMemoria);
 }
 
-int seedYaExiste(seed* unaSeed) {
+int seedYaEstaConectada(seed* unaSeed) {
 
 	sem_wait(&sem_borradoMemoria);
 
@@ -593,7 +598,7 @@ int seedYaExiste(seed* unaSeed) {
 			continue;
 		}
 
-		if (!(strcmp(unaMemoria->ip, unaSeed->ip))
+		if ((!strcmp(unaMemoria->ip, unaSeed->ip))
 				&& (unaSeed->puerto == unaMemoria->puerto)) {
 			sem_post(&sem_borradoMemoria);
 			return 1;
@@ -602,6 +607,19 @@ int seedYaExiste(seed* unaSeed) {
 	sem_post(&sem_borradoMemoria);
 	return 0;
 }
+
+int seedYaExiste(seed* unaSeed) { //Sincro por afuera
+	for (int i = 0; i < list_size(seedsMemorias); i++) {
+		seed* otraSeed = list_get(seedsMemorias, i);
+		if ((!strcmp(otraSeed->ip, unaSeed->ip))
+				&& unaSeed->puerto == otraSeed->puerto) {
+			return 1;
+		}
+	}
+	return 0;
+}
+
+
 
 void agregarUnaMetadata(metadataTablaLFS* unaMetadata) {
 	if (criterioDeTabla(unaMetadata->nombre) == -1) //Si no existe ya
@@ -635,6 +653,29 @@ void actualizarMetadatas(t_list* metadatas) {
 	log_info(logger, "Se termino de actualizar las metadatas.");
 
 	sem_post(&sem_actualizacionMetadatas);
+}
+
+void agregarUnaMetadataEnString(char* metadataEnString)
+{
+	char** parametrosMetadata = string_split(metadataEnString," ");
+
+	char* nombreTabla = string_duplicate(parametrosMetadata[0]);
+	int laConsistencia = queConsistenciaEs(parametrosMetadata[1]);
+	int lasParticiones = atoi(parametrosMetadata[2]);
+	int elCompactTime = atoi(parametrosMetadata[3]);
+
+	metadataTablaLFS* unaMetadata = malloc(sizeof(metadataTablaLFS));
+
+	unaMetadata->nombre= nombreTabla;
+	unaMetadata->consistencia = laConsistencia;
+	unaMetadata->compactTime = elCompactTime;
+	unaMetadata->particiones = lasParticiones;
+
+	agregarUnaMetadata(unaMetadata);
+
+	liberarArrayDeStrings(parametrosMetadata);
+
+
 }
 
 int manejarRespuestaDeMemoria(script* elScript, request* laRequest, int memoria) {
@@ -780,6 +821,11 @@ int manejarRespuestaDeMemoria(script* elScript, request* laRequest, int memoria)
 				}
 
 				sem_post(&sem_borradoMemoria);
+
+
+				agregarUnaMetadataEnString(laRequest->parametros);
+
+
 			}
 
 			log_info(logger, "%s: Se pudo realizar. (Enviado a %i)",
@@ -823,3 +869,39 @@ int existeTabla(char* nombreTabla) {
 	return criterioDeTabla(nombreTabla) + 1;
 }
 
+int memoriaEstaSiendoCreada(seed* unaSeed) {
+	sem_wait(&sem_seedSiendoCreada);
+	for (int i = 0; i < list_size(seedsSiendoCreadas); i++) {
+
+		seed* otraSeed = list_get(seedsSiendoCreadas, i);
+
+		if ((!strcmp(otraSeed->ip, unaSeed->ip))
+				&& unaSeed->puerto == otraSeed->puerto) {
+			sem_post(&sem_seedSiendoCreada);
+			return 1;
+		}
+
+	}
+	sem_post(&sem_seedSiendoCreada);
+	return 0;
+}
+
+void sacarSeedDeMemoriasEnCreacion(seed* unaSeed){
+	sem_wait(&sem_seedSiendoCreada);
+	for (int i = 0; i < list_size(seedsSiendoCreadas); i++) {
+
+			seed* otraSeed = list_get(seedsSiendoCreadas, i);
+
+			if ((!strcmp(otraSeed->ip, unaSeed->ip))
+					&& unaSeed->puerto == otraSeed->puerto) {
+
+				list_remove(seedsSiendoCreadas,i);
+
+				sem_post(&sem_seedSiendoCreada);
+				return;
+			}
+
+		}
+		sem_post(&sem_seedSiendoCreada);
+
+}

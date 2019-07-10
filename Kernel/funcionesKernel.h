@@ -18,6 +18,6 @@ void journal();
 void refreshMetadatas();
 void refreshConfig();
 void metricsAutomatico();
-
+void gossipingAutomatico();
 
 #endif /* FUNCIONESKERNEL_H_ */

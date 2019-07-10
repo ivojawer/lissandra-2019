@@ -6,7 +6,7 @@ extern t_list* colaDeRequests;
 extern t_list* tablaGossiping;
 extern int nombreMemoria;
 extern sem_t sem_gossiping;
-int socketKernel;
+extern int socketKernel;
 int socketLFS;
 
 int primeraConexionLFS() {
@@ -258,7 +258,7 @@ void comunicacionConKernel() {
 
 		}
 		case GOSSIPING: {
-//			enviarSeedsConHeader(socketKernel, seeds, GOSSIPING);
+//			enviarSeedsConHeader(socketKernel, seeds, GOSSIPING); //TODO
 			continue;
 		}
 		case JOURNAL: {
