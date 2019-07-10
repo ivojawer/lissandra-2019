@@ -327,6 +327,11 @@ void dump() {
 
 void ejecutar_dump() {
 
+	struct sigaction sa;
+	sa.sa_handler = dump;
+	sa.sa_flags = SA_RESTART; //Porque setitimer es una funcion reentrante.
+	sigaction(SIGALRM, &sa, NULL);
+
 	struct itimerval initial;
 	struct timeval tiempo_inicial;
 
@@ -337,8 +342,6 @@ void ejecutar_dump() {
 
 	initial.it_interval = tiempo_inicial;
 	initial.it_value = tiempo_inicial;
-
-	signal(SIGALRM, &dump);
 
 	if (setitimer(ITIMER_REAL, &initial, NULL) == -1) {
 		perror("error calling setitimer()");

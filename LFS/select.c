@@ -141,7 +141,7 @@ int contar_comas(char *temp)
 
 		 while(!feof(f) && bloque_size < size_bloque){
 			 fgets(temp, 32, f);
-			 if(strlen(temp) > 1){
+			 if(strcmp(temp, " ") != 0){
 			 bloque_size += strlen(temp)*sizeof(char);
 			 int nr_comas = contar_comas(temp);
 			 tokens_registro = string_split(temp, ";");

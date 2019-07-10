@@ -408,7 +408,7 @@ void modificar_op_control(char *tabla, int mod_flag)
 	}
 }
 
-int contar_archivos_con_extension(char *root,char* extension) {
+int contar_archivos_con_extension(char *root, char* extension) {
 	int cont = 0;
 	DIR * dir;
 	dir = opendir(root);
