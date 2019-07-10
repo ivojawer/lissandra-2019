@@ -35,6 +35,7 @@ int elegir_bloque_libre(int nr_bloques)
 				free_block = i;
 				bitarray_set_bit(bitarray, i);
 				guardar_bitarray(i);
+				sem_post(&bloques_bitmap);
 				return free_block;
 			}
 		}
@@ -42,9 +43,6 @@ int elegir_bloque_libre(int nr_bloques)
 	sem_post(&bloques_bitmap);
 	return -1;
 }
-
-
-
 
 
 
