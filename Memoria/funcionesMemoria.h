@@ -1,6 +1,7 @@
 #ifndef FUNCIONESMEMORIA_H_
 #define FUNCIONESMEMORIA_H_
 
+
 #define DIRCONFIG "/home/utnso/workspace/tp-2019-1c-U-TN-Tecno/CONFIG/memoria.config"
 
 #include<stdio.h>
@@ -17,6 +18,7 @@
 #include "segmentos.h"
 #include "conexionesMem.h"
 #include <time.h>
+#include "journalAutomatico.h"
 #include <stdbool.h>
 #include <math.h>
 #include "gossiping.h"

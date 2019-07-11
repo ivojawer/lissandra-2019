@@ -76,6 +76,9 @@ int main() {
 	pthread_create(&h_conexiones, NULL, (void *) aceptarConexiones, NULL);
 	pthread_create(&h_refreshGossiping, NULL, (void *) gossiping, NULL);
 
+
+
+
 	pthread_detach(h_ejecucionRequests);
 	pthread_detach(h_conexiones);
 	pthread_detach(h_refreshGossiping);

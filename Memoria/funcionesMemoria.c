@@ -212,34 +212,20 @@ int numeroMarcoDondeAlocar() {
 	if (marcoAlocar > -1)
 		return marcoAlocar;
 	else{
-		log_info(logger,"No hay marcos disponibles, ejecutando journal");
-		journal();
-		return numeroMarcoDondeAlocar();
+		return MEM_LLENA;
 	}
 
 }
 
-pagina* nuevoDato(t_list* tablaPaginas, int flagModificado, int key,
-		int timestamp, char* value) {
-
+pagina* nuevoDato(t_list* tablaPaginas, int flagModificado, int key,int timestamp, char* value) {
 	pagina* nuevaPagina = malloc(sizeof(pagina));
-
-	nuevaPagina->flagModificado = flagModificado;
-
-	nuevaPagina->nroMarco = numeroMarcoDondeAlocar();
-	printf("marco pagina a asigar en marco:%d\n", nuevaPagina->nroMarco);
-
-	asignoPaginaEnMarco(key, timestamp, value, getMarcoFromPagina(nuevaPagina));
-
-	printf("value pagina a agregar: %s",
-			&getMarcoFromPagina(nuevaPagina)->value);
-
-	list_add(tablaPaginas, nuevaPagina);
-
-	pagina* paginaAgregada = ultimaPagina(tablaPaginas); //para testear
-	log_info(logger, "value de mi pagina agregada: %s",
-			&getMarcoFromPagina(paginaAgregada)->value);
-
+	int nroMarcoAlocar = numeroMarcoDondeAlocar();
+	nuevaPagina->nroMarco = nroMarcoAlocar;
+		if(nroMarcoAlocar>-1){
+		nuevaPagina->flagModificado = flagModificado;
+		asignoPaginaEnMarco(key, timestamp, value, getMarcoFromPagina(nuevaPagina));
+		list_add(tablaPaginas, nuevaPagina);
+	}
 	return nuevaPagina;
 }
 
@@ -359,25 +345,30 @@ int insert(char* parametros) {  //TODO: Cambiar tipos
 	segmento* tablaEncontrada = encuentroTablaPorNombre(tabla);
 	if (tablaEncontrada == NULL) {
 		log_info(logger, "tengo que crear la tabla y el dato");
-
 		segmento* tablaCreada = nuevaTabla(tablaSegmentos, tabla);
-
-		nuevoDato(tablaCreada->tablaDePaginas, 1, key, timestamp, value);
-		printf("dato insertado y tabla creada\n");
-		return 1;
+		pagina* nuevaPagina = nuevoDato(tablaCreada->tablaDePaginas, 1, key, timestamp, value);
+		if(nuevaPagina->nroMarco == MEM_LLENA){
+			log_error(logger,"MEMORIA FULL");
+			free(nuevaPagina);
+			return MEM_LLENA;
+		}
+		else return 1;
 	} else {
 		pagina* datoEncontrado = encuentroDatoPorKey(tablaEncontrada, key);
 		if (datoEncontrado != NULL) {
 			log_info(logger, "tengo que actualizar el dato");
 			actualizoDato(datoEncontrado, value, timestamp);
-			printf("dato actualizado\n");
 			return 1;
 		} else {
 			log_info(logger, "tengo que cear el dato");
-			nuevoDato(tablaEncontrada->tablaDePaginas, 1, key, timestamp,
+			pagina* nuevaPagina = nuevoDato(tablaEncontrada->tablaDePaginas, 1, key, timestamp,
 					value);
-			printf("dato insertado\n");
-			return 1;
+			if(nuevaPagina->nroMarco == MEM_LLENA){
+						log_error(logger,"MEMORIA FULL");
+						free(nuevaPagina);
+						return MEM_LLENA;
+			}
+			else return 1;
 		}
 	}
 
