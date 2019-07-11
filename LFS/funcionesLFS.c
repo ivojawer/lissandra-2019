@@ -141,7 +141,6 @@ void iniciar_variables(){
 	op_control_list = list_create();
 	cargar_op_control_tablas();
 
-	sem_init(&dump_semaphore, 0, 1);
 	sem_init(&requests_disponibles,0,0);
 	sem_init(&bloques_bitmap,0,1);
 
@@ -357,7 +356,15 @@ void crear_control_op(char *tabla)
 {
 	struct op_control *s_op_control = malloc(sizeof(struct op_control));
 	s_op_control->tabla = strdup(tabla);
-	sem_init(&(s_op_control->tabla_sem), 0, 1);
+	s_op_control->otros_flag = 0;
+	s_op_control->drop_flag = 0;
+	sem_init(&(s_op_control->drop_sem), 0, 0);
+	pthread_mutexattr_t attr;
+	pthread_mutexattr_init(&attr);
+	pthread_mutex_init(&(s_op_control->mutex), &attr);
+	pthread_mutexattr_t attr_2;
+	pthread_mutexattr_init(&attr_2);
+	pthread_mutex_init(&(s_op_control->tabla_sem), &attr);
 	list_add(op_control_list, s_op_control);
 }
 
@@ -384,6 +391,7 @@ bool comparar_nombre_op_control(void *elemento, char *tabla)
 	return (!strcmp(((struct op_control *)elemento)->tabla, tabla));
 }
 
+
 void modificar_op_control(char *tabla, int mod_flag)
 {
 
@@ -394,16 +402,49 @@ void modificar_op_control(char *tabla, int mod_flag)
 	struct op_control *tabla_a_controlar = malloc(sizeof(struct op_control));
 	tabla_a_controlar = list_find(op_control_list, coincide_nombre_op);
 
-	if(tabla_a_controlar != NULL){
-		if(mod_flag == 1){
-			sem_wait(&(tabla_a_controlar->tabla_sem));
-		}else if(mod_flag == 0){
-			sem_post(&(tabla_a_controlar->tabla_sem));
-		}else{//Eliminar de la lista
+	if (tabla_a_controlar != NULL) {
+		switch (mod_flag) {
+		case 1:
+			pthread_mutex_lock(&(tabla_a_controlar->mutex));
+			if (tabla_a_controlar->drop_flag == 0){
+				tabla_a_controlar->otros_flag++;
+			pthread_mutex_unlock(&(tabla_a_controlar->mutex));
+			}else{
+				pthread_mutex_unlock(&(tabla_a_controlar->mutex));
+				pthread_mutex_lock(&(tabla_a_controlar->tabla_sem));
+			}
+			break;
+		case 2:
+			tabla_a_controlar->otros_flag--;
+			if (tabla_a_controlar->otros_flag == 0 &&
+				tabla_a_controlar->drop_flag == 1) { //Si no hay otra request ejecutando y hay un Drop esperando
+				sem_post(&(tabla_a_controlar->drop_sem));
+			}
+			break;
+		case 3: //viene un Drop
+			pthread_mutex_lock(&(tabla_a_controlar->mutex));
+			tabla_a_controlar->drop_flag = 1;
+			if (tabla_a_controlar->otros_flag > 0) {
+				pthread_mutex_unlock(&(tabla_a_controlar->mutex));
+				pthread_mutex_unlock(&dump_semaphore); //si no puede ejecutar Drop, libera Dump
+				sem_wait(&(tabla_a_controlar->drop_sem));
+			} else {
+				pthread_mutex_unlock(&(tabla_a_controlar->mutex));
+				pthread_mutex_lock(&(tabla_a_controlar->tabla_sem));
+			}
+			break;
+		case 4:
+			tabla_a_controlar->drop_flag = 0;
+			pthread_mutex_unlock(&(tabla_a_controlar->tabla_sem));
 			void destruir_elemento(void *elemento){
 				return destroy_op_control((struct op_control *)elemento);
 			}
-		list_remove_and_destroy_by_condition(op_control_list, coincide_nombre_op, destruir_elemento);
+
+			list_remove_and_destroy_by_condition(op_control_list, coincide_nombre_op, destruir_elemento);
+			break;
+		default :
+			printf("mod_flag No reconocido\n");
+			break;
 		}
 	}
 }

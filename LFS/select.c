@@ -86,7 +86,7 @@ int obtener_size_particion(char *tabla, int particion_buscar)
 		free(unaTabla);
 		return -1;
 	}else{
-		int size_particion = config_get_int_value(config, "Size");
+		int size_particion = config_get_int_value(config, "SIZE");
 		config_destroy(config);
 		free(archivoParticion);
 		free(numeroParticion);
@@ -347,12 +347,10 @@ t_list *filtrar_tabla_memtable(char *tabla)
 	bool coincide_nombre(void *tabla_mt){
 		return comparar_nombre(tabla, tabla_mt);
 	}
-	sem_wait(&dump_semaphore);
 
 	tabla_encontrada = list_filter(memtable, coincide_nombre); //Supongo que solo extrae 1 tabla
 	if(lista_vacia(tabla_encontrada))
 		printf("La tabla <%s> no se encuentra en la memtable\n", tabla);
-	sem_post(&dump_semaphore);
 
 	return tabla_encontrada;
 }
@@ -416,8 +414,12 @@ t_par_valor_timestamp *filtrar_timestamp_mayor(t_list *timestamp_valor, int list
 	buscar_bloques_particion(tabla, particion_buscar, 1, bloques_buscar); //Busca .tmp
 	cargar_timestamp_value(bloques_buscar, timestamp_valor, key); //Lee en los bloques y carga los pares en lista "timestamp_valor"
 
+	pthread_mutex_lock(&dump_semaphore);
+
 	t_list *registros_encontrados = filtrar_registros_particion(filtrar_particion_tabla(filtrar_tabla_memtable(tabla), particion_buscar), key); /*Busca en la Memtable.
+
 																							Devuelve lista de registros que cumplen con la key*/
+	pthread_mutex_unlock(&dump_semaphore);
 	int cant_registros = list_size(registros_encontrados);
 	int i;
 	if(cant_registros!=0){
@@ -466,7 +468,7 @@ void rutina_select(char* comando)
 
 		buscar_en_todos_lados(tabla, key, particion_buscar);
 
-		modificar_op_control(tabla, 0);
+		modificar_op_control(tabla, 2);
 	}else{
 		printf("No se ha podido realizar la operacion\n");
 	}

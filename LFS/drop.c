@@ -70,9 +70,8 @@ void eliminar_tabla(char *tabla) {
 void rutina_drop(char* comando) {
 	printf("Rutina DROP\n");
 	char *tabla = get_tabla(comando);
-	sem_wait(&dump_semaphore);
-	modificar_op_control(tabla, 1); //para no cruzarse con Insert y Select
-	modificar_op_control(strdup(tabla), 2);
+	pthread_mutex_lock(&dump_semaphore);
+	modificar_op_control(tabla, 3); //para no cruzarse con niguno
 	if (existe_tabla(tabla)){
 		eliminar_tabla(tabla);
 
@@ -95,5 +94,6 @@ void rutina_drop(char* comando) {
 		printf("La tabla no se encuentra en el sistema\n");
 		enviarIntConHeader(socket_memoria, ERROR, RESPUESTA);
 	}
-	sem_post(&dump_semaphore);
+	modificar_op_control(strdup(tabla), 4);
+	pthread_mutex_unlock(&dump_semaphore);
 }

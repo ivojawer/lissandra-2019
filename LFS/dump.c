@@ -269,7 +269,7 @@ void dump() {
 		int table_change;
 		int siga_siga = 0;
 		lista_bloques_tmp = list_create();
-		sem_wait(&dump_semaphore);
+		pthread_mutex_lock(&dump_semaphore); //influye en todas las tablas
 		for (i = 0; i < list_size(memtable); i++){
 			space_full = 0;
 			fp_dump = NULL;
@@ -295,7 +295,7 @@ void dump() {
 								log_info(dump_logger, "Dump finalizado. No se pudo guardar un registro por falta de espacio.");
 								if(full_space == 1)
 									printf("Dump finalizado. No se pudo guardar un registro por falta de espacio\n");
-								sem_post(&dump_semaphore);
+								pthread_mutex_unlock(&dump_semaphore);
 								return;
 							}
 							full_space = 0;
@@ -321,7 +321,7 @@ void dump() {
 			guardar_bloques_metadata(lista_bloques_tmp);
 			liberar_lista_bloques(lista_bloques_tmp);
 		}
-	sem_post(&dump_semaphore);
+	pthread_mutex_unlock(&dump_semaphore);
 	}
 }
 
@@ -330,7 +330,6 @@ void ejecutar_dump() {
 	struct sigaction sa;
 	sa.sa_handler = dump;
 	sa.sa_flags = SA_RESTART; //Porque setitimer es una funcion reentrante.
-	sigaction(SIGALRM, &sa, NULL);
 
 	struct itimerval initial;
 	struct timeval tiempo_inicial;
@@ -343,11 +342,14 @@ void ejecutar_dump() {
 	initial.it_interval = tiempo_inicial;
 	initial.it_value = tiempo_inicial;
 
+	sigaction(SIGALRM, &sa, NULL);
+
 	if (setitimer(ITIMER_REAL, &initial, NULL) == -1) {
 		perror("error calling setitimer()");
 	}
 
 	while (1) {
 		pause();
+		sleep(1);//RETARDO
 	}
 }
