@@ -160,3 +160,30 @@ void describirMetadatas(t_list* metadatas) {
 	}
 	printf("-------------------------\n\n");
 }
+
+void describirUnaMetadata (metadataTablaLFS* unaMetadata)
+{
+	printf("Tabla: %s\n", unaMetadata->nombre);
+			printf("Consistencia: %s\n", consistenciaEnString(unaMetadata->consistencia));
+			printf("Particiones: %i\n", unaMetadata->particiones);
+			printf("Compact time: %i\n\n", unaMetadata->compactTime);
+}
+
+void liberarMetadata(metadataTablaLFS* unaMetadata)
+{
+	if(unaMetadata->nombre != NULL)
+	{
+		free(unaMetadata->nombre);
+	}
+	free(unaMetadata);
+}
+
+void liberarListaMetadatas(t_list* metadatas)
+{
+	while(list_size(metadatas) != 0)
+	{
+		metadataTablaLFS* unaMetadata = list_remove(metadatas,0);
+
+		liberarMetadata(unaMetadata);
+	}
+}

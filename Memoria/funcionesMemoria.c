@@ -1,14 +1,22 @@
 #include "funcionesMemoria.h"
 
 extern t_log* logger;
-extern t_config* config;
 extern t_list* tablaSegmentos;
-extern int socketLFS;
-extern sem_t requestsDisponibles;
 extern t_list* colaDeRequests;
-extern int socketKernel;
+extern sem_t requestsDisponibles;
 extern sem_t sem_journal;
+extern sem_t sem_refreshConfig;
+extern sem_t sem_LFSconectandose;
+extern sem_t sem_recepcionLFS;
 extern int caracMaxDeValue;
+extern int sleepJournal;
+extern int sleepGossiping;
+extern int retardoAccesoLFS;
+extern int retardoAccesoMemoria;
+extern int socketKernel;
+extern int socketLFS;
+extern int idScriptKernel;
+extern char* dirConfig;
 
 void ejecutarRequests() {
 
@@ -22,72 +30,47 @@ void ejecutarRequests() {
 
 		sem_wait(&sem_journal);
 
+		idScriptKernel = requestEID->idKernel;
+
 		switch (requestAEjecutar->requestEnInt) {
-		case SELECT: {
+		case SELECT: { //Que haya un idScriptKernel = -1; arriba del request significa que no espera respuesta
 
-			char* datoObtenido = Select(requestAEjecutar->parametros);
-
-			if (requestEID->idKernel) {
-
-				if (datoObtenido == NULL) {
-
-					enviarRespuestaAlKernel(requestEID->idKernel, ERROR);
-
-				} else {
-					enviarStringConHeaderEId(socketKernel, datoObtenido, DATO,
-							requestEID->idKernel);
-				}
-
-			}
+			log_info(logger, "Ejecutando SELECT");
+			Select(requestAEjecutar->parametros);
+			idScriptKernel = -1;
 			break;
 		}
 
 		case INSERT: {
 
-			int resultado = insert(requestAEjecutar->parametros);
-
-			if (requestEID->idKernel) {
-				enviarRespuestaAlKernel(requestEID->idKernel, resultado);
-			}
-
+			idScriptKernel = -1;
+			log_info(logger, "Ejecutando INSERT");
+			insert(requestAEjecutar->parametros);
 			break;
 		}
 
 		case DROP: {
-
-			int resultado = drop(requestAEjecutar->parametros);
-			if (requestEID->idKernel) {
-				enviarRespuestaAlKernel(requestEID->idKernel, resultado);
-			}
+			log_info(logger, "Ejecutando DROP");
+			drop(requestAEjecutar->parametros);
+			idScriptKernel = -1;
 			break;
 		}
 		case CREATE: {
-			int resultado = create(requestAEjecutar->parametros);
-			if (requestEID->idKernel) {
-				enviarRespuestaAlKernel(requestEID->idKernel, resultado);
-			}
-
+			log_info(logger, "Ejecutando CREATE");
+			create(requestAEjecutar->parametros);
+			idScriptKernel = -1;
 			break;
 		}
 		case DESCRIBE: {
-
-			t_list* resultado = describe(requestAEjecutar->parametros);
-
-			metadataTablaLFS* metadataPrueba = list_get(resultado, 0);
-
-			if (requestEID->idKernel) {
-
-				if (metadataPrueba->consistencia == -1) {
-					enviarRespuestaAlKernel(requestEID->idKernel, ERROR);
-				} else {
-					enviarMetadatasConHeaderEId(socketKernel, resultado,
-					METADATAS, requestEID->idKernel);
-				}
-			}
-
+			log_info(logger, "Ejecutando DESCRIBE");
+			describe(requestAEjecutar->parametros);
+			idScriptKernel = -1;
 			break;
 		}
 		case JOURNAL: {
+
+			idScriptKernel = -1;
+			log_info(logger, "Ejecutando JOURNAL");
 			journal();
 			break;
 		}
@@ -136,8 +119,8 @@ pagina* ultimaPagina(t_list* tablaPaginas) { //para testear
 	return lastPagina;
 }
 
-void asignoPaginaEnMarco(uint16_t key, unsigned long long timestamp, char* value,
-		void* comienzoMarco) {
+void asignoPaginaEnMarco(uint16_t key, unsigned long long timestamp,
+		char* value, void* comienzoMarco) {
 
 	//timestamp->key->value el orden importa
 
@@ -151,51 +134,48 @@ void asignoPaginaEnMarco(uint16_t key, unsigned long long timestamp, char* value
 //	log_info(logger,"Marco donde asigne: %p",comienzoMarco);
 }
 
-
-
-
-void eliminarRegistro(segmento* seg, pagina* pagEnSeg){
-	bool encuentroPaginaPorKey(pagina* pag){
+void eliminarRegistro(segmento* seg, pagina* pagEnSeg) {
+	bool encuentroPaginaPorKey(pagina* pag) {
 		return pag == pagEnSeg;
 	}
 	marcos[pagEnSeg->nroMarco].vacio = true;
 	/*if(pagEnSeg->flagModificado){   //nunca va a estar modificado.
-		marco* datosPagina = getMarcoFromPagina(pagEnSeg);
-		registro* reg = malloc(sizeof(registro));
-		reg ->key=datosPagina->key;
-		reg ->timestamp = datosPagina->timestamp;
-		reg->value = malloc(sizeof(char) * string_length(&datosPagina->value));
-		reg->value = &datosPagina->value;
-		enviarRegistroComoInsert(reg);
-	}*/
-	list_remove_by_condition(seg->tablaDePaginas,(void*)encuentroPaginaPorKey);
+	 marco* datosPagina = getMarcoFromPagina(pagEnSeg);
+	 registro* reg = malloc(sizeof(registro));
+	 reg ->key=datosPagina->key;
+	 reg ->timestamp = datosPagina->timestamp;
+	 reg->value = malloc(sizeof(char) * string_length(&datosPagina->value));
+	 reg->value = &datosPagina->value;
+	 enviarRegistroComoInsert(reg);
+	 }*/
+	list_remove_by_condition(seg->tablaDePaginas,
+			(void*) encuentroPaginaPorKey);
 	free(pagEnSeg);
 }
 
-int marcoLRU(){
+int marcoLRU() {
 	bool encontreLRU = false;
 
 	segmento* segmentoLRU = tablaSegmentos->head->data;
 	pagina* paginaLRU = segmentoLRU->tablaDePaginas->head->data;
-	void menorUltimoUsoPorSegmento(segmento* seg){
-		void menorUltimoUso(pagina* pag){
-				if(pag->ultimoUso < paginaLRU->ultimoUso){
-					paginaLRU=pag;
-					segmentoLRU=seg;
-					encontreLRU = true;
-				}
+	void menorUltimoUsoPorSegmento(segmento* seg) {
+		void menorUltimoUso(pagina* pag) {
+			if (pag->ultimoUso < paginaLRU->ultimoUso) {
+				paginaLRU = pag;
+				segmentoLRU = seg;
+				encontreLRU = true;
+			}
 		}
-		list_iterate(seg->tablaDePaginas,(void*)menorUltimoUso);
+		list_iterate(seg->tablaDePaginas, (void*) menorUltimoUso);
 	}
 
-
-	list_iterate(tablaSegmentos,(void*)menorUltimoUsoPorSegmento);
+	list_iterate(tablaSegmentos, (void*) menorUltimoUsoPorSegmento);
 
 	int marcoLRU = paginaLRU->nroMarco;
 
-	eliminarRegistro(segmentoLRU,paginaLRU);
+	eliminarRegistro(segmentoLRU, paginaLRU);
 
-	if(encontreLRU)
+	if (encontreLRU)
 		return marcoLRU;
 	else
 		return -1;
@@ -212,19 +192,21 @@ int numeroMarcoDondeAlocar() {
 	int marcoAlocar = marcoLRU();
 	if (marcoAlocar > -1)
 		return marcoAlocar;
-	else{
+	else {
 		return MEM_LLENA;
 	}
 
 }
 
-pagina* nuevoDato(t_list* tablaPaginas, int flagModificado, int key,int timestamp, char* value) {
+pagina* nuevoDato(t_list* tablaPaginas, int flagModificado, int key,
+		int timestamp, char* value) {
 	pagina* nuevaPagina = malloc(sizeof(pagina));
 	int nroMarcoAlocar = numeroMarcoDondeAlocar();
 	nuevaPagina->nroMarco = nroMarcoAlocar;
-		if(nroMarcoAlocar>-1){
+	if (nroMarcoAlocar > -1) {
 		nuevaPagina->flagModificado = flagModificado;
-		asignoPaginaEnMarco(key, timestamp, value, getMarcoFromPagina(nuevaPagina));
+		asignoPaginaEnMarco(key, timestamp, value,
+				getMarcoFromPagina(nuevaPagina));
 		list_add(tablaPaginas, nuevaPagina);
 	}
 	return nuevaPagina;
@@ -268,7 +250,22 @@ pagina* getPagina(int key, char* nombreTabla) { //retorna un NULL si no existe l
 		return NULL;
 }
 
-char* Select(char* parametros) {
+void actualizoDato(pagina* pagina, char* nuevoValue,
+		unsigned long long nuevoTimestamp) { //TODO: Cambiar tipos
+	strcpy(&getMarcoFromPagina(pagina)->value, nuevoValue);
+	getMarcoFromPagina(pagina)->timestamp = nuevoTimestamp;
+
+}
+
+char* sacoComillas(char* cadena) {
+	int largoCadena = string_length(cadena);
+	if (cadena[0] == '\"' && cadena[largoCadena - 1] == '\"') {
+		return string_substring(cadena, 1, largoCadena - 2);
+	}
+	return cadena;
+}
+
+void Select(char* parametros) {
 	char** parametrosEnVector = string_n_split(parametros, 2, " ");
 	char* tabla = parametrosEnVector[0];
 	string_to_upper(tabla);
@@ -284,46 +281,21 @@ char* Select(char* parametros) {
 	if (paginaPedida != NULL) {
 		dato = string_duplicate(&getMarcoFromPagina(paginaPedida)->value);
 		printf("Registro pedido: %s\n", dato);
+
+		if (idScriptKernel) {
+			enviarStringConHeaderEId(socketKernel, dato, DATO, idScriptKernel);
+			return;
+		}
+
 	} else {
 		log_info(logger, "No encontre el dato, mandando request a LFS");
 
 		mandarRequestALFS(SELECT, parametros);
 
-		int header = recibirInt(socketLFS, logger);
-		if (header != DATO) {
-			manejoErrorLFS();
-			return NULL;
-		}
-
-		dato = recibirString(socketLFS, logger);
-
-		if (!strcmp(dato, " ")) {
-			free(dato);
-			manejoErrorLFS();
-			return NULL;
-		}
-
 	}
-
-	return dato;
-
 }
 
-void actualizoDato(pagina* pagina, char* nuevoValue, unsigned long long nuevoTimestamp) { //TODO: Cambiar tipos
-	strcpy(&getMarcoFromPagina(pagina)->value, nuevoValue);
-	getMarcoFromPagina(pagina)->timestamp = nuevoTimestamp;
-
-}
-
-char* sacoComillas(char* cadena) {
-	int largoCadena = string_length(cadena);
-	if (cadena[0] == '\"' && cadena[largoCadena - 1] == '\"') {
-		return string_substring(cadena, 1, largoCadena - 2);
-	}
-	return cadena;
-}
-
-int insert(char* parametros) {  //TODO: Cambiar tipos
+void insert(char* parametros) {  //TODO: Cambiar tipos
 	char** parametrosEnVector = string_n_split(parametros, 3, " ");
 
 	char* tabla = parametrosEnVector[0];
@@ -336,9 +308,9 @@ int insert(char* parametros) {  //TODO: Cambiar tipos
 
 	value = sacoComillas(value);
 
-	if(string_length(value)>caracMaxDeValue){
-		log_error(logger,"Value excede caracteres maximos");
-		return ERROR;//TODO esto tal vez deberia devolver un codigo especifico
+	if (string_length(value) > caracMaxDeValue) {
+		log_error(logger, "Value excede caracteres maximos");
+
 	}
 
 	unsigned long long timestamp = time(NULL) / 1000; //TODO: Hacer la adquisicion del timestamp consistente con el LFS
@@ -350,101 +322,45 @@ int insert(char* parametros) {  //TODO: Cambiar tipos
 	if (tablaEncontrada == NULL) {
 		log_info(logger, "tengo que crear la tabla y el dato");
 		segmento* tablaCreada = nuevaTabla(tablaSegmentos, tabla);
-		pagina* nuevaPagina = nuevoDato(tablaCreada->tablaDePaginas, 1, key, timestamp, value);
-		if(nuevaPagina->nroMarco == MEM_LLENA){
-			log_error(logger,"MEMORIA FULL");
+		pagina* nuevaPagina = nuevoDato(tablaCreada->tablaDePaginas, 1, key,
+				timestamp, value);
+		if (nuevaPagina->nroMarco == MEM_LLENA) {
+			log_error(logger, "MEMORIA FULL");
 			free(nuevaPagina);
-			return MEM_LLENA;
+			enviarRespuestaAlKernel(idScriptKernel, MEM_LLENA);
+			return;
+		} else {
+			enviarRespuestaAlKernel(idScriptKernel, TODO_BIEN);
+			return;
 		}
-		else return 1;
+
 	} else {
 		pagina* datoEncontrado = encuentroDatoPorKey(tablaEncontrada, key);
 		if (datoEncontrado != NULL) {
 			log_info(logger, "tengo que actualizar el dato");
 			actualizoDato(datoEncontrado, value, timestamp);
-			return 1;
+			enviarRespuestaAlKernel(idScriptKernel, TODO_BIEN);
+			return;
 		} else {
 			log_info(logger, "tengo que cear el dato");
-			pagina* nuevaPagina = nuevoDato(tablaEncontrada->tablaDePaginas, 1, key, timestamp,
-					value);
-			if(nuevaPagina->nroMarco == MEM_LLENA){
-						log_error(logger,"MEMORIA FULL");
-						free(nuevaPagina);
-						return MEM_LLENA;
+			pagina* nuevaPagina = nuevoDato(tablaEncontrada->tablaDePaginas, 1,
+					key, timestamp, value);
+			if (nuevaPagina->nroMarco == MEM_LLENA) {
+				log_error(logger, "MEMORIA FULL");
+				free(nuevaPagina);
+				enviarRespuestaAlKernel(idScriptKernel, MEM_LLENA);
+				return;
+			} else {
+				enviarRespuestaAlKernel(idScriptKernel, TODO_BIEN);
+				return;
 			}
-			else return 1;
+
 		}
 	}
 
 }
 
-int create(char* parametros) {
-
-	mandarRequestALFS(CREATE, parametros);
-
-	int header = recibirInt(socketLFS, logger);
-
-	if (header != RESPUESTA) {
-		manejoErrorLFS();
-		return -1;
-	}
-
-	int respuesta = recibirInt(socketLFS, logger);
-
-	return respuesta;
-
-}
-
-void mandarRequestALFS(int requestAMandar, char* parametros) {
-
-	request* nuevaRequest = malloc(sizeof(request));
-	nuevaRequest->requestEnInt = requestAMandar;
-	if (parametros == NULL) {
-		nuevaRequest->parametros = string_duplicate(" ");
-	} else {
-		nuevaRequest->parametros = string_duplicate(parametros);
-	}
-
-	enviarRequestConHeader(socketLFS, nuevaRequest, REQUEST);
-
-	free(nuevaRequest->parametros);
-	free(nuevaRequest);
-}
-t_list* describe(char* parametro) {
-
-	mandarRequestALFS(CREATE, parametro);
-
-	int header = recibirInt(socketLFS, logger);
-
-	t_list* metadatas;
-
-	if (header != RESPUESTA) {
-		manejoErrorLFS();
-		metadatas = list_create();
-
-		metadataTablaLFS* metadata = malloc(sizeof(metadataTablaLFS));
-		metadata->nombre = NULL;
-		metadata->consistencia = -1;
-		metadata->particiones = -1;
-		metadata->compactTime = -1;
-
-		list_add(metadatas, metadata);
-
-		return metadatas;
-	}
-
-	metadatas = recibirMetadatas(socketLFS, logger);
-
-	metadataTablaLFS* metadataPrueba = list_get(metadatas, 0);
-
-	if (metadataPrueba->compactTime != -1) {
-		describirMetadatas(metadatas);
-	}
-
-	return metadatas;
-}
-
-int drop(char* parametro) {
+void drop(char* parametro) {
 
 	void liberoDato(pagina* pag) {
 
@@ -477,17 +393,53 @@ int drop(char* parametro) {
 	free(tabla);
 	mandarRequestALFS(DROP, parametro);
 
-	int header = recibirInt(socketLFS, logger);
+}
 
-	if (header != REQUEST) {
-		manejoErrorLFS();
-		return 0;
+void create(char* parametros) {
+
+	mandarRequestALFS(CREATE, parametros);
+
+}
+
+void describe(char* parametro) {
+
+	mandarRequestALFS(DESCRIBE, parametro);
+}
+
+void mandarRequestALFS(int requestAMandar, char* parametros) {
+
+	sem_wait(&sem_LFSconectandose);
+	if (socketLFS == -1) {
+		log_error(logger,
+				"El LFS no esta conectado, no se puede realizar la REQUEST.");
+		if (idScriptKernel) {
+			enviarRespuestaAlKernel(idScriptKernel, ERROR);
+		}
+		sem_post(&sem_LFSconectandose);
+		return;
+	}
+	sem_post(&sem_LFSconectandose);
+
+	request* nuevaRequest = malloc(sizeof(request));
+	nuevaRequest->requestEnInt = requestAMandar;
+	if (parametros == NULL) {
+		nuevaRequest->parametros = string_duplicate(" ");
+	} else {
+		nuevaRequest->parametros = string_duplicate(parametros);
 	}
 
-	int respuesta = recibirInt(socketLFS, logger);
+	sem_wait(&sem_refreshConfig);
+	int sleepMilisegundos = retardoAccesoLFS / 1000;
+	sem_post(&sem_refreshConfig);
+	sleep(sleepMilisegundos);
 
-	return respuesta;
+	enviarRequestConHeader(socketLFS, nuevaRequest, REQUEST);
 
+
+	free(nuevaRequest->parametros);
+	free(nuevaRequest);
+
+	sem_wait(&sem_recepcionLFS);
 }
 
 void mandoPaginaComoInsert(pagina* pag) {
@@ -554,24 +506,96 @@ t_list* journalPorSegmento(segmento* seg) {
 void journal() {
 	//TODO: Hay algun problema si las listas son vacias? En haskell no, en C puede ocurrir magia siempre pero no creo.
 
-	t_list* listasDeInserts = list_map(tablaSegmentos,
-			(void*) journalPorSegmento);
+	if (list_size(tablaSegmentos) != 0) { //bueno hay que tener cuidado :)
+		t_list* listasDeInserts = list_map(tablaSegmentos,
+				(void*) journalPorSegmento);
 
-	t_list* seedInsertsInicial = list_remove(listasDeInserts, 0);
+		if (list_size(listasDeInserts) != 0) {
 
-	t_list* insertsAMandar = list_fold(listasDeInserts, seedInsertsInicial,
-			(void*) list_add_all);
+			t_list* seedInsertsInicial = list_remove(listasDeInserts, 0);
 
-	enviarListaDeRequestsConHeader(socketLFS, insertsAMandar, JOURNAL);
+			t_list* insertsAMandar = list_fold(listasDeInserts,
+					seedInsertsInicial, (void*) list_add_all);
+
+			if (list_size(insertsAMandar) != 0) {
+
+				sem_wait(&sem_LFSconectandose);
+				if (socketLFS == -1) {
+					sem_post(&sem_LFSconectandose);
+					return;
+				}
+				sem_post(&sem_LFSconectandose);
+
+				sem_wait(&sem_refreshConfig);
+				int sleepMilisegundos = retardoAccesoLFS / 1000;
+				sem_post(&sem_refreshConfig);
+				sleep(sleepMilisegundos);
+
+				enviarListaDeRequestsConHeader(socketLFS, insertsAMandar,
+				JOURNAL);
+			}
+
+		}
+
+	}
+
 }
-
 void journalAutomatico() {
 
 	while (true) {
-		sleep(config_get_int_value(config, "RETARDO_GOSSIPING"));
+		sem_wait(&sem_refreshConfig);
+		int sleepMilisegundos = sleepJournal / 1000;
+		sem_post(&sem_refreshConfig);
+		sleep(sleepMilisegundos);
+
+		sem_wait(&sem_LFSconectandose);
+		if (socketLFS == -1) {
+			sem_post(&sem_LFSconectandose);
+			return;
+		}
+		sem_post(&sem_LFSconectandose);
 		sem_wait(&sem_journal);
+		log_info(logger, "Ejecutando JOURNAL");
 		journal();
 		sem_post(&sem_journal);
 	}
+}
+
+void refreshConfig() {
+	while (true) {
+
+		esperarModificacionDeArchivo(dirConfig);
+
+		sem_wait(&sem_refreshConfig);
+		t_config* config = config_create(dirConfig);
+
+		sleepJournal = config_get_int_value(config, "RETARDO_JOURNAL");
+		sleepGossiping = config_get_int_value(config, "RETARDO_GOSSIPING");
+		retardoAccesoLFS = config_get_int_value(config, "RETARDO_FS");
+		retardoAccesoMemoria = config_get_int_value(config, "RETARDO_MEM");
+
+		config_destroy(config);
+
+		sem_post(&sem_refreshConfig);
+	}
+}
+
+void reconexionLFS() {
+
+	while (1) {
+		sleep(5);
+		sem_wait(&sem_LFSconectandose);
+		int respuesta = primeraConexionLFS();
+		sem_post(&sem_LFSconectandose);
+		if (respuesta != -1) {
+			log_info(logger, "Se conecto el LFS.");
+			pthread_t h_respuestaLFS;
+			pthread_create(&h_respuestaLFS, NULL, (void *) manejarRespuestaLFS,
+					NULL);
+			pthread_detach(h_respuestaLFS);
+			return;
+		}
+	}
+
 }
 

@@ -1,7 +1,7 @@
 #include "funcionesMemoria.h"
 
 t_log* logger;
-t_config* config;
+
 
 
 int caracMaxDeValue;
@@ -12,22 +12,36 @@ sem_t requestsDisponibles;
 sem_t sem_gossiping;
 sem_t sem_cargarSeeds;
 sem_t sem_journal;
+sem_t sem_refreshConfig;
+sem_t sem_LFSconectandose;
+sem_t sem_recepcionLFS;
 int nombreMemoria;
 int socketKernel;
+char* dirConfig;
+int sleepJournal;
+int sleepGossiping;
+int retardoAccesoLFS;
+int retardoAccesoMemoria;
+int idScriptKernel;
+
 
 int main() {
 
 
 
-	printf("Insertar nombre archivo inclusive el path:\n");
+	printf("Insertar nombre config:\n");
 	char* nombreArchivoConfig = string_new ();
-	string_append(&nombreArchivoConfig, readline("nombre="));
+	string_append(&nombreArchivoConfig, readline("Nombre="));
+	dirConfig = string_duplicate(RAIZCONFIG);
+	string_append(&dirConfig,nombreArchivoConfig);
+	free(nombreArchivoConfig);
+
 	//string_append(&nombreArchivoConfig,".config");
 
 	logger = log_create("memoria.log", "memoria", 1, 0); //3er parametro en 1 para mostrarlos en consola. Sino en 0
 
 
-	config= config_create(nombreArchivoConfig);//TODO no se el punto de montaje => no se donde esta la carpeta CONFIG, asi que por ahora hay que poner los archivos en el mismo directorio que el ejecutable
+	t_config* config = config_create(dirConfig);
 
 
 
@@ -37,14 +51,32 @@ int main() {
 	sem_init(&sem_gossiping,0,1);
 	sem_init(&sem_cargarSeeds,0,1);
 	sem_init(&sem_journal,0,1);
+	sem_init(&sem_refreshConfig,0,1);
+	sem_init(&sem_LFSconectandose,0,1);
+	sem_init(&sem_recepcionLFS,0,0);
 
 	int tamanioMemoria = config_get_int_value(config, "TAM_MEM");
 
 	nombreMemoria = config_get_int_value(config, "MEMORY_NUMBER");
+	sleepJournal = config_get_int_value(config, "RETARDO_JOURNAL");
+	sleepGossiping = config_get_int_value(config, "RETARDO_GOSSIPING");
+	retardoAccesoLFS = config_get_int_value(config, "RETARDO_FS");
+	retardoAccesoMemoria = config_get_int_value(config, "RETARDO_MEM");
+	idScriptKernel = -1;
 
 	config_destroy(config);
 
 	caracMaxDeValue = primeraConexionLFS();
+
+	if (caracMaxDeValue != -1)
+	{
+		log_info(logger,"Se conecto el LFS.");
+		pthread_t h_respuestaLFS;
+		pthread_create(&h_respuestaLFS, NULL, (void *) manejarRespuestaLFS, NULL);
+		pthread_detach(h_respuestaLFS);
+
+	}
+
 	socketKernel = -1; //Para luego comprobar si se conecto o no
 
 //	if (caracMaxDeValue == -1)
@@ -80,11 +112,15 @@ int main() {
 	pthread_t h_ejecucionRequests;
 	pthread_t h_conexiones;
 	pthread_t h_refreshGossiping;
+	pthread_t h_refreshConfig;
+	pthread_t h_journalAutomatico;
 
 	pthread_create(&h_ejecucionRequests, NULL, (void *) ejecutarRequests, NULL);
-	pthread_create(&h_consola, NULL, (void *) consola, NULL);
 	pthread_create(&h_conexiones, NULL, (void *) aceptarConexiones, NULL);
 	pthread_create(&h_refreshGossiping, NULL, (void *) gossiping, NULL);
+	pthread_create(&h_refreshConfig, NULL, (void *) refreshConfig, NULL);
+	pthread_create(&h_journalAutomatico, NULL, (void *) journalAutomatico, NULL);
+	pthread_create(&h_consola, NULL, (void *) consola, NULL);
 
 
 
@@ -92,6 +128,8 @@ int main() {
 	pthread_detach(h_ejecucionRequests);
 	pthread_detach(h_conexiones);
 	pthread_detach(h_refreshGossiping);
+	pthread_detach(h_refreshConfig);
+	pthread_detach(h_journalAutomatico);
 	pthread_join(h_consola, NULL);
 
 	//Se cerro la consola

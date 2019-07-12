@@ -2,7 +2,7 @@
 #define FUNCIONESMEMORIA_H_
 
 
-#define DIRCONFIG "/home/utnso/workspace/tp-2019-1c-U-TN-Tecno/CONFIG/memoria.config"
+#define RAIZCONFIG "/home/utnso/workspace/tp-2019-1c-U-TN-Tecno/CONFIG/"
 
 #include<stdio.h>
 #include<stdlib.h>
@@ -76,12 +76,15 @@ pagina* getPagina(int key, char* nombreTabla);
 void consola();
 void mandarAEjecutarRequest(request* requestAEjecutar);
 void mandarRequestALFS(int,char*);
-char* Select(char* parametros);
-int insert(char* parametros);
-int create(char* parametros);
-t_list* describe(char* parametro);
-int drop(char* parametro);
+void Select(char* parametros);
+void insert(char* parametros);
+void create(char* parametros);
+void describe(char* parametro);
+void drop(char* parametro);
 void journal();
 int enviarYRecibirSeeds(memoriaGossip* memoriaDestino);
+void journalAutomatico();
+void refreshConfig();
+void reconexionLFS();
 
 #endif /* FUNCIONESMEMORIA_H_ */

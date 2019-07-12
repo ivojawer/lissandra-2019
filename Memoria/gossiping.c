@@ -2,8 +2,11 @@
 extern t_log* logger;
 extern sem_t sem_gossiping;
 extern sem_t sem_cargarSeeds;
+extern sem_t sem_refreshConfig;
 t_list* seedsConocidas;
 t_list* tablaGossiping;
+extern char* dirConfig;
+extern int sleepGossiping;
 
 void hacerGossipingAutomatico() {
 
@@ -15,11 +18,11 @@ void hacerGossipingAutomatico() {
 
 	while (1) {
 
-		t_config* config = config_create(DIRCONFIG);
+		sem_wait(&sem_refreshConfig);
+		int sleepMilisegundos = sleepGossiping/1000;
+		sem_post(&sem_refreshConfig);
 
-		sleep(config_get_int_value(config, "RETARDO_GOSSIPING"));
-
-		config_destroy(config);
+		sleep(sleepMilisegundos);
 
 		gossiping();
 
@@ -195,7 +198,7 @@ void tratarDeConectarseASeeds() {
 }
 
 void cargarSeedsIniciales() {
-	t_config* config = config_create(DIRCONFIG);
+	t_config* config = config_create(dirConfig);
 	seedsConocidas = list_create();
 	char** seedsPORTDeConfig = config_get_array_value(config, "PUERTO_SEEDS");
 	char** seedsIPDeConfig = config_get_array_value(config, "IP_SEEDS");

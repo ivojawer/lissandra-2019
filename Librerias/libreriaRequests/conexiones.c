@@ -20,7 +20,7 @@ int conectarseAServidor(char* ip, int puerto) {
 	int conexion = socket(AF_INET, SOCK_STREAM, 0);
 	if (connect(conexion, (void*) &direccionServidor, sizeof(direccionServidor))
 			!= 0) {
-		perror("No me pude conectar");
+//		perror("No me pude conectar");
 		return -1;
 	}
 	return conexion;

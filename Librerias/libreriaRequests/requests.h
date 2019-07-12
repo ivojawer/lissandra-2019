@@ -30,7 +30,7 @@
 //Respuestas:
 #define ERROR 0
 #define TODO_BIEN 1
-#define MEM_LLENA 200
+#define MEM_LLENA -200
 
 //Identificadores de modulo:
 #define KERNEL 300
@@ -94,8 +94,10 @@ int str_last_index_of(char c, char* cadena);
 int lista_vacia(t_list *lista);
 void liberarArrayDeStrings(char** array);
 void describirMetadatas(t_list* metadatas);
+void describirUnaMetadata (metadataTablaLFS* unaMetadata);
 void esperarModificacionDeArchivo(char* direccionArchivo);
 int esUnNumero(char* string);
+void liberarListaMetadatas(t_list* metadatas);
 
 //Comunicacion:
 void enviarInt(int aQuien, int intAEnviar);

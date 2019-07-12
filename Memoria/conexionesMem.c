@@ -8,23 +8,32 @@ extern int nombreMemoria;
 extern sem_t sem_gossiping;
 extern int socketKernel;
 int socketLFS;
+extern char* dirConfig;
+extern int idScriptKernel;
+extern sem_t sem_recepcionLFS;
 
 int primeraConexionLFS() {
 
-	t_config* config = config_create(DIRCONFIG);
+	t_config* config = config_create(dirConfig);
 
 	char* ipLFS = string_duplicate(config_get_string_value(config, "IP_LFS"));
 	int puertoLFS = config_get_int_value(config, "PUERTO_LFS");
 
 	socketLFS = conectarseAServidor(ipLFS, puertoLFS);
 
+	if (socketLFS == -1) {
+		config_destroy(config);
+		return -1;
+	}
+
 	enviarIntConHeader(socketLFS, MEMORIA, HANDSHAKE); //HANDSHAKE-MEMORIA
 
 	int headerRespuesta = recibirInt(socketLFS, logger);
 
 	if (headerRespuesta != HANDSHAKE) {
-		log_error(logger,
-				"Se envio un handshake al LFS y se devolvio otra cosa.");
+//		log_error(logger,
+//				"Se envio un handshake al LFS y se devolvio otra cosa.");
+		config_destroy(config);
 		close(socketLFS);
 		return -1;
 	}
@@ -32,12 +41,19 @@ int primeraConexionLFS() {
 	int moduloConectado = recibirInt(socketLFS, logger);
 
 	if (moduloConectado != LFS) {
-		log_error(logger, "Se conecto algo que no es el LFS.");
+//		log_error(logger, "Se conecto algo que no es el LFS.");
+		config_destroy(config);
 		close(socketLFS);
 		return -1;
 	}
 
 	int tamanioMaximoValue = recibirInt(socketLFS, logger);
+
+	if (tamanioMaximoValue == -1) {
+		config_destroy(config);
+		close(socketLFS);
+		return -1;
+	}
 
 	config_destroy(config);
 
@@ -46,7 +62,7 @@ int primeraConexionLFS() {
 }
 
 void aceptarConexiones() {
-	t_config* config = config_create(DIRCONFIG);
+	t_config* config = config_create(dirConfig);
 
 	int puertoServidor = config_get_int_value(config, "PUERTO_ESCUCHA");
 
@@ -373,9 +389,19 @@ void enviarRespuestaAlKernel(int id, int respuesta) {
 	enviarVariosIntsConHeader(socketKernel, intsAEnviar, RESPUESTA);
 }
 void manejoErrorLFS() {
-	log_error(logger,
-			"Se recibio del LFS algo incorrecto, se va a cerrar la conexion.");
+
+	if (socketLFS == -1) {
+		return;
+	}
+
+	log_error(logger, "Se desconecto el LFS.");
 	close(socketLFS);
+	socketLFS = -1;
+
+	pthread_t h_reconexionLFS;
+	pthread_create(&h_reconexionLFS, NULL, (void *) reconexionLFS, NULL);
+	pthread_detach(h_reconexionLFS);
+
 }
 
 void manejoErrorKernel() {
@@ -384,3 +410,84 @@ void manejoErrorKernel() {
 	close(socketKernel);
 }
 
+void manejarRespuestaLFS() {
+
+	while (1) {
+		int operacion = recibirInt(socketLFS, logger);
+
+		switch (operacion) {
+		case DATO: {
+			char* dato = recibirString(socketLFS, logger);
+			if (!strcmp(dato, " ")) {
+				enviarRespuestaAlKernel(idScriptKernel, ERROR);
+				free(dato);
+				manejoErrorLFS();
+				sem_post(&sem_recepcionLFS);
+				return;
+			}
+			if (idScriptKernel) {
+				enviarStringConHeaderEId(socketKernel, dato, DATO,
+						idScriptKernel);
+			}
+			sem_post(&sem_recepcionLFS);
+			continue;
+		}
+		case RESPUESTA: {
+			int respuesta = recibirInt(socketLFS, logger);
+
+			if (respuesta == -1) {
+				enviarRespuestaAlKernel(idScriptKernel, ERROR);
+				manejoErrorLFS();
+				sem_post(&sem_recepcionLFS);
+				return;
+			}
+			if(idScriptKernel)
+			{
+				enviarRespuestaAlKernel(idScriptKernel, respuesta);
+			}
+			sem_post(&sem_recepcionLFS);
+			continue;
+		}
+		case METADATAS: {
+			t_list* metadatas = recibirMetadatas(socketLFS, logger);
+
+			metadataTablaLFS* metadataPrueba = list_get(metadatas, 0);
+
+			if (metadataPrueba->consistencia == -1) {
+				enviarRespuestaAlKernel(idScriptKernel, ERROR);
+				free(metadataPrueba);
+				list_remove(metadatas, 0);
+				list_destroy(metadatas);
+				manejoErrorLFS();
+				sem_post(&sem_recepcionLFS);
+				return;
+			}
+
+			if(idScriptKernel){
+				enviarMetadatasConHeaderEId(socketKernel, metadatas,
+									METADATAS, idScriptKernel);
+			}
+
+			describirMetadatas(metadatas);
+
+			liberarListaMetadatas(metadatas);
+
+			sem_post(&sem_recepcionLFS);
+			continue;
+		}
+		default: {
+
+			manejoErrorLFS();
+
+			if (idScriptKernel != -1) //Si habia un script en ejecucion
+			{
+				enviarRespuestaAlKernel(idScriptKernel, ERROR);
+				sem_post(&sem_recepcionLFS);
+			}
+
+			return;
+		}
+		}
+	}
+
+}

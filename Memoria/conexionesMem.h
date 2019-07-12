@@ -16,3 +16,4 @@ void conectarseAOtraMemoria(seed* laSeed);
 int posicionMemoriaEnLista(int nombreMemoria);
 int memoriaYaEstaConectada(int nombreMemoria);
 void enviarRegistroComoInsert(registro* registroAEnviar);
+void manejarRespuestaLFS();
