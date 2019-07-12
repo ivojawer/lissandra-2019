@@ -146,11 +146,33 @@ void iniciar_variables(){
 
 	//agrego bitarray de cargar_configuracion_FS()
 	crear_bitarray(cantidadBloques);
+	crear_bloques(cantidadBloques);
 
 	config_destroy(config);
 	config_destroy(metadataLFS);
 	free(dirMetadata);
 }
+
+void crear_bloques(int nr_blocks){
+
+	char* path_absoluto = string_new();
+	string_append(&path_absoluto, puntoDeMontaje);
+	string_append(&path_absoluto, "/Bloques/bloque");
+
+	for(int i = 0; i < nr_blocks; i++){
+		char* bloque = string_new();
+		string_append(&bloque,path_absoluto);
+		string_append(&bloque,string_itoa(i));
+		string_append(&bloque,".bin");
+
+		FILE* archivo_bloque = fopen(bloque,"a"); //con "a" si ya existe un bloque no lo sobreescribe
+		fclose(archivo_bloque);
+
+		free(bloque);
+	}
+	free(path_absoluto);
+}
+
 
 
 char* get_tabla(char* comando)

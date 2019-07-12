@@ -108,6 +108,8 @@ int obtener_size_particion(char *tabla, int particion_buscar);
 t_list *filtrar_tabla_memtable(char *tabla);
 t_list *filtrar_particion_tabla(t_list *tabla_encontrada, int particion_buscar);
 void crear_bitarray(int nr_blocks);
+void crear_bloques(int nr_blocks);
+
 void tabla_destroy(t_tabla *self);
 t_list* cola_requests;
 void cargar_op_control_tablas();
