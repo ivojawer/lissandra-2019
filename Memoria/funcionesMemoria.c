@@ -288,13 +288,13 @@ void Select(char* parametros) {
 	} else {
 		log_info(logger, "No se encontro el dato, mandando request a LFS");
 		mandarRequestALFS(SELECT, parametros);
-		registro* registroPedido= recibirRegistro(socketLFS, logger);
-		insertInterno(registroPedido->key,registroPedido->value,tabla,registroPedido->timestamp);
-		if (idScriptKernel) {
-			log_info(logger, "Enviando el resultado al kernel");
-			enviarStringConHeaderEId(socketKernel, registroPedido->value, DATO, idScriptKernel);
-			return;
-		}
+//		registro* registroPedido= recibirRegistro(socketLFS, logger);
+//		insertInterno(registroPedido->key,registroPedido->value,tabla,registroPedido->timestamp);
+//		if (idScriptKernel) {
+//			log_info(logger, "Enviando el resultado al kernel");
+//			enviarStringConHeaderEId(socketKernel, registroPedido->value, DATO, idScriptKernel);
+//			return;
+//		}
 	}
 }
 
