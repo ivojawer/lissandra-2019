@@ -418,14 +418,27 @@ void manejarRespuestaLFS() {
 		switch (operacion) {
 		case DATO: {
 			char* dato = recibirString(socketLFS, logger);
+
+
 			if (!strcmp(dato, " ")) {
-				enviarRespuestaAlKernel(idScriptKernel, ERROR);
-				free(dato);
+
 				manejoErrorLFS();
+				log_error(logger,"No se pudo ejecutar el request");
+				if(idScriptKernel)
+				{
+					enviarRespuestaAlKernel(idScriptKernel, ERROR);
+					log_info(logger,"Enviando ERROR al kernel");
+				}
+
+				free(dato);
 				sem_post(&sem_recepcionLFS);
 				return;
 			}
+
+			log_info(logger,"Resultado: %s",dato);
 			if (idScriptKernel) {
+
+				log_info(logger,"Enviando el resultado al kernel");
 				enviarStringConHeaderEId(socketKernel, dato, DATO,
 						idScriptKernel);
 			}
@@ -436,13 +449,32 @@ void manejarRespuestaLFS() {
 			int respuesta = recibirInt(socketLFS, logger);
 
 			if (respuesta == -1) {
-				enviarRespuestaAlKernel(idScriptKernel, ERROR);
+
 				manejoErrorLFS();
+				log_error(logger,"No se pudo ejecutar el request");
+
+				if(idScriptKernel)
+				{
+					log_info(logger,"Enviando ERROR al kernel");
+					enviarRespuestaAlKernel(idScriptKernel, ERROR);
+				}
+
+
 				sem_post(&sem_recepcionLFS);
+
 				return;
+			}
+			if (respuesta == TODO_BIEN)
+			{
+				log_info(logger,"El LFS pudo ejecutar la request");
+			}
+			else
+			{
+				log_info(logger,"El LFS no pudo ejecutar la request");
 			}
 			if(idScriptKernel)
 			{
+				log_info(logger,"Enviando el resultado al kernel");
 				enviarRespuestaAlKernel(idScriptKernel, respuesta);
 			}
 			sem_post(&sem_recepcionLFS);
@@ -459,16 +491,34 @@ void manejarRespuestaLFS() {
 				list_remove(metadatas, 0);
 				list_destroy(metadatas);
 				manejoErrorLFS();
+				log_error(logger,"No se pudo ejecutar el request");
+
+				if(idScriptKernel)
+				{
+					log_info(logger,"Enviando ERROR al kernel");
+					enviarRespuestaAlKernel(idScriptKernel, ERROR);
+				}
+
 				sem_post(&sem_recepcionLFS);
 				return;
 			}
 
+			describirMetadatas(metadatas);
+
 			if(idScriptKernel){
+
+				if(list_size(metadatas) == 1) //HAY QUE TENER ESA BUENA COHERENCIA DE SINGULAR/PLURAL
+				{
+					log_info(logger,"Enviando la metadata al kernel");
+				}
+				else
+				{
+					log_info(logger,"Enviando las metadatas al kernel");
+				}
+
 				enviarMetadatasConHeaderEId(socketKernel, metadatas,
 									METADATAS, idScriptKernel);
 			}
-
-			describirMetadatas(metadatas);
 
 			liberarListaMetadatas(metadatas);
 
@@ -478,9 +528,11 @@ void manejarRespuestaLFS() {
 		default: {
 
 			manejoErrorLFS();
+			log_error(logger,"No se pudo ejecutar el request");
 
 			if (idScriptKernel != -1) //Si habia un script en ejecucion
 			{
+				log_info(logger,"Enviando ERROR al kernel");
 				enviarRespuestaAlKernel(idScriptKernel, ERROR);
 				sem_post(&sem_recepcionLFS);
 			}

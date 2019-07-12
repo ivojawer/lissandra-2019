@@ -33,17 +33,15 @@ void ejecutarRequests() {
 		idScriptKernel = requestEID->idKernel;
 
 		switch (requestAEjecutar->requestEnInt) {
-		case SELECT: { //Que haya un idScriptKernel = -1; arriba del request significa que no espera respuesta
+		case SELECT: {
 
 			log_info(logger, "Ejecutando SELECT");
 			Select(requestAEjecutar->parametros);
-			idScriptKernel = -1;
 			break;
 		}
 
 		case INSERT: {
 
-			idScriptKernel = -1;
 			log_info(logger, "Ejecutando INSERT");
 			insert(requestAEjecutar->parametros);
 			break;
@@ -52,30 +50,28 @@ void ejecutarRequests() {
 		case DROP: {
 			log_info(logger, "Ejecutando DROP");
 			drop(requestAEjecutar->parametros);
-			idScriptKernel = -1;
 			break;
 		}
 		case CREATE: {
 			log_info(logger, "Ejecutando CREATE");
 			create(requestAEjecutar->parametros);
-			idScriptKernel = -1;
 			break;
 		}
 		case DESCRIBE: {
 			log_info(logger, "Ejecutando DESCRIBE");
 			describe(requestAEjecutar->parametros);
-			idScriptKernel = -1;
 			break;
 		}
 		case JOURNAL: {
 
-			idScriptKernel = -1;
 			log_info(logger, "Ejecutando JOURNAL");
 			journal();
 			break;
 		}
 
 		}
+
+		idScriptKernel = -1;
 
 		sem_post(&sem_journal);
 	}
@@ -198,8 +194,8 @@ int numeroMarcoDondeAlocar() {
 
 }
 
-pagina* nuevoDato(t_list* tablaPaginas, int flagModificado, int key,
-		int timestamp, char* value) {
+pagina* nuevoDato(t_list* tablaPaginas, int flagModificado, uint16_t key,
+		unsigned long long timestamp, char* value) {
 	pagina* nuevaPagina = malloc(sizeof(pagina));
 	int nroMarcoAlocar = numeroMarcoDondeAlocar();
 	nuevaPagina->nroMarco = nroMarcoAlocar;
@@ -234,16 +230,16 @@ pagina* encuentroDatoPorKey(segmento* tabla, uint16_t key) {
 
 }
 
-pagina* getPagina(int key, char* nombreTabla) { //retorna un NULL si no existe la tabla o la pagina TODO: Cambiar tipos
+pagina* getPagina(uint16_t key, char* nombreTabla) { //retorna un NULL si no existe la tabla o la pagina
 
 	segmento* tabla = encuentroTablaPorNombre(nombreTabla);
-	printf("tabla pedida:%p\n", tabla);
+//	printf("tabla pedida:%p\n", tabla);
 	if (tabla != NULL) {
-		log_info(logger, "Encontre una tabla con el nombre: %s",
-				tabla->nombreDeTabla);
+//		log_info(logger, "Encontre una tabla con el nombre: %s",
+//				tabla->nombreDeTabla);
 		pagina* dato = encuentroDatoPorKey(tabla, key);
-		log_info(logger, "Encontre un dato con el value: %s",
-				&getMarcoFromPagina(dato)->value);
+//		log_info(logger, "Encontre un dato con el value: %s",
+//				&getMarcoFromPagina(dato)->value);
 
 		return dato;
 	} else
@@ -251,7 +247,7 @@ pagina* getPagina(int key, char* nombreTabla) { //retorna un NULL si no existe l
 }
 
 void actualizoDato(pagina* pagina, char* nuevoValue,
-		unsigned long long nuevoTimestamp) { //TODO: Cambiar tipos
+		unsigned long long nuevoTimestamp) {
 	strcpy(&getMarcoFromPagina(pagina)->value, nuevoValue);
 	getMarcoFromPagina(pagina)->timestamp = nuevoTimestamp;
 
@@ -280,22 +276,23 @@ void Select(char* parametros) {
 
 	if (paginaPedida != NULL) {
 		dato = string_duplicate(&getMarcoFromPagina(paginaPedida)->value);
-		printf("Registro pedido: %s\n", dato);
+		log_info(logger, "Resultado: %s\n", dato);
 
 		if (idScriptKernel) {
+			log_info(logger, "Enviando el resultado al kernel");
 			enviarStringConHeaderEId(socketKernel, dato, DATO, idScriptKernel);
 			return;
 		}
 
 	} else {
-		log_info(logger, "No encontre el dato, mandando request a LFS");
+		log_info(logger, "No se encontro el dato, mandando request a LFS");
 
 		mandarRequestALFS(SELECT, parametros);
 
 	}
 }
 
-void insert(char* parametros) {  //TODO: Cambiar tipos
+void insert(char* parametros) {
 	char** parametrosEnVector = string_n_split(parametros, 3, " ");
 
 	char* tabla = parametrosEnVector[0];
@@ -304,54 +301,82 @@ void insert(char* parametros) {  //TODO: Cambiar tipos
 
 	char* value = parametrosEnVector[2];
 
+	unsigned long long timestamp = time(NULL) / 1000; //TODO: Hacer la adquisicion del timestamp consistente con el LFS
+
+	log_info(logger, "INSERT: Tabla:%s - key:%d - timestamp:%llu - value:%s\n",
+			tabla, key, timestamp, value);
+
 	liberarArrayDeStrings(parametrosEnVector);
 
 	value = sacoComillas(value);
 
 	if (string_length(value) > caracMaxDeValue) {
 		log_error(logger, "Value excede caracteres maximos");
+		if (idScriptKernel) {
+			enviarRespuestaAlKernel(idScriptKernel, ERROR);
+			log_info(logger, "Enviando ERROR al kernel");
+		}
+		return;
 
 	}
 
-	unsigned long long timestamp = time(NULL) / 1000; //TODO: Hacer la adquisicion del timestamp consistente con el LFS
-
-	log_info(logger, "INSERT: Tabla:%s - key:%d - timestamp:%d - value:%s\n",
-			tabla, key, timestamp, value);
-
 	segmento* tablaEncontrada = encuentroTablaPorNombre(tabla);
 	if (tablaEncontrada == NULL) {
-		log_info(logger, "tengo que crear la tabla y el dato");
+		log_info(logger, "Se va a crear la tabla y el dato");
 		segmento* tablaCreada = nuevaTabla(tablaSegmentos, tabla);
 		pagina* nuevaPagina = nuevoDato(tablaCreada->tablaDePaginas, 1, key,
 				timestamp, value);
 		if (nuevaPagina->nroMarco == MEM_LLENA) {
 			log_error(logger, "MEMORIA FULL");
 			free(nuevaPagina);
-			enviarRespuestaAlKernel(idScriptKernel, MEM_LLENA);
+			if (idScriptKernel) {
+				log_info(logger,
+						"Avisando al kernel que la memoria esta llena");
+				enviarRespuestaAlKernel(idScriptKernel, MEM_LLENA);
+			}
 			return;
 		} else {
-			enviarRespuestaAlKernel(idScriptKernel, TODO_BIEN);
+			log_info(logger, "Se pudo hacer el INSERT");
+			if (idScriptKernel) {
+				log_info(logger, "Enviando respuesta al kernel");
+				enviarRespuestaAlKernel(idScriptKernel, TODO_BIEN);
+			}
+
 			return;
 		}
 
 	} else {
 		pagina* datoEncontrado = encuentroDatoPorKey(tablaEncontrada, key);
 		if (datoEncontrado != NULL) {
-			log_info(logger, "tengo que actualizar el dato");
+			log_info(logger, "Se va a actualizar el dato ya existente");
 			actualizoDato(datoEncontrado, value, timestamp);
-			enviarRespuestaAlKernel(idScriptKernel, TODO_BIEN);
+			log_info(logger, "Se pudo hacer el INSERT");
+			if (idScriptKernel) {
+				log_info(logger, "Enviando respuesta al kernel");
+				enviarRespuestaAlKernel(idScriptKernel, TODO_BIEN);
+			}
+
 			return;
 		} else {
-			log_info(logger, "tengo que cear el dato");
+			log_info(logger, "Se va a crear el dato");
 			pagina* nuevaPagina = nuevoDato(tablaEncontrada->tablaDePaginas, 1,
 					key, timestamp, value);
 			if (nuevaPagina->nroMarco == MEM_LLENA) {
 				log_error(logger, "MEMORIA FULL");
 				free(nuevaPagina);
-				enviarRespuestaAlKernel(idScriptKernel, MEM_LLENA);
+				if (idScriptKernel) {
+					log_info(logger,
+							"Avisando al kernel que la memoria esta llena");
+					enviarRespuestaAlKernel(idScriptKernel, MEM_LLENA);
+				}
 				return;
 			} else {
-				enviarRespuestaAlKernel(idScriptKernel, TODO_BIEN);
+				log_info(logger, "Se pudo hacer el INSERT");
+				if (idScriptKernel) {
+					log_info(logger, "Enviando respuesta al kernel");
+					enviarRespuestaAlKernel(idScriptKernel, TODO_BIEN);
+				}
+
 				return;
 			}
 
@@ -370,13 +395,11 @@ void drop(char* parametro) {
 		printf("cambie valores marco\n");
 		free(pag);
 	}
-
 	char* tabla = string_duplicate(parametro);
 	string_to_upper(tabla);
+	log_info(logger, "DROP de la tabla %s", parametro);
 	segmento* tablaADropear = encuentroTablaPorNombre(tabla);
 	if (tablaADropear != NULL) {
-		printf("encontre la tabla a dropear, nombre:%s\n",
-				tablaADropear->nombreDeTabla);
 		list_destroy_and_destroy_elements(tablaADropear->tablaDePaginas,
 				(void*) liberoDato);
 		bool comparoNombreTabla(segmento* segmentoAComparar) {
@@ -384,25 +407,30 @@ void drop(char* parametro) {
 					segmentoAComparar->nombreDeTabla) == 0;
 		}
 		list_remove_by_condition(tablaSegmentos, (void*) comparoNombreTabla);
-		printf("libere los datos y destruyo tabla paginas\n");
+		log_info(logger, "Se elimino la tabla de la memoria");
 
-		printf("tabla eliminada\n");
-
+	} else {
+		log_info(logger, "No existe la tabla en la memoria");
 	}
 	free(tablaADropear);
 	free(tabla);
+	log_info(logger, "Mandando DROP al LFS");
 	mandarRequestALFS(DROP, parametro);
 
 }
 
 void create(char* parametros) {
 
+	log_info(logger, "CREATE %s", parametros);
+	log_info(logger, "Mandando CREATE al LFS");
 	mandarRequestALFS(CREATE, parametros);
 
 }
 
 void describe(char* parametro) {
 
+	log_info(logger, "DESCRIBE %s", parametro);
+	log_info(logger, "Enviando DESCRIBE al LFS");
 	mandarRequestALFS(DESCRIBE, parametro);
 }
 
@@ -411,7 +439,7 @@ void mandarRequestALFS(int requestAMandar, char* parametros) {
 	sem_wait(&sem_LFSconectandose);
 	if (socketLFS == -1) {
 		log_error(logger,
-				"El LFS no esta conectado, no se puede realizar la REQUEST.");
+				"El LFS no esta conectado, no se puede terminar la REQUEST.");
 		if (idScriptKernel) {
 			enviarRespuestaAlKernel(idScriptKernel, ERROR);
 		}
@@ -434,7 +462,6 @@ void mandarRequestALFS(int requestAMandar, char* parametros) {
 	sleep(sleepMilisegundos);
 
 	enviarRequestConHeader(socketLFS, nuevaRequest, REQUEST);
-
 
 	free(nuevaRequest->parametros);
 	free(nuevaRequest);
@@ -462,9 +489,9 @@ request* pasarPaginaAInsert(pagina* paginaAPasar, char* nombreTabla) {
 
 	marco* frame = getMarcoFromPagina(paginaAPasar);
 
-	int lengthTS = snprintf( NULL, 0, "%d", frame->timestamp); //TODO: Cuando sea la hora habra que cambiar esto (probablemente por %llu)
+	int lengthTS = snprintf( NULL, 0, "%llu", frame->timestamp); //TODO: Marca de que se cambio %d por %llu
 	char* tsEnString = malloc(lengthTS + 1);
-	snprintf(tsEnString, lengthTS + 1, "%d", frame->timestamp);
+	snprintf(tsEnString, lengthTS + 1, "%llu", frame->timestamp);
 
 	string_append(&paginaEnInsert->parametros, nombreTabla);
 	string_append(&paginaEnInsert->parametros, " ");
@@ -505,6 +532,16 @@ t_list* journalPorSegmento(segmento* seg) {
 
 void journal() {
 	//TODO: Hay algun problema si las listas son vacias? En haskell no, en C puede ocurrir magia siempre pero no creo.
+
+	sem_wait(&sem_LFSconectandose);
+	if (socketLFS == -1) {
+
+		log_error(logger, "El LFS no esta conectado");
+
+		sem_post(&sem_LFSconectandose);
+		return;
+	}
+	sem_post(&sem_LFSconectandose);
 
 	if (list_size(tablaSegmentos) != 0) { //bueno hay que tener cuidado :)
 		t_list* listasDeInserts = list_map(tablaSegmentos,
@@ -547,15 +584,8 @@ void journalAutomatico() {
 		int sleepMilisegundos = sleepJournal / 1000;
 		sem_post(&sem_refreshConfig);
 		sleep(sleepMilisegundos);
-
-		sem_wait(&sem_LFSconectandose);
-		if (socketLFS == -1) {
-			sem_post(&sem_LFSconectandose);
-			return;
-		}
-		sem_post(&sem_LFSconectandose);
 		sem_wait(&sem_journal);
-		log_info(logger, "Ejecutando JOURNAL");
+		log_info(logger, "Ejecutando el JOURNAL automatico");
 		journal();
 		sem_post(&sem_journal);
 	}
@@ -591,7 +621,7 @@ void reconexionLFS() {
 			log_info(logger, "Se conecto el LFS.");
 			pthread_t h_respuestaLFS;
 			pthread_create(&h_respuestaLFS, NULL, (void *) manejarRespuestaLFS,
-					NULL);
+			NULL);
 			pthread_detach(h_respuestaLFS);
 			return;
 		}

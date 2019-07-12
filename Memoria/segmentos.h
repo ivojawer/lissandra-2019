@@ -11,7 +11,7 @@ typedef struct{
 
 
 
-void agregarDato(segmento* miSegmento,int key, int timestamp,char* value,int flagModificado);
+void agregarDato(segmento* miSegmento,uint16_t key, unsigned long long timestamp,char* value,int flagModificado);
 
 
 
