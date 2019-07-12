@@ -1,7 +1,7 @@
 #include "gossiping.h"
 extern t_log* logger;
 extern sem_t sem_gossiping;
-extern sem_t sem_cargarSeeds;
+//extern sem_t sem_cargarSeeds;
 extern sem_t sem_refreshConfig;
 t_list* seedsConocidas;
 t_list* tablaGossiping;
@@ -33,18 +33,14 @@ void gossiping() {
 
 	sem_wait(&sem_gossiping);
 
+	log_info(logger,"Se va a empezar a hacer gossiping.");
+
 	for (int i = 0; i < list_size(tablaGossiping); i++) {
 		memoriaGossip* unaMemoria = list_get(tablaGossiping, i);
 
-		int resultado = enviarYRecibirSeeds(unaMemoria);
-
-		if (resultado == -1) {
-			i--; //Se borro la memoria de la lista, por lo que el contador tiene que quedarse en la misma posicion para no saltearse una memoria.
-		}
+		enviarSeedsConectadas(unaMemoria,GOSSIPING);
 
 	}
-
-	tratarDeConectarseASeeds();
 
 	sem_post(&sem_gossiping);
 }
@@ -57,8 +53,6 @@ void sacarMemoriaDeTablaGossip(memoriaGossip* unaMemoria) {
 		}
 		return 0;
 	}
-
-	sem_wait(&sem_gossiping);
 	int* index = list_find(tablaGossiping, (void*) esLaMismaMemoria);
 
 	list_remove(tablaGossiping, *index);
@@ -66,88 +60,54 @@ void sacarMemoriaDeTablaGossip(memoriaGossip* unaMemoria) {
 	close(unaMemoria->elSocket);
 
 	free(unaMemoria);
-	sem_post(&sem_gossiping);
 
 	//No liberar la seed, es el mismo seed* que el de la lista de seedsConocidas.
 
 }
 
-int enviarYRecibirSeeds(memoriaGossip* memoriaDestino) {
-
+void enviarSeedsConectadas(memoriaGossip* memoriaDestino,int tipoDeEnvio) //Sincro por afuera
+{	//tipo de envio = GOSSIP o RESPUESTA
+	//GOSSIP: se envia las seeds por gossip automatico
+	//RESPUESTA: se envia las seeds por respuesta a un gossip de otra memoria
 	int seedEstaConectada(seed* unaSeed) {
 
 		return !seedNoEstaConectada(unaSeed);
 	}
 
-	int seedNoExiste(seed* unaSeed) {
-		int tienenLaMismaSeed(seed* otraSeed) {
-			return esLaMismaSeed(unaSeed, otraSeed);
-		}
-
-		return !list_any_satisfy(seedsConocidas, (void*) tienenLaMismaSeed);
-	}
-
-	int seedExiste(seed* unaSeed) {
-		int tienenLaMismaSeed(seed* otraSeed) {
-			return esLaMismaSeed(unaSeed, otraSeed);
-		}
-
-		return list_any_satisfy(seedsConocidas, (void*) tienenLaMismaSeed);
-	}
-
-	sem_wait(&sem_cargarSeeds);
-
 	t_list* seedsConectadas = list_filter(seedsConocidas,
-			(void*) seedEstaConectada);
+				(void*) seedEstaConectada);
 
-	enviarSeedsConHeader(memoriaDestino->elSocket, seedsConectadas, GOSSIPING);
+	enviarSeedsConHeader(memoriaDestino->elSocket, seedsConectadas, tipoDeEnvio); //Se responde con RESPUESTA
 
 	list_destroy(seedsConectadas);
 
-	int operacion = recibirInt(memoriaDestino->elSocket, logger);
+}
 
-	t_list* seedsRecibidas = recibirSeeds(memoriaDestino->elSocket, logger);
+void agregarNuevasSeeds(t_list* seeds) { //Sincronizar por afuera
 
-	if (operacion != GOSSIPING) {
-		sacarMemoriaDeTablaGossip(memoriaDestino);
+	int seedNoExiste(seed* unaSeed) {
+			int tienenLaMismaSeed(seed* otraSeed) {
+				return esLaMismaSeed(unaSeed, otraSeed);
+			}
 
-		list_destroy(seedsRecibidas);
-
-		sem_post(&sem_cargarSeeds);
-
-		return -1;
-	}
-
-	if (list_size(seedsRecibidas) != 0) {
-
-		seed* seedPrueba = list_get(seedsRecibidas, 0);
-		if (seedPrueba->puerto == -1) {
-			sacarMemoriaDeTablaGossip(memoriaDestino);
-
-			free(seedPrueba);
-			list_destroy(seedsRecibidas);
-			sem_post(&sem_cargarSeeds);
-
-			return -1;
+			return !list_any_satisfy(seedsConocidas, (void*) tienenLaMismaSeed);
 		}
-	} else {
-		list_destroy(seedsRecibidas);
-		sem_post(&sem_cargarSeeds);
-		return 1; //Seeds vacias, no hay nada que hacer aca muchachos
-	}
-	t_list* seedsNuevas = list_filter(seedsRecibidas, (void*) seedNoExiste);
+
+		int seedExiste(seed* unaSeed) {
+			int tienenLaMismaSeed(seed* otraSeed) {
+				return esLaMismaSeed(unaSeed, otraSeed);
+			}
+
+			return list_any_satisfy(seedsConocidas, (void*) tienenLaMismaSeed);
+		}
+
+	t_list* seedsNuevas = list_filter(seeds, (void*) seedNoExiste);
 
 	list_add_all(seedsConocidas, seedsNuevas);
 
-	sem_post(&sem_cargarSeeds);
+	t_list* seedsALiberar = list_filter(seeds, (void*) seedExiste);
 
-	t_list* seedsALiberar = list_filter(seedsRecibidas, (void*) seedExiste);
-
-	list_destroy_and_destroy_elements(seedsALiberar,(void*) liberarSeed);
-
-	list_destroy(seedsRecibidas);
-
-	return 1;
+	list_destroy_and_destroy_elements(seedsALiberar, (void*) liberarSeed);
 }
 
 int esLaMismaSeed(seed* unaSeed, seed* otraSeed) {

@@ -10,7 +10,7 @@ t_list* hilosEnEjecucion;
 t_list* colaDeRequests;
 sem_t requestsDisponibles;
 sem_t sem_gossiping;
-sem_t sem_cargarSeeds;
+//sem_t sem_cargarSeeds;
 sem_t sem_journal;
 sem_t sem_refreshConfig;
 sem_t sem_LFSconectandose;
@@ -49,7 +49,7 @@ int main() {
 	colaDeRequests = list_create();
 	sem_init(&requestsDisponibles,0,0);
 	sem_init(&sem_gossiping,0,1);
-	sem_init(&sem_cargarSeeds,0,1);
+//	sem_init(&sem_cargarSeeds,0,1);
 	sem_init(&sem_journal,0,1);
 	sem_init(&sem_refreshConfig,0,1);
 	sem_init(&sem_LFSconectandose,0,1);
