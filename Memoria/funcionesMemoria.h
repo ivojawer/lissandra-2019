@@ -18,7 +18,6 @@
 #include "segmentos.h"
 #include "conexionesMem.h"
 #include <time.h>
-#include "journalAutomatico.h"
 #include <stdbool.h>
 #include <math.h>
 #include "gossiping.h"
