@@ -154,7 +154,7 @@ void asignoPaginaEnMarco(uint16_t key, unsigned long long timestamp, char* value
 
 
 
-eliminarRegistro(segmento* seg, pagina* pagEnSeg){
+void eliminarRegistro(segmento* seg, pagina* pagEnSeg){
 	bool encuentroPaginaPorKey(pagina* pag){
 		return pag == pagEnSeg;
 	}
@@ -337,7 +337,7 @@ int insert(char* parametros) {  //TODO: Cambiar tipos
 	value = sacoComillas(value);
 
 	if(string_length(value)>caracMaxDeValue){
-		log_error("Value excede caracteres maximos");
+		log_error(logger,"Value excede caracteres maximos");
 		return ERROR;//TODO esto tal vez deberia devolver un codigo especifico
 	}
 

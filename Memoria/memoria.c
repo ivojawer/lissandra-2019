@@ -4,7 +4,7 @@ t_log* logger;
 t_config* config;
 
 
-int caracMaxDeValue
+int caracMaxDeValue;
 t_list* tablaSegmentos;
 t_list* hilosEnEjecucion;
 t_list* colaDeRequests;
