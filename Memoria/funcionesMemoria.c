@@ -288,7 +288,13 @@ void Select(char* parametros) {
 	} else {
 		log_info(logger, "No se encontro el dato, mandando request a LFS");
 		mandarRequestALFS(SELECT, parametros);
-
+		registro* registroPedido= recibirRegistro(socketLFS, logger);
+		insertInterno(registroPedido->key,registroPedido->value,tabla,registroPedido->timestamp);
+		if (idScriptKernel) {
+			log_info(logger, "Enviando el resultado al kernel");
+			enviarStringConHeaderEId(socketKernel, registroPedido->value, DATO, idScriptKernel);
+			return;
+		}
 	}
 }
 
@@ -386,6 +392,47 @@ void insert(char* parametros) {
 
 		}
 	}
+
+}
+
+
+//si, esto es literalmente una copia de lo que esta arriba solo que sin las respuestas y con el timestamp por parametro.
+void insertInterno(uint16_t key, char* value, char* tabla, unsigned long long timestamp){
+	segmento* tablaEncontrada = encuentroTablaPorNombre(tabla);
+		if (tablaEncontrada == NULL) {
+			log_info(logger, "Se va a crear la tabla y el dato");
+			segmento* tablaCreada = nuevaTabla(tablaSegmentos, tabla);
+			pagina* nuevaPagina = nuevoDato(tablaCreada->tablaDePaginas, 1, key,
+					timestamp, value);
+			if (nuevaPagina->nroMarco == MEM_LLENA) {
+				log_error(logger, "MEMORIA FULL");
+				return;
+			} else {
+				log_info(logger, "Se pudo hacer el INSERT");
+				return;
+			}
+
+		} else {
+			pagina* datoEncontrado = encuentroDatoPorKey(tablaEncontrada, key);
+			if (datoEncontrado != NULL) {
+				log_info(logger, "Se va a actualizar el dato ya existente");
+				actualizoDato(datoEncontrado, value, timestamp);
+				log_info(logger, "Se pudo hacer el INSERT");
+				return;
+			} else {
+				log_info(logger, "Se va a crear el dato");
+				pagina* nuevaPagina = nuevoDato(tablaEncontrada->tablaDePaginas, 1,	key, timestamp, value);
+				if (nuevaPagina->nroMarco == MEM_LLENA) {
+					log_error(logger, "MEMORIA FULL");
+					free(nuevaPagina);
+					return;
+				} else {
+					log_info(logger, "Se pudo hacer el INSERT");
+					return;
+				}
+
+			}
+		}
 
 }
 
