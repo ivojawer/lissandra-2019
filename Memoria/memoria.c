@@ -3,6 +3,8 @@
 t_log* logger;
 t_config* config;
 
+
+int caracMaxDeValue
 t_list* tablaSegmentos;
 t_list* hilosEnEjecucion;
 t_list* colaDeRequests;
@@ -34,7 +36,7 @@ int main() {
 
 	config_destroy(config);
 
-	int caracMaxDeValue = primeraConexionLFS();
+	caracMaxDeValue = primeraConexionLFS();
 	socketKernel = -1; //Para luego comprobar si se conecto o no
 
 //	if (caracMaxDeValue == -1)

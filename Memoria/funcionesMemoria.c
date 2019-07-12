@@ -8,6 +8,7 @@ extern sem_t requestsDisponibles;
 extern t_list* colaDeRequests;
 extern int socketKernel;
 extern sem_t sem_journal;
+extern int caracMaxDeValue;
 
 void ejecutarRequests() {
 
@@ -271,8 +272,7 @@ char* Select(char* parametros) {
 	char** parametrosEnVector = string_n_split(parametros, 2, " ");
 	char* tabla = parametrosEnVector[0];
 	string_to_upper(tabla);
-	uint16_t key = atoi(parametrosEnVector[1]); //TODO: Cambiar tipos
-
+	uint16_t key = atoi(parametrosEnVector[1]);
 	liberarArrayDeStrings(parametrosEnVector);
 
 	log_info(logger, "Select de tabla: %s - key: %d", tabla, key);
@@ -336,7 +336,11 @@ int insert(char* parametros) {  //TODO: Cambiar tipos
 
 	value = sacoComillas(value);
 
-	//value=string_substring_until(value,config_get_int_value(config,"CANT_MAX_CARAC")); //lo corta para que no ocupe mas de 20 caracteres
+	if(string_length(value)>caracMaxDeValue){
+		log_error("Value excede caracteres maximos");
+		return ERROR;//TODO esto tal vez deberia devolver un codigo especifico
+	}
+
 	unsigned long long timestamp = time(NULL) / 1000; //TODO: Hacer la adquisicion del timestamp consistente con el LFS
 
 	log_info(logger, "INSERT: Tabla:%s - key:%d - timestamp:%d - value:%s\n",
