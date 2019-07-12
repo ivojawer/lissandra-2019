@@ -171,7 +171,7 @@ void rutina_insert(char* comando)
 				}else{
 					agregar_registro_en_particion_existente(tabla, particion_buscar, registro_nuevo);
 				}
-				modificar_op_control(tabla, 0);
+				modificar_op_control(tabla, 2);
 				printf("Registro agregado a la particion.\n");
 				enviarIntConHeader(socket_memoria, TODO_BIEN, RESPUESTA);
 			}

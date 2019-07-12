@@ -33,7 +33,11 @@
 /*** ESTRUCTURAS ***/
 
 struct op_control{
-	sem_t tabla_sem;
+	pthread_mutex_t tabla_sem;
+	pthread_mutex_t mutex;
+	sem_t drop_sem;
+	int drop_flag;
+	int otros_flag;
 	char *tabla;
 };
 
@@ -172,7 +176,7 @@ void eliminar_tabla(char *tabla);
 
 //DUMP
 void ejecutar_dump();
-sem_t dump_semaphore;
+pthread_mutex_t dump_semaphore;
 
 
 

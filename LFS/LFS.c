@@ -28,7 +28,7 @@ int main() {
 	dump_logger = log_create("Dump.log", "LFS", 0, 0);
 
 	iniciar_variables();
-	compactar("TABLA-B");
+//	compactar("TABLA-B");
 
 	pthread_t h_consola;
 	pthread_t h_conexiones;
