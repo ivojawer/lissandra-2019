@@ -25,7 +25,7 @@
 
 
 typedef struct {
-	unsigned long long timestamp; //TODO: Cambiar
+	unsigned long long timestamp;
 	uint16_t key;
 	char value;
 }marco;
@@ -84,6 +84,7 @@ void drop(char* parametro);
 void journal();
 void journalAutomatico();
 void refreshConfig();
+unsigned long long tiempoActual();
 void reconexionLFS();
 
 #endif /* FUNCIONESMEMORIA_H_ */
