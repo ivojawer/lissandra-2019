@@ -5,11 +5,17 @@
 
 void compactar(char* tabla);
 
-
+void escribirEnBloquesTabla(t_list* tablaParticiones,char* nombreTabla);
+void escribirEnBloquesParticion(t_list* registrosDeParticion, int numeroParticion, char* tabla);
 int renombrarATmpc(char* tabla);
 t_list* traerRegistrosBloques(char** bloques);
 void string_append_char(char* string, char c);
 
+//-----------------------------------------------------
+// ------------- getters paths completos --------------
+//-----------------------------------------------------
+char* generarNombreCompletoBloque(int nro_bloque);
+char* generarNombreCompletoParticion(int numeroDeParticion,char* nombreTabla);
 
 //-----------------------------------------------------
 //--conversores array de numeroBloque --> path bloque--
@@ -44,8 +50,9 @@ void mostrarListaDeListasDeStrings(t_list* lista);
 
 void mostrarBytes(int* bytes);
 
-
-
-void eliminarListaDeStrings(t_list* list);
+//-----------------------------------------------------
+// ---------- funciones para hacer frees --------------
+//-----------------------------------------------------
+//void eliminarListaDeStrings(t_list* list);
 
 #endif /* COMPACTACION_H_ */

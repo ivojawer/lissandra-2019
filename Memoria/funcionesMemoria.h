@@ -2,7 +2,7 @@
 #define FUNCIONESMEMORIA_H_
 
 
-#define RAIZCONFIG "/home/utnso/workspace/tp-2019-1c-U-TN-Tecno/CONFIG/"
+#define RAIZCONFIG "/home/ivan/eclipse-workspace/tp-2019-1c-U-TN-Tecno/CONFIG/"
 
 #include<stdio.h>
 #include<stdlib.h>
