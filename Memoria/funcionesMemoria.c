@@ -119,16 +119,16 @@ pagina* ultimaPagina(t_list* tablaPaginas) { //para testear
 void asignoPaginaEnMarco(uint16_t key, unsigned long long timestamp,
 		char* value, void* comienzoMarco) {
 
-	//timestamp->key->value el orden importa
 
-//	printf("value:%s\n",value);
-//	printf("key:%d\n",key);
-//	printf("timestamp:%d\n",timestamp);
+	sem_wait(&sem_refreshConfig);
+	int sleepMilisegundos = retardoAccesoMemoria / 1000;
+	sem_post(&sem_refreshConfig);
+	sleep(sleepMilisegundos);
+
 
 	void* marcoParaKey = mempcpy(comienzoMarco, &timestamp, sizeof(int));
 	void* marcoParaValue = mempcpy(marcoParaKey, &key, sizeof(int));
 	strcpy(marcoParaValue, value); //maximo carac string
-//	log_info(logger,"Marco donde asigne: %p",comienzoMarco);
 }
 
 void eliminarRegistro(segmento* seg, pagina* pagEnSeg) {
@@ -238,6 +238,10 @@ pagina* getPagina(uint16_t key, char* nombreTabla) { //retorna un NULL si no exi
 	if (tabla != NULL) {
 //		log_info(logger, "Encontre una tabla con el nombre: %s",
 //				tabla->nombreDeTabla);
+		sem_wait(&sem_refreshConfig);
+		int sleepMilisegundos = retardoAccesoMemoria / 1000;
+		sem_post(&sem_refreshConfig);
+		sleep(sleepMilisegundos);
 		pagina* dato = encuentroDatoPorKey(tabla, key);
 //		log_info(logger, "Encontre un dato con el value: %s",
 //				&getMarcoFromPagina(dato)->value);
@@ -248,6 +252,10 @@ pagina* getPagina(uint16_t key, char* nombreTabla) { //retorna un NULL si no exi
 }
 
 void actualizoDato(pagina* pagina, char* nuevoValue, unsigned long long nuevoTimestamp) {
+	sem_wait(&sem_refreshConfig);
+	int sleepMilisegundos = retardoAccesoMemoria/ 1000;
+	sem_post(&sem_refreshConfig);
+	sleep(sleepMilisegundos);
 	pagina->ultimoUso= tiempoActual();
 	strcpy(&getMarcoFromPagina(pagina)->value, nuevoValue);
 	getMarcoFromPagina(pagina)->timestamp = nuevoTimestamp;
