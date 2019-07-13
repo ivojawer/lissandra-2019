@@ -77,7 +77,7 @@ void conectarseAUnaMemoria(seed* unaSeed) {
 	sacarSeedDeMemoriasEnCreacion(unaSeed);
 
 
-	log_info(logger, "Se acaba de conectar la memoria %i",
+	log_info(logger, "Se conecto la memoria %i",
 			nuevaMemoria->nombre);
 
 	comunicacionConMemoria(nuevaMemoria);

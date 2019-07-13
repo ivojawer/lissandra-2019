@@ -100,5 +100,6 @@ void sacarScriptDeEspera(int nombreScript, memoriaEnLista* laMemoria);
 int existeTabla(char* nombreTabla);
 void enviarPeticionesDeGossip();
 int memoriaEstaSiendoCreada(seed* unaSeed);
+void sacarSeedDeMemoriasEnCreacion(seed* unaSeed);
 
 #endif /* FUNCIONESBASEKERNEL_H_ */

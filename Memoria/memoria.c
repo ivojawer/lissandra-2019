@@ -2,58 +2,52 @@
 
 t_log* logger;
 
-
-
-int caracMaxDeValue;
 t_list* tablaSegmentos;
 t_list* hilosEnEjecucion;
 t_list* colaDeRequests;
+t_list* tablaGossiping;
 sem_t requestsDisponibles;
 sem_t sem_gossiping;
-sem_t sem_cargarSeeds;
+//sem_t sem_cargarSeeds;
 sem_t sem_journal;
 sem_t sem_refreshConfig;
 sem_t sem_LFSconectandose;
 sem_t sem_recepcionLFS;
 int nombreMemoria;
 int socketKernel;
-char* dirConfig;
 int sleepJournal;
 int sleepGossiping;
 int retardoAccesoLFS;
 int retardoAccesoMemoria;
 int idScriptKernel;
-
+int caracMaxDeValue;
+char* tablaSelect;
+char* dirConfig;
 
 int main() {
 
-
-
 	printf("Insertar nombre config:\n");
-	char* nombreArchivoConfig = string_new ();
+	char* nombreArchivoConfig = string_new();
 	string_append(&nombreArchivoConfig, readline("Nombre="));
 	dirConfig = string_duplicate(RAIZCONFIG);
-	string_append(&dirConfig,nombreArchivoConfig);
+	string_append(&dirConfig, nombreArchivoConfig);
 	free(nombreArchivoConfig);
 
 	//string_append(&nombreArchivoConfig,".config");
 
 	logger = log_create("memoria.log", "memoria", 1, 0); //3er parametro en 1 para mostrarlos en consola. Sino en 0
 
-
 	t_config* config = config_create(dirConfig);
-
-
 
 	hilosEnEjecucion = list_create();
 	colaDeRequests = list_create();
-	sem_init(&requestsDisponibles,0,0);
-	sem_init(&sem_gossiping,0,1);
-	sem_init(&sem_cargarSeeds,0,1);
-	sem_init(&sem_journal,0,1);
-	sem_init(&sem_refreshConfig,0,1);
-	sem_init(&sem_LFSconectandose,0,1);
-	sem_init(&sem_recepcionLFS,0,0);
+	sem_init(&requestsDisponibles, 0, 0);
+	sem_init(&sem_gossiping, 0, 1);
+//	sem_init(&sem_cargarSeeds,0,1);
+	sem_init(&sem_journal, 0, 1);
+	sem_init(&sem_refreshConfig, 0, 1);
+	sem_init(&sem_LFSconectandose, 0, 1);
+	sem_init(&sem_recepcionLFS, 0, 0);
 
 	int tamanioMemoria = config_get_int_value(config, "TAM_MEM");
 
@@ -68,11 +62,11 @@ int main() {
 
 	caracMaxDeValue = primeraConexionLFS();
 
-	if (caracMaxDeValue != -1)
-	{
-		log_info(logger,"Se conecto el LFS.");
+	if (caracMaxDeValue != -1) {
+		log_info(logger, "Se conecto el LFS.");
 		pthread_t h_respuestaLFS;
-		pthread_create(&h_respuestaLFS, NULL, (void *) manejarRespuestaLFS, NULL);
+		pthread_create(&h_respuestaLFS, NULL, (void *) manejarRespuestaLFS,
+		NULL);
 		pthread_detach(h_respuestaLFS);
 
 	}
@@ -84,8 +78,6 @@ int main() {
 //		return -1;
 //	}
 
-
-
 	//reservo toda la memoria
 
 	log_info(logger, "Cree mi memoria tamanio: %d.", tamanioMemoria);
@@ -94,19 +86,22 @@ int main() {
 	//printf("comienzo memoria:%p\n", comienzoMemoria);
 	//divido en marcos
 
-
-	tamanioMarco = tamanioMarco * sizeof(char) + sizeof(uint16_t) + sizeof(unsigned long long); //value + key + timestamp
-	log_info(logger,"el tamanio de mi marco es: %d", tamanioMarco);
-	cantMarcos = tamanioMemoria/tamanioMarco; //tamanio marco siempre es mult de 2 asi que da entero
-	log_info(logger,"cantidad de marcos: %d",cantMarcos);
-	marcos=malloc(sizeof(disponibilidad)*cantMarcos);
-	for(int i = 0; i<cantMarcos;i++){
-		marcos[i].vacio=true;
+	tamanioMarco = tamanioMarco * sizeof(char) + sizeof(uint16_t)
+			+ sizeof(unsigned long long); //value + key + timestamp
+	log_info(logger, "el tamanio de mi marco es: %d", tamanioMarco);
+	cantMarcos = tamanioMemoria / tamanioMarco; //tamanio marco siempre es mult de 2 asi que da entero
+	log_info(logger, "cantidad de marcos: %d", cantMarcos);
+	marcos = malloc(sizeof(disponibilidad) * cantMarcos);
+	for (int i = 0; i < cantMarcos; i++) {
+		marcos[i].vacio = true;
 	}
 //	creo tabla de segmentos
 
 	tablaSegmentos = crearTablaSegmentos();
 
+	cargarSeedsIniciales();
+
+	tablaGossiping = list_create();
 
 	pthread_t h_consola;
 	pthread_t h_ejecucionRequests;
@@ -119,11 +114,9 @@ int main() {
 	pthread_create(&h_conexiones, NULL, (void *) aceptarConexiones, NULL);
 	pthread_create(&h_refreshGossiping, NULL, (void *) gossiping, NULL);
 	pthread_create(&h_refreshConfig, NULL, (void *) refreshConfig, NULL);
-	pthread_create(&h_journalAutomatico, NULL, (void *) journalAutomatico, NULL);
+	pthread_create(&h_journalAutomatico, NULL, (void *) journalAutomatico,
+	NULL);
 	pthread_create(&h_consola, NULL, (void *) consola, NULL);
-
-
-
 
 	pthread_detach(h_ejecucionRequests);
 	pthread_detach(h_conexiones);
@@ -134,10 +127,19 @@ int main() {
 
 	//Se cerro la consola
 
-	if(socketKernel != -1)
-	{
-		enviarInt(socketKernel,-1); //Si el kernel alguna vez recibe -1, mata la memoria.
+	if (socketKernel != -1) {
+		enviarInt(socketKernel, -1); //Si el kernel alguna vez recibe -1, mata la memoria.
 		close(socketKernel);
+	}
+
+	sem_wait(&sem_gossiping);
+
+	for (int i = 0; i < list_size(tablaGossiping); i++) {
+		memoriaGossip* unaMemoria = list_get(tablaGossiping, i);
+
+		if (unaMemoria->nombre != nombreMemoria) {
+			enviarInt(unaMemoria->elSocket, -1);
+		}
 	}
 
 	log_destroy(logger);

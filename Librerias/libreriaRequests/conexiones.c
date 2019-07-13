@@ -558,7 +558,7 @@ char* recibirString(int deQuien, t_log* logger) { //Si hubo error: string = " "
 
 	int tamanioString = recibirInt(deQuien, logger);
 
-	if (tamanioString == -1) {
+	if (tamanioString <= 0) {
 		return " ";
 	}
 
@@ -580,7 +580,7 @@ char* recibirString(int deQuien, t_log* logger) { //Si hubo error: string = " "
 	return stringRecibido;
 }
 
-int recibirInt(int deQuien, t_log* logger) { //Si hubo error: elInt = -1
+int recibirInt(int deQuien, t_log* logger) { //Si hubo error: elInt = -1 || elInt = 0
 	void* bufferInt = malloc(sizeof(int));
 	int respuesta = recv(deQuien, bufferInt, sizeof(int),
 	MSG_WAITALL);

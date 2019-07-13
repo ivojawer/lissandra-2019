@@ -210,7 +210,10 @@ int ejecutarRequest(request* requestAEjecutar, script* elScript) {
 
 	time_t tiempoFinal = time(NULL);
 
-	insertarTiempo(tiempoInicial, tiempoFinal, requestAEjecutar->requestEnInt);
+	if (respuesta == 1)
+	{
+		insertarTiempo(tiempoInicial, tiempoFinal, requestAEjecutar->requestEnInt);
+	}
 
 	return respuesta;
 }

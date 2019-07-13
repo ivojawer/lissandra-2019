@@ -25,7 +25,7 @@
 
 
 typedef struct {
-	unsigned long long timestamp; //TODO: Cambiar
+	unsigned long long timestamp;
 	uint16_t key;
 	char value;
 }marco;
@@ -82,9 +82,12 @@ void create(char* parametros);
 void describe(char* parametro);
 void drop(char* parametro);
 void journal();
-int enviarYRecibirSeeds(memoriaGossip* memoriaDestino);
 void journalAutomatico();
 void refreshConfig();
+unsigned long long tiempoActual();
 void reconexionLFS();
+void comunicacionConMemoria(memoriaGossip* memoria);
+void enviarSeedsConectadas(memoriaGossip* memoriaDestino,int tipoDeEnvio);
+void sacarMemoriaDeTablaGossip(memoriaGossip* unaMemoria);
 
 #endif /* FUNCIONESMEMORIA_H_ */

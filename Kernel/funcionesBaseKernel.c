@@ -679,8 +679,8 @@ void agregarUnaMetadataEnString(char* metadataEnString)
 }
 
 int manejarRespuestaDeMemoria(script* elScript, request* laRequest, int memoria) {
-	int respuesta;
 
+	int respuesta;
 	memcpy(&respuesta, elScript->resultadoDeEnvio, sizeof(int));
 
 	if (respuesta == ERROR) {
@@ -710,7 +710,7 @@ int manejarRespuestaDeMemoria(script* elScript, request* laRequest, int memoria)
 	}
 
 	else if (respuesta == MEM_LLENA) {
-		log_error(logger,
+		log_info(logger,
 				"La memoria %i esta llena, se va a enviar un JOURNAL.");
 
 		journal();
@@ -795,9 +795,11 @@ int manejarRespuestaDeMemoria(script* elScript, request* laRequest, int memoria)
 
 			if (esDescribeGlobal(laRequest)) {
 				actualizarMetadatas(metadatas);
+				describirMetadatas(metadatas);
 			} else {
 				metadataTablaLFS* laMetadata = list_get(metadatas, 0);
 				agregarUnaMetadata(laMetadata);
+				describirUnaMetadata(laMetadata);
 
 				list_destroy(metadatas);
 			}

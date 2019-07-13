@@ -1,6 +1,12 @@
 #include "funcionesMemoria.h"
 extern t_list* colaDeRequests;
 extern sem_t requestsDisponibles;
+extern sem_t sem_refreshConfig;
+extern int sleepJournal;
+extern int sleepGossiping;
+extern int retardoAccesoLFS;
+extern int retardoAccesoMemoria;
+
 void consola() {
 
 	while (1)
@@ -24,6 +30,43 @@ void consola() {
 		}
 
 		char** requestYParametros = string_n_split(lectura, 2, " ");
+
+		if(!strcmp(requestYParametros[0],"RETARDO_JOURNAL"))
+		{
+			if(esUnNumero(requestYParametros[1]))
+			{
+				sem_wait(&sem_refreshConfig);
+				sleepJournal = atoi(requestYParametros[1]);
+				sem_post(&sem_refreshConfig);
+			}
+		}
+		if(!strcmp(requestYParametros[0],"RETARDO_GOSSIPING"))
+		{
+			if(esUnNumero(requestYParametros[1]))
+			{
+				sem_wait(&sem_refreshConfig);
+				sleepGossiping = atoi(requestYParametros[1]);
+				sem_post(&sem_refreshConfig);
+			}
+		}
+		if(!strcmp(requestYParametros[0],"RETARDO_FS"))
+		{
+			if(esUnNumero(requestYParametros[1]))
+			{
+				sem_wait(&sem_refreshConfig);
+				retardoAccesoLFS = atoi(requestYParametros[1]);
+				sem_post(&sem_refreshConfig);
+			}
+		}
+		if(!strcmp(requestYParametros[0],"RETARDO_MEM"))
+		{
+			if(esUnNumero(requestYParametros[1]))
+			{
+				sem_wait(&sem_refreshConfig);
+				retardoAccesoMemoria = atoi(requestYParametros[1]);
+				sem_post(&sem_refreshConfig);
+			}
+		}
 
 		int requestEnInt = queRequestEs(requestYParametros[0]);
 

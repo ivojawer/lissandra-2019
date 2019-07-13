@@ -17,6 +17,7 @@ extern int socketKernel;
 extern int socketLFS;
 extern int idScriptKernel;
 extern char* dirConfig;
+extern char* tablaSelect;
 
 void ejecutarRequests() {
 
@@ -174,7 +175,7 @@ int marcoLRU() {
 	if (encontreLRU)
 		return marcoLRU;
 	else
-		return -1;
+		return MEM_LLENA;
 }
 
 int numeroMarcoDondeAlocar() {
@@ -186,7 +187,7 @@ int numeroMarcoDondeAlocar() {
 		}
 	}
 	int marcoAlocar = marcoLRU();
-	if (marcoAlocar > -1)
+	if (marcoAlocar != MEM_LLENA)
 		return marcoAlocar;
 	else {
 		return MEM_LLENA;
@@ -195,14 +196,14 @@ int numeroMarcoDondeAlocar() {
 }
 
 pagina* nuevoDato(t_list* tablaPaginas, int flagModificado, uint16_t key,
-		unsigned long long timestamp, char* value) {
+	unsigned long long timestamp, char* value) {
 	pagina* nuevaPagina = malloc(sizeof(pagina));
+	nuevaPagina->ultimoUso =  tiempoActual();
 	int nroMarcoAlocar = numeroMarcoDondeAlocar();
 	nuevaPagina->nroMarco = nroMarcoAlocar;
 	if (nroMarcoAlocar > -1) {
 		nuevaPagina->flagModificado = flagModificado;
-		asignoPaginaEnMarco(key, timestamp, value,
-				getMarcoFromPagina(nuevaPagina));
+		asignoPaginaEnMarco(key, timestamp, value,getMarcoFromPagina(nuevaPagina));
 		list_add(tablaPaginas, nuevaPagina);
 	}
 	return nuevaPagina;
@@ -246,8 +247,8 @@ pagina* getPagina(uint16_t key, char* nombreTabla) { //retorna un NULL si no exi
 		return NULL;
 }
 
-void actualizoDato(pagina* pagina, char* nuevoValue,
-		unsigned long long nuevoTimestamp) {
+void actualizoDato(pagina* pagina, char* nuevoValue, unsigned long long nuevoTimestamp) {
+	pagina->ultimoUso= tiempoActual();
 	strcpy(&getMarcoFromPagina(pagina)->value, nuevoValue);
 	getMarcoFromPagina(pagina)->timestamp = nuevoTimestamp;
 
@@ -275,6 +276,7 @@ void Select(char* parametros) {
 	char* dato;
 
 	if (paginaPedida != NULL) {
+		paginaPedida->ultimoUso = tiempoActual();
 		dato = string_duplicate(&getMarcoFromPagina(paginaPedida)->value);
 		log_info(logger, "Resultado: %s\n", dato);
 
@@ -286,10 +288,20 @@ void Select(char* parametros) {
 
 	} else {
 		log_info(logger, "No se encontro el dato, mandando request a LFS");
-
+		tablaSelect = tabla; //tablaSelect es una variable global que se usa en el hilo de recepcion de LFS. Pido disculpas por ser tan hijo de puta y haber hecho esto, pero no hay tiempOOOOO.
 		mandarRequestALFS(SELECT, parametros);
-
+//		registro* registroPedido= recibirRegistro(socketLFS, logger);
+//		insertInterno(registroPedido->key,registroPedido->value,tabla,registroPedido->timestamp);
+//		if (idScriptKernel) {
+//			log_info(logger, "Enviando el resultado al kernel");
+//			enviarStringConHeaderEId(socketKernel, registroPedido->value, DATO, idScriptKernel);
+//			return;
+//		}
 	}
+}
+
+unsigned long long tiempoActual(){
+	return time(NULL) / 1000; //TODO: Hacer la adquisicion del timestamp consistente con el LFS
 }
 
 void insert(char* parametros) {
@@ -301,7 +313,7 @@ void insert(char* parametros) {
 
 	char* value = parametrosEnVector[2];
 
-	unsigned long long timestamp = time(NULL) / 1000; //TODO: Hacer la adquisicion del timestamp consistente con el LFS
+	unsigned long long timestamp = tiempoActual();
 
 	log_info(logger, "INSERT: Tabla:%s - key:%d - timestamp:%llu - value:%s\n",
 			tabla, key, timestamp, value);
@@ -382,6 +394,47 @@ void insert(char* parametros) {
 
 		}
 	}
+
+}
+
+
+//si, esto es literalmente una copia de lo que esta arriba solo que sin las respuestas y con el timestamp por parametro.
+void insertInterno(uint16_t key, char* value, char* tabla, unsigned long long timestamp){
+	segmento* tablaEncontrada = encuentroTablaPorNombre(tabla);
+		if (tablaEncontrada == NULL) {
+			log_info(logger, "Se va a crear la tabla y el dato");
+			segmento* tablaCreada = nuevaTabla(tablaSegmentos, tabla);
+			pagina* nuevaPagina = nuevoDato(tablaCreada->tablaDePaginas, 1, key,
+					timestamp, value);
+			if (nuevaPagina->nroMarco == MEM_LLENA) {
+				log_error(logger, "MEMORIA FULL");
+				return;
+			} else {
+				log_info(logger, "Se pudo hacer el INSERT");
+				return;
+			}
+
+		} else {
+			pagina* datoEncontrado = encuentroDatoPorKey(tablaEncontrada, key);
+			if (datoEncontrado != NULL) {
+				log_info(logger, "Se va a actualizar el dato ya existente");
+				actualizoDato(datoEncontrado, value, timestamp);
+				log_info(logger, "Se pudo hacer el INSERT");
+				return;
+			} else {
+				log_info(logger, "Se va a crear el dato");
+				pagina* nuevaPagina = nuevoDato(tablaEncontrada->tablaDePaginas, 1,	key, timestamp, value);
+				if (nuevaPagina->nroMarco == MEM_LLENA) {
+					log_error(logger, "MEMORIA FULL");
+					free(nuevaPagina);
+					return;
+				} else {
+					log_info(logger, "Se pudo hacer el INSERT");
+					return;
+				}
+
+			}
+		}
 
 }
 

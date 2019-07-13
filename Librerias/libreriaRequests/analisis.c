@@ -15,6 +15,12 @@ int queRequestEs(char* palabra) {
 }
 
 int esUnNumero(char* string) {
+
+	if(string == NULL)
+	{
+		return 0;
+	}
+
 	if ((!atoi(string) && strcmp(string, "0"))
 			|| string_contains(string, " ")) { //Si contiene espacios lo considera un numero
 		return 0;
