@@ -227,6 +227,9 @@ void string_append_char(char** string, char c){
 	string_append(string,str);
 }
 
+//TODO: bancarse que la ultima linea del archivo no tenga \n
+//TODO: bancarse que la linea solo contenga \n. Hecho. Falta testing!
+
 t_list* traerRegistrosBloques(char** bloques){
 
 	t_list* registros = list_create();
@@ -242,7 +245,7 @@ t_list* traerRegistrosBloques(char** bloques){
 		char nuevoCaracter = fgetc(archivoDeBloque);
 		while(nuevoCaracter != EOF){
 //			printf("caracter leido:%c\n",nuevoCaracter);
-			if(nuevoCaracter == '\n'){
+			if(nuevoCaracter == '\n' && !string_is_empty(registroActual)){	
 //				printf("termino registro\n");
 				list_add(registros, stringRegistroAStruct(registroActual));
 				free(registroActual);
@@ -255,12 +258,16 @@ t_list* traerRegistrosBloques(char** bloques){
 			nuevoCaracter = fgetc(archivoDeBloque);
 		}
 		fclose(archivoDeBloque);
-
 	}
 
 	string_iterate_lines(bloques, (void*) leerBloque);
-
-
+	
+	// Esto aplica si la ultima linea del ultimo bloque no termina en \n
+	if (!string_is_empty(registroActual)){
+		list_add(registros, stringRegistroAStruct(registroActual));
+		free(registroActual);
+		registroActual = string_new();
+	}
 
 	free(registroActual);
 	printf("termine de leer bloques de la particion\n");
