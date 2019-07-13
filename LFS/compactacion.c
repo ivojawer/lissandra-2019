@@ -240,7 +240,7 @@ t_list* traerRegistrosBloques(char** bloques){
 //		printf("bloque actual:%s\n",nombreBloque);
 		FILE* bloqueActual = fopen(nombreBloque,"r");
 		char nuevoCaracter = fgetc(bloqueActual);
-		while(nuevoCaracter > EOF){
+		while(nuevoCaracter != EOF){
 //			printf("caracter leido:%c\n",nuevoCaracter);
 			if(nuevoCaracter == '\n'){
 //				printf("termino registro\n");
