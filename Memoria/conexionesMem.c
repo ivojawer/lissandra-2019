@@ -12,6 +12,7 @@ int socketLFS;
 extern char* dirConfig;
 extern int idScriptKernel;
 extern sem_t sem_recepcionLFS;
+extern char* tablaSelect;
 
 int primeraConexionLFS() {
 
@@ -110,9 +111,11 @@ void aceptarConexiones() {
 		case MEMORIA: {
 			int nombre = recibirInt(socketMisterioso, logger);
 
+			enviarVariosIntsConHeader(socketMisterioso, listaInts, HANDSHAKE); //HANDSHAKE-MEMORIA-NOMBRE
+
 			if (nombre == nombreMemoria) //Si se conecto la memoria misma
-			{
-				return; //El hilo que envio se encarga de agregarse a la tabla
+					{
+				continue; //El hilo que envio se encarga de agregarse a la tabla
 			}
 
 			sem_wait(&sem_gossiping);
@@ -121,26 +124,40 @@ void aceptarConexiones() {
 				sem_post(&sem_gossiping);
 				continue;
 			}
-
 			memoriaGossip* nuevaMemoriaConectada = malloc(
 					sizeof(memoriaGossip));
 			nuevaMemoriaConectada->nombre = nombre;
 			nuevaMemoriaConectada->elSocket = socketMisterioso;
 			nuevaMemoriaConectada->laSeed = NULL;
 
-			int respuesta = enviarYRecibirSeeds(nuevaMemoriaConectada);
+			enviarSeedsConectadas(nuevaMemoriaConectada, GOSSIPING);
 
-			if (respuesta == -1) {
-				log_error(logger, "Fallo la conexion a la memoria %i.", nombre);
-				close(socketMisterioso);
-				free(nuevaMemoriaConectada);
-				sem_post(&sem_gossiping);
-				continue;
+			int operacion = recibirInt(socketMisterioso, logger);
+
+			t_list* seedsRecibidas = recibirSeeds(socketMisterioso, logger);
+
+			if (list_size(seedsRecibidas) != 0) {
+
+				seed* seedPrueba = list_get(seedsRecibidas, 0);
+				if (seedPrueba->puerto == -1 || operacion != GOSSIPING) {
+
+					close(socketMisterioso);
+					free(nuevaMemoriaConectada);
+					free(seedPrueba);
+					list_destroy(seedsRecibidas);
+					log_error(logger, "Fallo la conexion a la memoria %i.",
+							nombre);
+					sem_post(&sem_gossiping);
+					continue;
+				}
+				agregarNuevasSeeds(seedsRecibidas);
+
+				log_info(logger, "Se conecto a la memoria %i.", nombre);
 			}
 
-			nuevaMemoriaConectada->laSeed = NULL;
-
 			list_add(tablaGossiping, nuevaMemoriaConectada);
+
+			tratarDeConectarseASeeds();
 
 			sem_post(&sem_gossiping);
 
@@ -176,48 +193,51 @@ void conectarseAOtraMemoria(seed* laSeed) { //Esto es secuencial al hilo de goss
 	list_add(listaInts, &nombreModulo);
 	list_add(listaInts, &nombreMemoria);
 
-	enviarVariosIntsConHeader(socketKernel, listaInts, HANDSHAKE); //HANDSHAKE-MEMORIA-NOMBRE
+	enviarVariosIntsConHeader(socketMemoria, listaInts, HANDSHAKE); //HANDSHAKE-MEMORIA-NOMBRE
 
-	int operacion = recibirInt(socketKernel, logger);
+	list_remove(listaInts, 0);
+	list_remove(listaInts, 0);
+	list_destroy(listaInts);
+
+	int operacion = recibirInt(socketMemoria, logger);
 
 	if (operacion != HANDSHAKE) {
 		log_error(logger,
 				"Se envio un handshake a una memoria y se devolvio otra cosa.");
-		list_destroy(listaInts);
 		close(socketMemoria);
 		return;
 	}
 
-	int modulo = recibirInt(socketKernel, logger);
+	int modulo = recibirInt(socketMemoria, logger);
 
 	if (modulo != MEMORIA) {
 		log_error(logger,
 				"Se conecto indebidamente algo que no es una memoria.");
-		list_destroy(listaInts);
 		close(socketMemoria);
 		return;
 	}
 
-	int nombre = recibirInt(socketKernel, logger);
-
+	int nombre = recibirInt(socketMemoria, logger);
 
 	if (nombre == -1) {
 		log_error(logger, "Se recibio algo indebido de una memoria.");
-		list_destroy(listaInts);
 		close(socketMemoria);
 		return;
 	}
-
-	sem_wait(&sem_gossiping);
 
 	if (memoriaYaEstaConectada(nombre)) {
 
 		int index = posicionMemoriaEnLista(nombre);
 
 		memoriaGossip* memoriaYaConectada = list_get(tablaGossiping, index);
-		memoriaYaConectada->laSeed = laSeed;
-		sem_post(&sem_gossiping);
-		return;
+		if (memoriaYaConectada->laSeed == NULL) { //Si la memoria no tenia seed, se le agrega
+			memoriaYaConectada->laSeed = laSeed;
+		}
+
+		free(laSeed->ip);
+		free(laSeed);
+
+		return; //Ya se hizo gossiping
 
 	}
 
@@ -226,31 +246,41 @@ void conectarseAOtraMemoria(seed* laSeed) { //Esto es secuencial al hilo de goss
 	nuevaMemoriaConectada->elSocket = socketMemoria;
 	nuevaMemoriaConectada->laSeed = laSeed;
 
+	if (nombre != nombreMemoria) {
+		enviarSeedsConectadas(nuevaMemoriaConectada, GOSSIPING);
 
-	if (nombre != nombreMemoria)
-	{
-		//	int respuesta = enviarYRecibirSeeds(nuevaMemoriaConectada);
+		int operacion = recibirInt(socketMemoria, logger);
 
-			if (respuesta == -1) {
-				log_error(logger, "Fallo la conexion a la memoria %i.", nombre);
+		t_list* seedsRecibidas = recibirSeeds(socketMemoria, logger);
+
+		if (list_size(seedsRecibidas) != 0) {
+
+			seed* seedPrueba = list_get(seedsRecibidas, 0);
+			if (seedPrueba->puerto == -1 || operacion != GOSSIPING) {
+
 				close(socketMemoria);
 				free(nuevaMemoriaConectada);
+				free(seedPrueba);
+				list_destroy(seedsRecibidas);
+				log_error(logger, "Fallo la conexion a la memoria %i.", nombre);
 				free(laSeed->ip);
 				free(laSeed);
 				return;
 			}
+			agregarNuevasSeeds(seedsRecibidas);
 
 			log_info(logger, "Se conecto a la memoria %i.", nombre);
+		}
+
+		list_add(tablaGossiping, nuevaMemoriaConectada);
+		tratarDeConectarseASeeds();
+
+		pthread_t h_comunicacionConMemoria;
+		pthread_create(&h_comunicacionConMemoria, NULL,
+				(void *) comunicacionConMemoria, nuevaMemoriaConectada);
+		pthread_detach(h_comunicacionConMemoria);
+
 	}
-	list_add(tablaGossiping, nuevaMemoriaConectada);
-
-	sem_post(&sem_gossiping);
-
-
-	pthread_t h_comunicacionConMemoria;
-	pthread_create(&h_comunicacionConMemoria, NULL,
-			(void *) comunicacionConMemoria, nuevaMemoriaConectada);
-	pthread_detach(h_comunicacionConMemoria);
 
 }
 
@@ -563,6 +593,26 @@ void manejarRespuestaLFS() {
 			}
 			sem_post(&sem_recepcionLFS);
 			continue;
+		}
+		case REGISTRO: {
+			registro* registroRecibido = recibirRegistro(socketLFS, logger);
+			if (!strcmp(registroRecibido->value, " ")) {
+
+				manejoErrorLFS();
+				log_error(logger, "No se pudo ejecutar el request");
+
+				if (idScriptKernel) {
+					log_info(logger, "Enviando ERROR al kernel");
+					enviarRespuestaAlKernel(idScriptKernel, ERROR);
+				}
+
+				sem_post(&sem_recepcionLFS);
+
+				return;
+			}
+
+			insertInterno(registroRecibido->key,registroRecibido->value,tablaSelect,registroRecibido->timestamp);
+
 		}
 		case METADATAS: {
 			t_list* metadatas = recibirMetadatas(socketLFS, logger);

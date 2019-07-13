@@ -17,6 +17,7 @@ extern int socketKernel;
 extern int socketLFS;
 extern int idScriptKernel;
 extern char* dirConfig;
+extern char* tablaSelect;
 
 void ejecutarRequests() {
 
@@ -287,6 +288,7 @@ void Select(char* parametros) {
 
 	} else {
 		log_info(logger, "No se encontro el dato, mandando request a LFS");
+		tablaSelect = tabla; //tablaSelect es una variable global que se usa en el hilo de recepcion de LFS. Pido disculpas por ser tan hijo de puta y haber hecho esto, pero no hay tiempOOOOO.
 		mandarRequestALFS(SELECT, parametros);
 //		registro* registroPedido= recibirRegistro(socketLFS, logger);
 //		insertInterno(registroPedido->key,registroPedido->value,tabla,registroPedido->timestamp);

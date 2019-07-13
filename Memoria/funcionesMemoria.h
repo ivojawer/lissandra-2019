@@ -86,5 +86,8 @@ void journalAutomatico();
 void refreshConfig();
 unsigned long long tiempoActual();
 void reconexionLFS();
+void comunicacionConMemoria(memoriaGossip* memoria);
+void enviarSeedsConectadas(memoriaGossip* memoriaDestino,int tipoDeEnvio);
+void sacarMemoriaDeTablaGossip(memoriaGossip* unaMemoria);
 
 #endif /* FUNCIONESMEMORIA_H_ */

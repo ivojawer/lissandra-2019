@@ -7,6 +7,7 @@ t_list* seedsConocidas;
 t_list* tablaGossiping;
 extern char* dirConfig;
 extern int sleepGossiping;
+extern int nombreMemoria;
 
 void hacerGossipingAutomatico() {
 
@@ -38,7 +39,10 @@ void gossiping() {
 	for (int i = 0; i < list_size(tablaGossiping); i++) {
 		memoriaGossip* unaMemoria = list_get(tablaGossiping, i);
 
-		enviarSeedsConectadas(unaMemoria,GOSSIPING);
+		if (unaMemoria->nombre != nombreMemoria)
+		{
+			enviarSeedsConectadas(unaMemoria,GOSSIPING);
+		}
 
 	}
 

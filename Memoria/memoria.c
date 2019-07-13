@@ -23,7 +23,7 @@ int sleepGossiping;
 int retardoAccesoLFS;
 int retardoAccesoMemoria;
 int idScriptKernel;
-
+char* tablaSelect;
 
 int main() {
 

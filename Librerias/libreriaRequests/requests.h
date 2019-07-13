@@ -71,7 +71,7 @@ typedef struct {
 } seed;
 
 typedef struct {
-	int timestamp;
+	unsigned long long timestamp;
 	uint16_t key;
 	char* value;
 } registro;
