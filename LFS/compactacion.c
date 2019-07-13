@@ -238,8 +238,8 @@ t_list* traerRegistrosBloques(char** bloques){
 //	string_iterate_lines(bloques,(void*)show);
 	void leerBloque(char* nombreBloque){
 //		printf("bloque actual:%s\n",nombreBloque);
-		FILE* bloqueActual = fopen(nombreBloque,"r");
-		char nuevoCaracter = fgetc(bloqueActual);
+		FILE* archivoDeBloque = fopen(nombreBloque,"r");
+		char nuevoCaracter = fgetc(archivoDeBloque);
 		while(nuevoCaracter != EOF){
 //			printf("caracter leido:%c\n",nuevoCaracter);
 			if(nuevoCaracter == '\n'){
@@ -252,9 +252,9 @@ t_list* traerRegistrosBloques(char** bloques){
 				string_append_char(&registroActual,nuevoCaracter);
 //				printf("registro con caracter agregado:%s\n", registroActual);
 			}
-			nuevoCaracter = fgetc(bloqueActual);
+			nuevoCaracter = fgetc(archivoDeBloque);
 		}
-		fclose(bloqueActual);
+		fclose(archivoDeBloque);
 
 	}
 
