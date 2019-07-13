@@ -61,7 +61,7 @@ int main() {
 	config_destroy(config);
 
 	caracMaxDeValue = primeraConexionLFS();
-
+	log_info(logger,"Caracteres value:%d", caracMaxDeValue);
 	if (caracMaxDeValue != -1) {
 		log_info(logger, "Se conecto el LFS.");
 		pthread_t h_respuestaLFS;
@@ -86,8 +86,7 @@ int main() {
 	//printf("comienzo memoria:%p\n", comienzoMemoria);
 	//divido en marcos
 
-	tamanioMarco = tamanioMarco * sizeof(char) + sizeof(uint16_t)
-			+ sizeof(unsigned long long); //value + key + timestamp
+	tamanioMarco = caracMaxDeValue * sizeof(char) + sizeof(uint16_t)	+ sizeof(unsigned long long); //value + key + timestamp
 	log_info(logger, "el tamanio de mi marco es: %d", tamanioMarco);
 	cantMarcos = tamanioMemoria / tamanioMarco; //tamanio marco siempre es mult de 2 asi que da entero
 	log_info(logger, "cantidad de marcos: %d", cantMarcos);
