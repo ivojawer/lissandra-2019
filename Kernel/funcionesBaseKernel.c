@@ -721,6 +721,7 @@ int manejarRespuestaDeMemoria(script* elScript, request* laRequest, int memoria)
 
 		if (index == -1) {
 			sem_post(&sem_borradoMemoria);
+			free(elScript->resultadoDeEnvio);
 			return -1;
 		}
 
@@ -839,7 +840,13 @@ int manejarRespuestaDeMemoria(script* elScript, request* laRequest, int memoria)
 
 	free(elScript->resultadoDeEnvio);
 
-	return respuesta;
+	if(respuesta == ERROR)
+	{
+		return -1;
+	}
+	else{
+		return 1;
+	}
 
 }
 

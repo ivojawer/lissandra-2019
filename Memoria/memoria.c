@@ -112,7 +112,7 @@ int main() {
 
 	pthread_create(&h_ejecucionRequests, NULL, (void *) ejecutarRequests, NULL);
 	pthread_create(&h_conexiones, NULL, (void *) aceptarConexiones, NULL);
-	pthread_create(&h_refreshGossiping, NULL, (void *) gossiping, NULL);
+	pthread_create(&h_refreshGossiping, NULL, (void *) hacerGossipingAutomatico, NULL);
 	pthread_create(&h_refreshConfig, NULL, (void *) refreshConfig, NULL);
 	pthread_create(&h_journalAutomatico, NULL, (void *) journalAutomatico,
 	NULL);

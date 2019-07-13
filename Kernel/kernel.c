@@ -101,6 +101,8 @@ int main() {
 	seedPrincipal->ip = ipMemoriaPrincipal;
 	seedPrincipal->puerto = puertoMemoriaPrincipal;
 
+	list_add(seedsMemorias,seedPrincipal);
+
 	pthread_create(&h_primeraConexion, NULL, (void *) conectarseAUnaMemoria,
 			seedPrincipal);
 	pthread_detach(h_primeraConexion);

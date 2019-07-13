@@ -89,5 +89,6 @@ void reconexionLFS();
 void comunicacionConMemoria(memoriaGossip* memoria);
 void enviarSeedsConectadas(memoriaGossip* memoriaDestino,int tipoDeEnvio);
 void sacarMemoriaDeTablaGossip(memoriaGossip* unaMemoria);
+void insertInterno(uint16_t key, char* value, char* tabla, unsigned long long timestamp);
 
 #endif /* FUNCIONESMEMORIA_H_ */

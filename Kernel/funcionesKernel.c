@@ -103,10 +103,10 @@ void journal() {
 int ejecutarRequest(request* requestAEjecutar, script* elScript) {
 
 	sem_wait(&sem_refreshConfig);
-		int tiempoDeSleep = sleepEjecucion / 1000;
-		sem_post(&sem_refreshConfig);
+	int tiempoDeSleep = sleepEjecucion / 1000;
+	sem_post(&sem_refreshConfig);
 
-		sleep(tiempoDeSleep); //TODO: Marca, el sleep esta al principio de la ejecucion
+	sleep(tiempoDeSleep); //TODO: Marca, el sleep esta al principio de la ejecucion
 
 	switch (requestAEjecutar->requestEnInt) {
 
@@ -210,9 +210,9 @@ int ejecutarRequest(request* requestAEjecutar, script* elScript) {
 
 	time_t tiempoFinal = time(NULL);
 
-	if (respuesta == 1)
-	{
-		insertarTiempo(tiempoInicial, tiempoFinal, requestAEjecutar->requestEnInt);
+	if (respuesta == 1) {
+		insertarTiempo(tiempoInicial, tiempoFinal,
+				requestAEjecutar->requestEnInt);
 	}
 
 	return respuesta;
@@ -309,7 +309,6 @@ void metrics(int loggear) {
 		sem_post(&sem_borradoMemoria);
 
 	}
-
 
 	printf("\n\n");
 
@@ -437,20 +436,32 @@ void refreshMetadatas() {
 
 		memoriaEnLista* laMemoria = list_get(memorias,
 				encontrarPosicionDeMemoria(memoria));
-		sem_post(&sem_borradoMemoria);
 
 		enviarRequestConHeaderEId(laMemoria->socket, requestMetadata,
 		REQUEST, scriptRefreshMetadata->idScript);
 
+		sem_post(&sem_borradoMemoria);
+
 		t_list* metadatas;
 
 		sem_wait(&scriptRefreshMetadata->semaforoDelScript);
+
+		int respuesta;
+		memcpy(&respuesta, scriptRefreshMetadata->resultadoDeEnvio,
+				sizeof(int));
+
+		if (respuesta == ERROR) {
+			log_error(logger, "No se pudo realizar el DESCRIBE automatico");
+			continue;
+		}
 
 		memcpy(&metadatas,
 				scriptRefreshMetadata->resultadoDeEnvio + sizeof(int),
 				sizeof(t_list*));
 
 		actualizarMetadatas(metadatas);
+
+		describirMetadatas(metadatas);
 
 	}
 
@@ -469,8 +480,7 @@ void refreshConfig() {
 		sleepEjecucion = config_get_int_value(config, "SLEEP_EJECUCION");
 		intervaloDeRefreshMetadata = config_get_int_value(config,
 				"METADATA_REFRESH");
-		retardoGossiping = config_get_int_value(config,
-				"GOSSIP_SLEEP");
+		retardoGossiping = config_get_int_value(config, "GOSSIP_SLEEP");
 
 		config_destroy(config);
 
@@ -481,14 +491,14 @@ void refreshConfig() {
 
 }
 
-void gossipingAutomatico(){
+void gossipingAutomatico() {
 	while(1)
 	{
 		sem_wait(&sem_refreshConfig);
 		int retardoGossip = retardoGossiping; //En segundos
 		sem_post(&sem_refreshConfig);
 
-		sleep(retardoGossip);
+		sleep(2);
 
 		conectarseASeedsDesconectadas();
 

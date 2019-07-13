@@ -354,3 +354,96 @@
 [INFO] 15:40:53:629 kernel/(6765:6785): Operaciones totales: 0
 [INFO] 15:53:32:914 kernel/(7099:7115): 1000: NEW->READY
 [INFO] 15:53:32:914 kernel/(7099:7109): 1000: READY->EXEC
+[INFO] 00:25:25:47 kernel/(31233:31257): Se conecto la memoria 1
+[INFO] 00:25:56:245 kernel/(31233:31262): ----METRICS----
+[INFO] 00:25:56:245 kernel/(31233:31262): Read latency: ---
+[INFO] 00:25:56:245 kernel/(31233:31262): Write latency: ---
+[INFO] 00:25:56:245 kernel/(31233:31262): Reads: 0
+[INFO] 00:25:56:245 kernel/(31233:31262): Writes: 0
+[INFO] 00:25:56:245 kernel/(31233:31262): Operaciones totales: 0
+[INFO] 00:26:14:535 kernel/(31233:31264): Se agrego la memoria 1 al criterio SC
+[INFO] 00:26:15:839 kernel/(31233:31262): --Memoria 1-- 
+Inserts Completos: 0 
+Inserts Fallidos: 0 
+Selects Completos: 0 
+Selects Fallidos: 0 
+Operaciones totales: 0
+[ERROR] 00:26:16:412 kernel/(31233:31257): Se desconecto la memoria 1.
+[INFO] 00:36:09:595 kernel/(31590:31602): Se conecto la memoria 1
+[INFO] 00:36:29:379 kernel/(31590:31609): Se agrego la memoria 1 al criterio SC
+[ERROR] 00:36:29:379 kernel/(31590:31602): Se desconecto la memoria 1.
+[INFO] 00:36:59:502 kernel/(31658:31668): Se conecto la memoria 1
+[INFO] 00:37:09:385 kernel/(31658:31675): Se agrego la memoria 1 al criterio SC
+[ERROR] 00:37:11:510 kernel/(31658:31668): Se desconecto la memoria 1.
+[INFO] 00:43:54:747 kernel/(32127:32138): Se conecto la memoria 1
+[INFO] 00:44:25:627 kernel/(32127:32143): ----METRICS----
+[INFO] 00:44:25:627 kernel/(32127:32143): Read latency: ---
+[INFO] 00:44:25:627 kernel/(32127:32143): Write latency: ---
+[INFO] 00:44:25:627 kernel/(32127:32143): Reads: 0
+[INFO] 00:44:25:627 kernel/(32127:32143): Writes: 0
+[INFO] 00:44:25:627 kernel/(32127:32143): Operaciones totales: 0
+[INFO] 00:44:25:628 kernel/(32127:32145): Se agrego la memoria 1 al criterio SC
+[INFO] 00:44:25:628 kernel/(32127:32143): --Memoria 1-- 
+Inserts Completos: 0 
+Inserts Fallidos: 0 
+Selects Completos: 0 
+Selects Fallidos: 0 
+Operaciones totales: 0
+[ERROR] 00:44:49:435 kernel/(32127:32138): Se desconecto la memoria 1.
+[INFO] 00:45:57:722 kernel/(32263:32274): Se conecto la memoria 1
+[INFO] 00:46:00:428 kernel/(32263:32281): Se agrego la memoria 1 al criterio SC
+[INFO] 00:46:41:897 kernel/(32315:32327): Se conecto la memoria 1
+[INFO] 00:46:47:690 kernel/(32315:32334): Se agrego la memoria 1 al criterio SC
+[INFO] 00:47:19:771 kernel/(32315:32332): ----METRICS----
+[INFO] 00:47:19:771 kernel/(32315:32332): Read latency: ---
+[INFO] 00:47:19:771 kernel/(32315:32332): Write latency: ---
+[INFO] 00:47:19:771 kernel/(32315:32332): Reads: 0
+[INFO] 00:47:19:771 kernel/(32315:32332): Writes: 0
+[INFO] 00:47:19:771 kernel/(32315:32332): Operaciones totales: 0
+[ERROR] 00:47:19:772 kernel/(32315:32327): Se desconecto la memoria 1.
+[INFO] 00:48:29:379 kernel/(32408:32422): Se conecto la memoria 1
+[INFO] 00:48:33:457 kernel/(32408:32429): Se agrego la memoria 1 al criterio SC
+[ERROR] 00:48:44:463 kernel/(32408:32422): Se desconecto la memoria 1.
+[INFO] 01:06:34:445 kernel/(1035:1058): Se conecto la memoria 1
+[INFO] 01:06:39:937 kernel/(1035:1065): Se agrego la memoria 1 al criterio SC
+[INFO] 01:07:12:938 kernel/(1035:1063): ----METRICS----
+[INFO] 01:07:12:938 kernel/(1035:1063): Read latency: ---
+[INFO] 01:07:12:938 kernel/(1035:1063): Write latency: ---
+[INFO] 01:07:12:938 kernel/(1035:1063): Reads: 0
+[INFO] 01:07:12:938 kernel/(1035:1063): Writes: 0
+[INFO] 01:07:12:938 kernel/(1035:1063): Operaciones totales: 0
+[INFO] 01:07:12:938 kernel/(1035:1063): --Memoria 1-- 
+Inserts Completos: 0 
+Inserts Fallidos: 0 
+Selects Completos: 0 
+Selects Fallidos: 0 
+Operaciones totales: 0
+[INFO] 01:15:15:24 kernel/(1344:1360): Se conecto la memoria 1
+[INFO] 01:15:18:604 kernel/(1344:1369): Se agrego la memoria 1 al criterio SC
+[INFO] 01:26:15:856 kernel/(1752:1763): Se conecto la memoria 1
+[INFO] 01:26:50:782 kernel/(1812:1820): Se conecto la memoria 1
+[INFO] 01:27:00:631 kernel/(1812:1827): Se agrego la memoria 1 al criterio SHC
+[ERROR] 01:27:00:631 kernel/(1812:1820): Se desconecto la memoria 1.
+[INFO] 01:27:21:434 kernel/(1812:1825): ----METRICS----
+[INFO] 01:27:21:434 kernel/(1812:1825): Read latency: ---
+[INFO] 01:27:21:434 kernel/(1812:1825): Write latency: ---
+[INFO] 01:27:21:434 kernel/(1812:1825): Reads: 0
+[INFO] 01:27:21:434 kernel/(1812:1825): Writes: 0
+[INFO] 01:27:21:434 kernel/(1812:1825): Operaciones totales: 0
+[INFO] 01:36:41:184 kernel/(2254:2265): Se conecto la memoria 1
+[INFO] 01:36:54:620 kernel/(2254:2272): Se agrego la memoria 1 al criterio SHC
+[ERROR] 01:36:54:620 kernel/(2254:2265): Se desconecto la memoria 1.
+[INFO] 01:49:45:71 kernel/(2783:2832): Se conecto la memoria 1
+[INFO] 01:49:55:820 kernel/(2783:2804): ----METRICS----
+[ERROR] 01:49:55:820 kernel/(2783:2832): Se desconecto la memoria 1.
+[INFO] 01:49:55:820 kernel/(2783:2804): Read latency: ---
+[INFO] 01:49:55:820 kernel/(2783:2804): Write latency: ---
+[INFO] 01:49:55:820 kernel/(2783:2804): Reads: 0
+[INFO] 01:49:55:820 kernel/(2783:2804): Writes: 0
+[INFO] 01:49:55:820 kernel/(2783:2804): Operaciones totales: 0
+[INFO] 01:49:55:820 kernel/(2783:2804): --Memoria 1-- 
+Inserts Completos: 0 
+Inserts Fallidos: 0 
+Selects Completos: 0 
+Selects Fallidos: 0 
+Operaciones totales: 0

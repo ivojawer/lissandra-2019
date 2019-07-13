@@ -85,8 +85,7 @@ void aceptarConexiones() {
 
 		int socketMisterioso = accept(socketServidor, (void*) NULL, NULL);
 
-		if(socketMisterioso == -1)
-		{
+		if (socketMisterioso == -1) {
 			continue;
 		}
 
@@ -118,8 +117,6 @@ void aceptarConexiones() {
 		case MEMORIA: {
 			int nombre = recibirInt(socketMisterioso, logger);
 
-			enviarVariosIntsConHeader(socketMisterioso, listaInts, HANDSHAKE); //HANDSHAKE-MEMORIA-NOMBRE
-
 			if (nombre == nombreMemoria) //Si se conecto la memoria misma
 					{
 				continue; //El hilo que envio se encarga de agregarse a la tabla
@@ -127,7 +124,7 @@ void aceptarConexiones() {
 
 			sem_wait(&sem_gossiping);
 			if (nombre == -1 || memoriaYaEstaConectada(nombre)) { //Si la memoria ya esta conectada, ya se conoce su seed
-				close(socketMisterioso);
+//				close(socketMisterioso);
 				sem_post(&sem_gossiping);
 				continue;
 			}
@@ -159,7 +156,6 @@ void aceptarConexiones() {
 				}
 				agregarNuevasSeeds(seedsRecibidas);
 
-				log_info(logger, "Se conecto a la memoria %i.", nombre);
 			}
 
 			list_add(tablaGossiping, nuevaMemoriaConectada);
@@ -169,6 +165,11 @@ void aceptarConexiones() {
 			sem_post(&sem_gossiping);
 
 			log_info(logger, "Se conecto la memoria %i.", nombre);
+
+			pthread_t h_comunicacionConMemoria;
+			pthread_create(&h_comunicacionConMemoria, NULL,
+					(void *) comunicacionConMemoria, nuevaMemoriaConectada);
+			pthread_detach(h_comunicacionConMemoria);
 
 			continue;
 		}
@@ -276,10 +277,10 @@ void conectarseAOtraMemoria(seed* laSeed) { //Esto es secuencial al hilo de goss
 			}
 			agregarNuevasSeeds(seedsRecibidas);
 
-			log_info(logger, "Se conecto a la memoria %i.", nombre);
 		}
-
 		list_add(tablaGossiping, nuevaMemoriaConectada);
+		log_info(logger, "Se conecto a la memoria %i.", nombre);
+
 		tratarDeConectarseASeeds();
 
 		pthread_t h_comunicacionConMemoria;
@@ -287,6 +288,10 @@ void conectarseAOtraMemoria(seed* laSeed) { //Esto es secuencial al hilo de goss
 				(void *) comunicacionConMemoria, nuevaMemoriaConectada);
 		pthread_detach(h_comunicacionConMemoria);
 
+	}
+	else
+	{
+		list_add(tablaGossiping, nuevaMemoriaConectada);
 	}
 
 }
@@ -296,31 +301,29 @@ void comunicacionConMemoria(memoriaGossip* memoria) {
 	int socketMemoria = memoria->elSocket;
 	while (1) {
 		int operacion = recibirInt(socketMemoria, logger);
+		log_info(logger, "%i", operacion);
 
 		switch (operacion) {
 		case GOSSIPING: {
 			t_list* seedsRecibidas = recibirSeeds(socketMemoria, logger);
+			sem_wait(&sem_gossiping);
 
 			if (list_size(seedsRecibidas) != 0) {
 
 				seed* seedPrueba = list_get(seedsRecibidas, 0);
 				if (seedPrueba->puerto == -1) {
-					sem_wait(&sem_gossiping);
+
 					sacarMemoriaDeTablaGossip(memoria);
-					sem_post(&sem_gossiping);
 
 					free(seedPrueba);
 					list_destroy(seedsRecibidas);
 					return;
 				}
-				sem_wait(&sem_gossiping);
 				agregarNuevasSeeds(seedsRecibidas);
 				tratarDeConectarseASeeds();
-				sem_post(&sem_gossiping);
 
 			} //Si list_size == 0 no se hace nada
 			list_destroy(seedsRecibidas);
-			sem_wait(&sem_gossiping);
 			enviarSeedsConectadas(memoria, RESPUESTA);
 			sem_post(&sem_gossiping);
 
@@ -341,18 +344,20 @@ void comunicacionConMemoria(memoriaGossip* memoria) {
 					list_destroy(seedsRecibidas);
 					return;
 				}
-				sem_wait(&sem_gossiping);
-				agregarNuevasSeeds(seedsRecibidas);
-				tratarDeConectarseASeeds();
-				sem_post(&sem_gossiping);
 			}
-			default:
-			{
-				sem_wait(&sem_gossiping);
-				sacarMemoriaDeTablaGossip(memoria);
-				sem_post(&sem_gossiping);
-				return;
-			}
+
+			sem_wait(&sem_gossiping);
+			agregarNuevasSeeds(seedsRecibidas);
+			tratarDeConectarseASeeds();
+			sem_post(&sem_gossiping);
+			continue;
+		}
+
+		default: {
+			sem_wait(&sem_gossiping);
+			sacarMemoriaDeTablaGossip(memoria);
+			sem_post(&sem_gossiping);
+			return;
 		}
 		}
 	}
@@ -406,7 +411,7 @@ void comunicacionConKernel() {
 			sem_post(&sem_gossiping);
 			continue;
 		}
-		case JOURNAL: {
+		case OP_JOURNAL: {
 			request* unaRequest = malloc(sizeof(request));
 			unaRequest->requestEnInt = JOURNAL;
 			unaRequest->parametros = NULL;
@@ -539,8 +544,7 @@ void manejoErrorLFS() {
 void manejoErrorKernel() {
 	log_error(logger,
 			"Se recibio del kernel algo incorrecto, se va a cerrar la conexion.");
-	if(socketKernel != -1)
-	{
+	if (socketKernel != -1) {
 		close(socketKernel);
 	}
 
@@ -625,7 +629,8 @@ void manejarRespuestaLFS() {
 				return;
 			}
 
-			insertInterno(registroRecibido->key,registroRecibido->value,tablaSelect,registroRecibido->timestamp);
+			insertInterno(registroRecibido->key, registroRecibido->value,
+					tablaSelect, registroRecibido->timestamp);
 			sem_post(&sem_recepcionLFS);
 			continue;
 		}

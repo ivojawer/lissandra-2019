@@ -15,6 +15,7 @@ void conectarseAUnaMemoria(seed* unaSeed) {
 	int socketMemoria = conectarseAServidor(unaSeed->ip, unaSeed->puerto);
 
 	if (socketMemoria == -1) {
+		sacarSeedDeMemoriasEnCreacion(unaSeed);
 		return;
 	}
 	enviarIntConHeader(socketMemoria, KERNEL, HANDSHAKE);
@@ -24,6 +25,7 @@ void conectarseAUnaMemoria(seed* unaSeed) {
 	if (headerRespuesta != HANDSHAKE) {
 		log_error(logger,
 				"Se envio un handshake a la memoria y se devolvio otra cosa.");
+		sacarSeedDeMemoriasEnCreacion(unaSeed);
 		close(socketMemoria);
 		return;
 	}
@@ -32,6 +34,7 @@ void conectarseAUnaMemoria(seed* unaSeed) {
 
 	if (modulo != MEMORIA) {
 		log_error(logger, "Se conecto algo que no es la memoria.");
+		sacarSeedDeMemoriasEnCreacion(unaSeed);
 		close(socketMemoria);
 		return;
 	}
@@ -39,6 +42,7 @@ void conectarseAUnaMemoria(seed* unaSeed) {
 	int nombreMemoria = recibirInt(socketMemoria, logger);
 
 	if (nombreMemoria == -1) { //Log error ya esta en la funcion
+		sacarSeedDeMemoriasEnCreacion(unaSeed);
 		close(socketMemoria);
 		return;
 	}
@@ -60,7 +64,8 @@ void conectarseAUnaMemoria(seed* unaSeed) {
 	nuevaMemoria->estaViva = 1;
 	sem_init(&nuevaMemoria->sem_cambioScriptsEsperando, 0, 1);
 
-	list_create(nuevaMemoria->scriptsEsperando);
+	nuevaMemoria->scriptsEsperando = list_create();
+
 
 	nuevaMemoria->estadisticas.insertsCompletos = 0;
 	nuevaMemoria->estadisticas.insertsFallidos = 0;
@@ -76,9 +81,7 @@ void conectarseAUnaMemoria(seed* unaSeed) {
 
 	sacarSeedDeMemoriasEnCreacion(unaSeed);
 
-
-	log_info(logger, "Se conecto la memoria %i",
-			nuevaMemoria->nombre);
+	log_info(logger, "Se conecto la memoria %i", nuevaMemoria->nombre);
 
 	comunicacionConMemoria(nuevaMemoria);
 
@@ -89,17 +92,14 @@ void manejoErrorMemoria(int nombreMemoria) {
 	matarMemoria(nombreMemoria);
 }
 
-void enviarPeticionesDeGossip()
-{
+void enviarPeticionesDeGossip() {
 	sem_wait(&sem_borradoMemoria);
-	for (int i = 0; i<list_size(memorias);i++)
-	{
+	for (int i = 0; i < list_size(memorias); i++) {
 
-		memoriaEnLista* unaMemoria = list_get(memorias,i);
+		memoriaEnLista* unaMemoria = list_get(memorias, i);
 
-		if(unaMemoria->estaViva)
-		{
-			enviarInt(unaMemoria->socket,GOSSIPING);
+		if (unaMemoria->estaViva) {
+			enviarInt(unaMemoria->socket, GOSSIPING);
 		}
 	}
 	sem_post(&sem_borradoMemoria);
@@ -119,9 +119,9 @@ void agregarMemorias(t_list* seeds) {
 			continue;
 		}
 
-		list_add(seedsMemorias,unaSeed);
+		list_add(seedsMemorias, unaSeed);
 		sem_wait(&sem_seedSiendoCreada);
-		list_add(seedsSiendoCreadas,unaSeed);
+		list_add(seedsSiendoCreadas, unaSeed);
 		sem_post(&sem_seedSiendoCreada);
 
 		pthread_t h_nuevaConexion;
@@ -145,10 +145,10 @@ void conectarseASeedsDesconectadas() {
 	for (int i = 0; i < list_size(seedsMemorias); i++) {
 		seed* unaSeed = list_get(seedsMemorias, i);
 
-		if (!seedYaEstaConectada(unaSeed) && memoriaEstaSiendoCreada(unaSeed)) {
+		if (!seedYaEstaConectada(unaSeed) && !memoriaEstaSiendoCreada(unaSeed)) {
 
 			sem_wait(&sem_seedSiendoCreada);
-			list_add(seedsSiendoCreadas,unaSeed);
+			list_add(seedsSiendoCreadas, unaSeed);
 			sem_post(&sem_seedSiendoCreada);
 
 			pthread_t h_nuevaConexion;
@@ -173,15 +173,25 @@ void comunicacionConMemoria(memoriaEnLista* memoria) {
 		case RESPUESTA: {
 			int idScript = recibirInt(socketMemoria, logger);
 
-			script* unScript = encontrarScriptEnLista(idScript, listaEXEC);
+			script* unScript;
 
-			if (idScript == -1 || unScript->idScript == -1) {
+			if (idScript == 1) {
+				unScript = scriptRefreshMetadata;
 
-				free(unScript);
-				manejoErrorMemoria(memoria->nombre);
-				return;
+			} else {
+
+				unScript = encontrarScriptEnLista(idScript, listaEXEC);
+
+				if (idScript == -1 || unScript->idScript == -1) {
+
+					free(unScript);
+					manejoErrorMemoria(memoria->nombre);
+					return;
+
+				}
 
 			}
+
 			script* scriptReceptor = unScript;
 			int tipoDeRespuesta = recibirInt(socketMemoria, logger);
 
@@ -289,7 +299,7 @@ void comunicacionConMemoria(memoriaEnLista* memoria) {
 
 			script* scriptReceptor;
 
-			if (idScript == 0) {
+			if (idScript == 1) {
 				scriptReceptor = scriptRefreshMetadata;
 			} else {
 

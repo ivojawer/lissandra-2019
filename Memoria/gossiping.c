@@ -11,6 +11,8 @@ extern int nombreMemoria;
 
 void hacerGossipingAutomatico() {
 
+
+	tratarDeConectarseASeeds();
 	gossiping(); //Gossip inicial
 
 	while (1) {
@@ -19,7 +21,7 @@ void hacerGossipingAutomatico() {
 		int sleepMilisegundos = sleepGossiping/1000;
 		sem_post(&sem_refreshConfig);
 
-		sleep(sleepMilisegundos);
+		sleep(2);
 
 		gossiping();
 
@@ -31,6 +33,7 @@ void gossiping() {
 	sem_wait(&sem_gossiping);
 
 	log_info(logger,"Se va a empezar a hacer gossiping.");
+	tratarDeConectarseASeeds();
 
 	for (int i = 0; i < list_size(tablaGossiping); i++) {
 		memoriaGossip* unaMemoria = list_get(tablaGossiping, i);
@@ -41,6 +44,7 @@ void gossiping() {
 		}
 
 	}
+	log_info(logger,"Se termino el gossiping.");
 
 	sem_post(&sem_gossiping);
 }
@@ -56,9 +60,24 @@ void sacarMemoriaDeTablaGossip(memoriaGossip* unaMemoria) {
 
 	log_error(logger,"Se desconecto la memoria %i",unaMemoria->nombre);
 
-	int* index = list_find(tablaGossiping, (void*) esLaMismaMemoria);
+//	int* index = list_find(tablaGossiping, (void*) esLaMismaMemoria); ESTO ME TRAICIONO
 
-	list_remove(tablaGossiping, *index);
+	int index = -1;
+	for (int i = 0;i<list_size(tablaGossiping);i++)
+	{
+		memoriaGossip* otraMemoria = list_get(tablaGossiping,i);
+
+		if(esLaMismaMemoria(otraMemoria))
+		{
+			index = i;
+		}
+	}
+
+	if(index != -1)
+	{
+		list_remove(tablaGossiping, index);
+	}
+
 
 	close(unaMemoria->elSocket);
 
@@ -88,14 +107,6 @@ void enviarSeedsConectadas(memoriaGossip* memoriaDestino,int tipoDeEnvio) //Sinc
 
 void agregarNuevasSeeds(t_list* seeds) { //Sincronizar por afuera
 
-	int seedNoExiste(seed* unaSeed) {
-			int tienenLaMismaSeed(seed* otraSeed) {
-				return esLaMismaSeed(unaSeed, otraSeed);
-			}
-
-			return !list_any_satisfy(seedsConocidas, (void*) tienenLaMismaSeed);
-		}
-
 		int seedExiste(seed* unaSeed) {
 			int tienenLaMismaSeed(seed* otraSeed) {
 				return esLaMismaSeed(unaSeed, otraSeed);
@@ -104,11 +115,17 @@ void agregarNuevasSeeds(t_list* seeds) { //Sincronizar por afuera
 			return list_any_satisfy(seedsConocidas, (void*) tienenLaMismaSeed);
 		}
 
+		int seedNoExiste(seed* unaSeed) {
+
+				return !seedExiste(unaSeed);
+			}
+
+
+	t_list* seedsALiberar = list_filter(seeds, (void*) seedExiste);
+
 	t_list* seedsNuevas = list_filter(seeds, (void*) seedNoExiste);
 
 	list_add_all(seedsConocidas, seedsNuevas);
-
-	t_list* seedsALiberar = list_filter(seeds, (void*) seedExiste);
 
 	list_destroy_and_destroy_elements(seedsALiberar, (void*) liberarSeed);
 }
@@ -148,12 +165,18 @@ int seedNoEstaConectada(seed* unaSeed) {
 
 void tratarDeConectarseASeeds() {
 
+	mostrarSeeds();
+
 	t_list* seedsDesconectadas = list_filter(seedsConocidas,
 			(void*) seedNoEstaConectada);
 
 	while (list_size(seedsDesconectadas) != 0) {
 		seed* seedAConectarse = list_remove(seedsDesconectadas, 0);
-		conectarseAOtraMemoria(seedAConectarse);
+		if(seedAConectarse->ip != NULL)
+		{
+			log_info(logger,"Me estoy tratando de conectar a %s:%i",seedAConectarse->ip,seedAConectarse->puerto);
+					conectarseAOtraMemoria(seedAConectarse);
+		}
 	}
 
 	list_destroy(seedsDesconectadas);

@@ -25,7 +25,7 @@ void ejecutarRequests() {
 
 		sem_wait(&requestsDisponibles);
 
-		requestConID* requestEID = list_get(colaDeRequests, 0);
+		requestConID* requestEID = list_remove(colaDeRequests, 0);
 
 		request* requestAEjecutar = requestEID->laRequest;
 
@@ -75,6 +75,9 @@ void ejecutarRequests() {
 		idScriptKernel = -1;
 
 		sem_post(&sem_journal);
+		free(requestEID->laRequest->parametros);
+		free(requestEID->laRequest);
+		free(requestEID);
 	}
 
 }
