@@ -374,14 +374,14 @@ char** getBloquesTemporal(char* tabla,int nro_temporal){
 // --------- conversores registro <--> char* ----------
 //-----------------------------------------------------
 
-t_registro* stringRegistroAStruct(char* registro){    //llega sin el \n al final :)
+t_registro* stringRegistroAStruct(char* registro){    //llega sin el \n al final, pero con \0  :-)
 
 	char** stringRegistroSeparado = string_n_split(registro,3,";");
-	t_registro* reg = malloc(sizeof(uint16_t)+sizeof(unsigned long)+sizeof(char)*strlen(stringRegistroSeparado[2]));
-
-	reg->timestamp=atoi(stringRegistroSeparado[0]);
-	reg ->key=atoi( stringRegistroSeparado[1]);
-	reg->value=string_duplicate(stringRegistroSeparado[2]);
+	t_registro* reg = malloc(sizeof(t_registro));
+	
+	reg->timestamp = atoi(stringRegistroSeparado[0]);
+	reg->key = atoi( stringRegistroSeparado[1]);
+	reg->value = string_duplicate(stringRegistroSeparado[2]);
 
 	return reg;
 }
