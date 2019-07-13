@@ -262,7 +262,7 @@ t_list* traerRegistrosBloques(char** bloques){
 
 
 
-	//free(registroActual);
+	free(registroActual);
 	printf("termine de leer bloques de la particion\n");
 	return registros;
 }
