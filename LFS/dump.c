@@ -198,8 +198,8 @@ void agregar_bloque_particion(void *elemento) {
 	FILE *fp;
 	fp = fopen(root, "a");
 
-	fprintf(fp, "Size=%d\n", blocks_info->size_total);
-	fprintf(fp, "Blocks=[");
+	fprintf(fp, "SIZE=%d\n", blocks_info->size_total);
+	fprintf(fp, "BLOCKS=[");
 	for (int i = 0; i < cant_bloques; i++) {
 		struct bloque *bloque = malloc(sizeof(struct bloque));
 		bloque = list_get(blocks_info->bloques, i);

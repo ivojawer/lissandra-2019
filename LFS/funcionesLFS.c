@@ -146,7 +146,7 @@ void iniciar_variables(){
 
 	//agrego bitarray de cargar_configuracion_FS()
 	crear_bitarray(cantidadBloques);
-	crear_bloques(cantidadBloques);
+	//crear_bloques(cantidadBloques);
 
 	config_destroy(config);
 	config_destroy(metadataLFS);
