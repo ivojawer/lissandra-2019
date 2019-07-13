@@ -28,8 +28,8 @@
 #define METADATAS 107
 
 //Respuestas:
-#define ERROR 0
-#define TODO_BIEN 1
+#define ERROR 1
+#define TODO_BIEN 2
 #define MEM_LLENA -200
 
 //Identificadores de modulo:
