@@ -1,18 +1,20 @@
 #include "conexionesMem.h"
 
 extern t_log* logger;
-extern sem_t requestsDisponibles;
+
 extern t_list* colaDeRequests;
 extern t_list* tablaGossiping;
 extern t_list* seedsConocidas;
 extern int nombreMemoria;
-extern sem_t sem_gossiping;
-extern int socketKernel;
-int socketLFS;
-extern char* dirConfig;
 extern int idScriptKernel;
+extern int socketKernel;
 extern sem_t sem_recepcionLFS;
+extern sem_t sem_LFSconectandose;
+extern sem_t sem_gossiping;
+extern sem_t requestsDisponibles;
 extern char* tablaSelect;
+extern char* dirConfig;
+int socketLFS;
 
 int primeraConexionLFS() {
 
@@ -82,6 +84,11 @@ void aceptarConexiones() {
 	while (1) {
 
 		int socketMisterioso = accept(socketServidor, (void*) NULL, NULL);
+
+		if(socketMisterioso == -1)
+		{
+			continue;
+		}
 
 		enviarVariosIntsConHeader(socketMisterioso, listaInts, HANDSHAKE); //HANDSHAKE-MEMORIA-NOMBRE
 
@@ -512,9 +519,12 @@ void enviarRespuestaAlKernel(int id, int respuesta) {
 }
 void manejoErrorLFS() {
 
+	sem_wait(&sem_LFSconectandose);
 	if (socketLFS == -1) {
+		sem_post(&sem_LFSconectandose);
 		return;
 	}
+	sem_post(&sem_LFSconectandose);
 
 	log_error(logger, "Se desconecto el LFS.");
 	close(socketLFS);
@@ -529,7 +539,11 @@ void manejoErrorLFS() {
 void manejoErrorKernel() {
 	log_error(logger,
 			"Se recibio del kernel algo incorrecto, se va a cerrar la conexion.");
-	close(socketKernel);
+	if(socketKernel != -1)
+	{
+		close(socketKernel);
+	}
+
 }
 
 void manejarRespuestaLFS() {
@@ -612,7 +626,8 @@ void manejarRespuestaLFS() {
 			}
 
 			insertInterno(registroRecibido->key,registroRecibido->value,tablaSelect,registroRecibido->timestamp);
-
+			sem_post(&sem_recepcionLFS);
+			continue;
 		}
 		case METADATAS: {
 			t_list* metadatas = recibirMetadatas(socketLFS, logger);

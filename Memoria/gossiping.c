@@ -4,16 +4,12 @@ extern sem_t sem_gossiping;
 //extern sem_t sem_cargarSeeds;
 extern sem_t sem_refreshConfig;
 t_list* seedsConocidas;
-t_list* tablaGossiping;
+extern t_list* tablaGossiping;
 extern char* dirConfig;
 extern int sleepGossiping;
 extern int nombreMemoria;
 
 void hacerGossipingAutomatico() {
-
-	cargarSeedsIniciales();
-
-	tablaGossiping = list_create();
 
 	gossiping(); //Gossip inicial
 
@@ -57,6 +53,9 @@ void sacarMemoriaDeTablaGossip(memoriaGossip* unaMemoria) {
 		}
 		return 0;
 	}
+
+	log_error(logger,"Se desconecto la memoria %i",unaMemoria->nombre);
+
 	int* index = list_find(tablaGossiping, (void*) esLaMismaMemoria);
 
 	list_remove(tablaGossiping, *index);
@@ -116,7 +115,7 @@ void agregarNuevasSeeds(t_list* seeds) { //Sincronizar por afuera
 
 int esLaMismaSeed(seed* unaSeed, seed* otraSeed) {
 
-	if (unaSeed == NULL || otraSeed == NULL) {
+	if (unaSeed == NULL || otraSeed == NULL  || (unaSeed->ip == NULL) || (otraSeed->ip == NULL)) {
 		return 0;
 	}
 
