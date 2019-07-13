@@ -220,11 +220,11 @@ int renombrarATmpc(char* tabla){
 	return cantTmp;
 }
 
-void string_append_char(char* string, char c){
+void string_append_char(char** string, char c){
 	char str[2];
 	str[0] =c;
 	str[1]='\0';
-	string_append(&string,str);
+	string_append(string,str);
 }
 
 t_list* traerRegistrosBloques(char** bloques){
@@ -249,7 +249,7 @@ t_list* traerRegistrosBloques(char** bloques){
 				registroActual = string_new();
 			}else{
 				//printf("agrego caracter a reg:%c\n",nuevoCaracter);
-				string_append_char(registroActual,nuevoCaracter);
+				string_append_char(&registroActual,nuevoCaracter);
 //				printf("registro con caracter agregado:%s\n", registroActual);
 			}
 			nuevoCaracter = fgetc(bloqueActual);
