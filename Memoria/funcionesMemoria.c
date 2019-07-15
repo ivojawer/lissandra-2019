@@ -309,7 +309,9 @@ void Select(char* parametros) {
 }
 
 unsigned long long tiempoActual(){
-	return time(NULL) / 1000; //TODO: Hacer la adquisicion del timestamp consistente con el LFS
+	struct timeval tv;
+	gettimeofday(&tv, NULL);
+	return (tv.tv_sec) * 1000 + (tv.tv_usec) / 1000;
 }
 
 void insert(char* parametros) {
