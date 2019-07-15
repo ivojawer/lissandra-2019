@@ -220,7 +220,7 @@ int renombrarATmpc(char* tabla){
 	return cantTmp;
 }
 
-void string_append_char(char** string, char c){
+void string_append_char(char* string, char c){
 	char str[2];
 	str[0] =c;
 	str[1]='\0';

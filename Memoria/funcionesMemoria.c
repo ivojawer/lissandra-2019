@@ -73,7 +73,6 @@ void ejecutarRequests() {
 		}
 
 		idScriptKernel = -1;
-
 		sem_post(&sem_journal);
 		free(requestEID->laRequest->parametros);
 		free(requestEID->laRequest);
@@ -275,7 +274,7 @@ char* sacoComillas(char* cadena) {
 
 void Select(char* parametros) {
 	char** parametrosEnVector = string_n_split(parametros, 2, " ");
-	char* tabla = parametrosEnVector[0];
+	char* tabla = string_duplicate(parametrosEnVector[0]);
 	string_to_upper(tabla);
 	uint16_t key = atoi(parametrosEnVector[1]);
 	liberarArrayDeStrings(parametrosEnVector);
