@@ -537,7 +537,6 @@ registro* recibirRegistro(int deQuien, t_log* logger) { //Si hubo error: registr
 
 request* recibirRequest(int deQuien, t_log* logger) { //Si hubo error: request->requestEnInt = -1
 	char* requestEnString = recibirString(deQuien, logger);
-
 	request* requestNuevo;
 
 	if (!strcmp(requestEnString, " ")) {
@@ -557,7 +556,6 @@ request* recibirRequest(int deQuien, t_log* logger) { //Si hubo error: request->
 char* recibirString(int deQuien, t_log* logger) { //Si hubo error: string = " "
 
 	int tamanioString = recibirInt(deQuien, logger);
-
 	if (tamanioString <= 0) {
 		return " ";
 	}

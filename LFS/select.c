@@ -435,6 +435,7 @@ t_par_valor_timestamp *filtrar_timestamp_mayor(t_list *timestamp_valor, int list
 //	printf("Largo lista *timestamp_valor* %d\n", list_size(timestamp_valor));
 	if(lista_vacia(timestamp_valor)){
 //		printf("*timestamp_valor* VACIO\n");
+		enviarIntConHeader(socket_memoria, ERROR, RESPUESTA);//no testeado
 	}else{
 		t_par_valor_timestamp *timestamp_value_max = filtrar_timestamp_mayor(timestamp_valor, list_size(timestamp_valor));
 		printf("El valor de la key ingresada es: %s\n", timestamp_value_max->valor);
@@ -471,5 +472,7 @@ void rutina_select(char* comando)
 		modificar_op_control(tabla, 2);
 	}else{
 		printf("No se ha podido realizar la operacion\n");
+		enviarIntConHeader(socket_memoria, ERROR, RESPUESTA);
+
 	}
 }

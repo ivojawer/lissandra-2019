@@ -224,8 +224,11 @@ void string_append_char(char* string, char c){
 	char str[2];
 	str[0] =c;
 	str[1]='\0';
-	string_append(&string,str);
+	string_append(string,str);
 }
+
+//TODO: bancarse que la ultima linea del archivo no tenga \n
+//TODO: bancarse que la linea solo contenga \n. Hecho. Falta testing!
 
 t_list* traerRegistrosBloques(char** bloques){
 
@@ -238,31 +241,35 @@ t_list* traerRegistrosBloques(char** bloques){
 //	string_iterate_lines(bloques,(void*)show);
 	void leerBloque(char* nombreBloque){
 //		printf("bloque actual:%s\n",nombreBloque);
-		FILE* bloqueActual = fopen(nombreBloque,"r");
-		char nuevoCaracter = fgetc(bloqueActual);
-		while(nuevoCaracter > EOF){
+		FILE* archivoDeBloque = fopen(nombreBloque,"r");
+		char nuevoCaracter = fgetc(archivoDeBloque);
+		while(nuevoCaracter != EOF){
 //			printf("caracter leido:%c\n",nuevoCaracter);
-			if(nuevoCaracter == '\n'){
+			if(nuevoCaracter == '\n' && !string_is_empty(registroActual)){	
 //				printf("termino registro\n");
 				list_add(registros, stringRegistroAStruct(registroActual));
 				free(registroActual);
 				registroActual = string_new();
 			}else{
 				//printf("agrego caracter a reg:%c\n",nuevoCaracter);
-				string_append_char(registroActual,nuevoCaracter);
+				string_append_char(&registroActual,nuevoCaracter);
 //				printf("registro con caracter agregado:%s\n", registroActual);
 			}
-			nuevoCaracter = fgetc(bloqueActual);
+			nuevoCaracter = fgetc(archivoDeBloque);
 		}
-		fclose(bloqueActual);
-
+		fclose(archivoDeBloque);
 	}
 
 	string_iterate_lines(bloques, (void*) leerBloque);
+	
+	// Esto aplica si la ultima linea del ultimo bloque no termina en \n
+	if (!string_is_empty(registroActual)){
+		list_add(registros, stringRegistroAStruct(registroActual));
+		free(registroActual);
+		registroActual = string_new();
+	}
 
-
-
-	//free(registroActual);
+	free(registroActual);
 	printf("termine de leer bloques de la particion\n");
 	return registros;
 }
@@ -374,14 +381,14 @@ char** getBloquesTemporal(char* tabla,int nro_temporal){
 // --------- conversores registro <--> char* ----------
 //-----------------------------------------------------
 
-t_registro* stringRegistroAStruct(char* registro){    //llega sin el \n al final :)
+t_registro* stringRegistroAStruct(char* registro){    //llega sin el \n al final, pero con \0  :-)
 
 	char** stringRegistroSeparado = string_n_split(registro,3,";");
-	t_registro* reg = malloc(sizeof(uint16_t)+sizeof(unsigned long)+sizeof(char)*strlen(stringRegistroSeparado[2]));
-
-	reg->timestamp=atoi(stringRegistroSeparado[0]);
-	reg ->key=atoi( stringRegistroSeparado[1]);
-	reg->value=string_duplicate(stringRegistroSeparado[2]);
+	t_registro* reg = malloc(sizeof(t_registro));
+	
+	reg->timestamp = atoi(stringRegistroSeparado[0]);
+	reg->key = atoi( stringRegistroSeparado[1]);
+	reg->value = string_duplicate(stringRegistroSeparado[2]);
 
 	return reg;
 }
