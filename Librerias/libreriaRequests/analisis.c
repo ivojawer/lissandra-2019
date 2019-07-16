@@ -22,7 +22,7 @@ int esUnNumero(char* string) {
 	}
 
 	if ((!atoi(string) && strcmp(string, "0"))
-			|| string_contains(string, " ")) { //Si contiene espacios lo considera un numero
+			|| string_contains(string," ")) { //Si tiene un espacio lo considera un numero
 		return 0;
 	}
 	return 1;
