@@ -452,14 +452,19 @@ void insertInterno(uint16_t key, char* value, char* tabla, unsigned long long ti
 }
 
 void drop(char* parametro) {
+	dropInterno(parametro);
+	log_info(logger, "Mandando DROP al LFS");
+	mandarRequestALFS(DROP, parametro);
+}
 
+void dropInterno(char* parametro){
 	void liberoDato(pagina* pag) {
 
-		int nroMarco = pag->nroMarco;
-		printf("nro de marco a dropear:%d\n", nroMarco);
-		marcos[nroMarco].vacio = true;
-		printf("cambie valores marco\n");
-		free(pag);
+			int nroMarco = pag->nroMarco;
+			printf("nro de marco a dropear:%d\n", nroMarco);
+			marcos[nroMarco].vacio = true;
+			printf("cambie disponibilidad marco\n");
+			free(pag);
 	}
 	char* tabla = string_duplicate(parametro);
 	string_to_upper(tabla);
@@ -480,9 +485,6 @@ void drop(char* parametro) {
 	}
 	free(tablaADropear);
 	free(tabla);
-	log_info(logger, "Mandando DROP al LFS");
-	mandarRequestALFS(DROP, parametro);
-
 }
 
 void create(char* parametros) {
@@ -591,7 +593,8 @@ t_list* journalPorSegmento(segmento* seg) {
 	list_destroy(paginasModificadas);
 
 	char* nombreTabla = string_duplicate(seg->nombreDeTabla);
-	drop(nombreTabla);
+	dropInterno(nombreTabla);
+	printf("dropie la tabla:%s\n", nombreTabla);
 
 	return insertsAMandar;
 }
@@ -636,6 +639,7 @@ void journal() {
 
 				enviarListaDeRequestsConHeader(socketLFS, insertsAMandar,
 				JOURNAL);
+				printf("le envie el JOURNAL al LFS\n");
 			}
 
 		}

@@ -63,6 +63,7 @@ int cantMarcos;
 int tamanioMarco;
 
 void ejecutarRequests();
+void dropInterno(char* parametro);
 segmento* encuentroTablaPorNombre(char* nombreTabla);
 marco* getMarcoFromPagina(pagina*);
 marco* getMarcoFromIndex(int);

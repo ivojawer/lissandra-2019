@@ -39,7 +39,6 @@ void ejecutar_peticion()
 		printf("mande a ejecutar:%s\n", request_a_ejecutar->parametros);
 		mandarAEjecutarRequest(request_a_ejecutar);
 		list_remove(cola_requests,0); //Esto no se que tan bien esta pero en algun lado tengo que sacar la request
-
 	}
 }
 

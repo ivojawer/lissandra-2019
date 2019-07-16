@@ -467,7 +467,7 @@ t_list* recibirRequests (int deQuien, t_log* logger) //Si hubo error: primer ele
 		list_add(requests,requestFallida);
 		return requests;
 	}
-
+	printf("cantidad de requests esperadas:%d\n", cantidadRequests);
 	for(int i = 0;i<cantidadRequests;i++)
 	{
 		request* unaRequest = recibirRequest(deQuien,logger);
@@ -486,8 +486,11 @@ t_list* recibirRequests (int deQuien, t_log* logger) //Si hubo error: primer ele
 			list_add(requests,requestFallida);
 			return requests;
 		}
+		printf("termine de recibir todas las requests!\n");
+
 		list_add(requests,unaRequest);
 	}
+
 
 	free(requestFallida);
 	return requests;
