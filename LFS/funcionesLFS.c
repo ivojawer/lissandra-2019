@@ -115,6 +115,8 @@ void mandarAEjecutarRequest(request* requestAEjecutar)
 
 void iniciar_variables(){
 
+	cola_requests = list_create();
+
 	//asigno variables globales del LFS.config
 	t_config* config = config_create("../../CONFIG/LFS.config");
 	puntoDeMontaje = string_duplicate(config_get_string_value(config,"PUNTO_MONTAJE"));

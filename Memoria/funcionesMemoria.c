@@ -74,7 +74,8 @@ void ejecutarRequests() {
 
 		idScriptKernel = -1;
 
-		printf("valor semaforo:%d",sem_post(&sem_journal));
+		sem_post(&sem_journal);
+		printf("termine ciclo ejecucion\n");
 		free(requestEID->laRequest->parametros);
 		free(requestEID->laRequest);
 		free(requestEID);

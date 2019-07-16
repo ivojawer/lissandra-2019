@@ -122,6 +122,9 @@ t_bloque *crear_bloque_buscar(char *bloque);
 void bloque_destroy(t_bloque *self);
 
 
+//para ejecutar requests
+void ejecutar_peticion();
+
 //funciones para obtener campos individuales de una request
 char* get_tabla(char* comando);
 char* get_value(char* comando);

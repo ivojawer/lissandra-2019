@@ -18,19 +18,17 @@ void comunicacion_con_memoria()
 	while(1){
 
 		int operacion = recibirInt(socket_cliente, logger);
-
 		switch (operacion) {
 		case REQUEST: {
 
-			int id = recibirInt(socket_cliente, logger);
-
-			if (id == -1) {
-				manejo_error_memoria();
-				return;
-			}
+//			int id = recibirInt(socket_cliente, logger); TODO: sacar los id de las respuestas (si los hay)
+//			printf("Id request recibido:%d\n",id);
+//			if (id == -1) {
+//				manejo_error_memoria();
+//				return;
+//			}
 
 			request* una_request = recibirRequest(socket_cliente, logger);
-
 			if (una_request->requestEnInt == -1) {
 				manejo_error_memoria();
 				return;
@@ -40,6 +38,7 @@ void comunicacion_con_memoria()
 
 			request_para_hilo->parametros = una_request->parametros;
 			request_para_hilo->requestEnInt = una_request->requestEnInt;
+
 			list_add(cola_requests, request_para_hilo);
 			sem_post(&requests_disponibles);
 
