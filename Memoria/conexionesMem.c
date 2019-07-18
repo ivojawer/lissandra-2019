@@ -14,6 +14,7 @@ extern sem_t sem_gossiping;
 extern sem_t requestsDisponibles;
 extern char* tablaSelect;
 extern char* dirConfig;
+int puertoServidor;
 int socketLFS;
 
 int primeraConexionLFS() {
@@ -68,7 +69,7 @@ int primeraConexionLFS() {
 void aceptarConexiones() {
 	t_config* config = config_create(dirConfig);
 
-	int puertoServidor = config_get_int_value(config, "PUERTO_ESCUCHA");
+	puertoServidor = config_get_int_value(config, "PUERTO_ESCUCHA");
 
 	int socketServidor = crearServidor(puertoServidor);
 

@@ -10,6 +10,28 @@ int seRecibioBien(int respuesta, t_log* logger) {
 	return 1;
 }
 
+char* ipDelCliente(int socketCliente) {
+	socklen_t len;
+	struct sockaddr_storage addr;
+	char ipstr[INET6_ADDRSTRLEN];
+	int port;
+
+	len = sizeof addr;
+	getpeername(socketCliente, (struct sockaddr*) &addr, &len);
+
+	if (addr.ss_family == AF_INET) {
+		struct sockaddr_in *s = (struct sockaddr_in *) &addr;
+		port = ntohs(s->sin_port);
+		inet_ntop(AF_INET, &s->sin_addr, ipstr, sizeof ipstr);
+	} else {
+		struct sockaddr_in6 *s = (struct sockaddr_in6 *) &addr;
+		port = ntohs(s->sin6_port);
+		inet_ntop(AF_INET6, &s->sin6_addr, ipstr, sizeof ipstr);
+	}
+
+	return ipstr;
+}
+
 int conectarseAServidor(char* ip, int puerto) {
 
 	struct sockaddr_in direccionServidor;
@@ -286,8 +308,7 @@ void enviarSeedsConHeader(int aQuien, t_list* seeds, int header) {
 
 	int cantidadSeeds = list_size(seeds);
 
-	if (cantidadSeeds == 0)
-	{
+	if (cantidadSeeds == 0) {
 		enviarIntConHeader(aQuien, cantidadSeeds, header);
 		return;
 	}
@@ -399,94 +420,85 @@ void enviarRegistroConHeader(int aQuien, registro* unRegistro, int header) {
 
 }
 
-void enviarListaDeRequestsConHeader(int aQuien, t_list* requests, int header)
-{
+void enviarListaDeRequestsConHeader(int aQuien, t_list* requests, int header) {
 	int cantidadRequests = list_size(requests);
 
-	if(list_size(requests) == 0)
-	{
-		enviarIntConHeader(aQuien,cantidadRequests,header);
+	if (list_size(requests) == 0) {
+		enviarIntConHeader(aQuien, cantidadRequests, header);
 		return;
 	}
 
-	t_list* requestsEnString = list_map(requests,(void*) requestStructAString);
+	t_list* requestsEnString = list_map(requests, (void*) requestStructAString);
 
 	int tamanioPaquete = sizeof(int); //Header
 
-	for(int i = 0; i<cantidadRequests; i++)
-	{
-		char* unaRequest = list_get(requestsEnString,i);
-		int tamanioString = strlen(unaRequest)+1;
+	for (int i = 0; i < cantidadRequests; i++) {
+		char* unaRequest = list_get(requestsEnString, i);
+		int tamanioString = strlen(unaRequest) + 1;
 
 		tamanioPaquete += sizeof(int) + tamanioString;
 	}
 
 	void* paquete = malloc(tamanioPaquete);
 
-	memcpy(paquete,&header,sizeof(int));
+	memcpy(paquete, &header, sizeof(int));
 
-	memcpy(paquete+sizeof(int),&cantidadRequests,sizeof(int));
+	memcpy(paquete + sizeof(int), &cantidadRequests, sizeof(int));
 
 	int ultimaPosicionPaquete = sizeof(int) + sizeof(int);
 
-	for(int i = 0; i<cantidadRequests;i++)
-	{
+	for (int i = 0; i < cantidadRequests; i++) {
 
-		char* unaRequest = list_get(requestsEnString,i);
+		char* unaRequest = list_get(requestsEnString, i);
 
-		int tamanioString =strlen(unaRequest) + 1;
+		int tamanioString = strlen(unaRequest) + 1;
 
-		memcpy(paquete + ultimaPosicionPaquete,&tamanioString,sizeof(int));
-		memcpy(paquete + ultimaPosicionPaquete+sizeof(int),unaRequest,tamanioString);
+		memcpy(paquete + ultimaPosicionPaquete, &tamanioString, sizeof(int));
+		memcpy(paquete + ultimaPosicionPaquete + sizeof(int), unaRequest,
+				tamanioString);
 
-		ultimaPosicionPaquete += sizeof(int)+tamanioString;
+		ultimaPosicionPaquete += sizeof(int) + tamanioString;
 	}
 
-	send(aQuien,paquete,tamanioPaquete,0);
+	send(aQuien, paquete, tamanioPaquete, 0);
 
 	free(paquete);
 }
 
-t_list* recibirRequests (int deQuien, t_log* logger) //Si hubo error: primer elemento de lista tiene requestEnInt == -1
+t_list* recibirRequests(int deQuien, t_log* logger) //Si hubo error: primer elemento de lista tiene requestEnInt == -1
 {
 	request* requestFallida = malloc(sizeof(request));
 	requestFallida->parametros = NULL;
 	requestFallida->requestEnInt = -1;
 
-	int cantidadRequests = recibirInt(deQuien,logger);
+	int cantidadRequests = recibirInt(deQuien, logger);
 
 	t_list* requests = list_create();
 
-	if (cantidadRequests == 0)
-	{
+	if (cantidadRequests == 0) {
 		free(requestFallida);
 		return requests; //Lista vacia
-	}
-	else if(cantidadRequests == -1)
-	{
-		list_add(requests,requestFallida);
+	} else if (cantidadRequests == -1) {
+		list_add(requests, requestFallida);
 		return requests;
 	}
 
-	for(int i = 0;i<cantidadRequests;i++)
-	{
-		request* unaRequest = recibirRequest(deQuien,logger);
+	for (int i = 0; i < cantidadRequests; i++) {
+		request* unaRequest = recibirRequest(deQuien, logger);
 
-		if (unaRequest->requestEnInt == -1)
-		{
+		if (unaRequest->requestEnInt == -1) {
 			free(unaRequest);
 
-			while(list_size(requests) != 0)
-			{
-				request* requestARemover = list_remove(requests,0);
+			while (list_size(requests) != 0) {
+				request* requestARemover = list_remove(requests, 0);
 				free(requestARemover->parametros);
 				free(requestARemover);
 			}
 
-			list_add(requests,requestFallida);
+			list_add(requests, requestFallida);
 			return requests;
 		}
-		list_add(requests,unaRequest);
+		list_add(requests, unaRequest);
 	}
 
 	free(requestFallida);
