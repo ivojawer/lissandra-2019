@@ -18,19 +18,17 @@ void comunicacion_con_memoria()
 	while(1){
 
 		int operacion = recibirInt(socket_cliente, logger);
-
 		switch (operacion) {
 		case REQUEST: {
 
-			int id = recibirInt(socket_cliente, logger);
-
-			if (id == -1) {
-				manejo_error_memoria();
-				return;
-			}
+//			int id = recibirInt(socket_cliente, logger); TODO: sacar los id de las respuestas (si los hay)
+//			printf("Id request recibido:%d\n",id);
+//			if (id == -1) {
+//				manejo_error_memoria();
+//				return;
+//			}
 
 			request* una_request = recibirRequest(socket_cliente, logger);
-
 			if (una_request->requestEnInt == -1) {
 				manejo_error_memoria();
 				return;
@@ -40,6 +38,7 @@ void comunicacion_con_memoria()
 
 			request_para_hilo->parametros = una_request->parametros;
 			request_para_hilo->requestEnInt = una_request->requestEnInt;
+
 			list_add(cola_requests, request_para_hilo);
 			sem_post(&requests_disponibles);
 
@@ -47,11 +46,12 @@ void comunicacion_con_memoria()
 		}
 		case JOURNAL: {
 			int i;
-			int nr_registros = recibirInt(socket_cliente, logger);
-			t_list *lista_journal = list_create();
-			lista_journal = recibirRequests(socket_cliente, logger); //lista de requests *
-
-			for(i = 0; i < nr_registros; i++){
+			//int nr_registros = recibirInt(socket_cliente, logger);
+			//printf("cantidad de registros a recibir:%d\n",nr_registros);
+			t_list *lista_journal = recibirRequests(socket_cliente, logger); //lista de requests *
+			request* primerRequest = (request*)lista_journal->head->data;
+			printf("primer request:%s\n",primerRequest->parametros);
+			for(i = 0; i < list_size(lista_journal); i++){
 				request* request_procesar = malloc(sizeof(request));
 				request_procesar = list_get(lista_journal, i);
 				request* request_para_hilo = malloc(sizeof(request));
@@ -63,7 +63,7 @@ void comunicacion_con_memoria()
 			void liberar_elemento(void *elemento){
 				return liberarRequest((request *)elemento);
 			}
-			list_destroy_and_destroy_elements(lista_journal, liberar_elemento);
+			//list_destroy_and_destroy_elements(lista_journal, (void*)liberarRequest); TODO: esta linea hace explotar pero habria que hacer un free en algun lado
 			continue;
 		}
 		default: {

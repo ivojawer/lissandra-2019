@@ -75,6 +75,7 @@ void ejecutarRequests() {
 		idScriptKernel = -1;
 
 		sem_post(&sem_journal);
+		printf("termine ciclo ejecucion\n");
 		free(requestEID->laRequest->parametros);
 		free(requestEID->laRequest);
 		free(requestEID);
@@ -119,18 +120,15 @@ pagina* ultimaPagina(t_list* tablaPaginas) { //para testear
 	return lastPagina;
 }
 
-void asignoPaginaEnMarco(uint16_t key, unsigned long long timestamp,
-		char* value, void* comienzoMarco) {
-
-
+void asignoPaginaEnMarco(uint16_t key, unsigned long long timestamp, char* value, void* comienzoMarco) {
 	sem_wait(&sem_refreshConfig);
 	int sleepMilisegundos = retardoAccesoMemoria / 1000;
 	sem_post(&sem_refreshConfig);
 	sleep(sleepMilisegundos);
 
 
-	void* marcoParaKey = mempcpy(comienzoMarco, &timestamp, sizeof(int));
-	void* marcoParaValue = mempcpy(marcoParaKey, &key, sizeof(int));
+	void* marcoParaKey = mempcpy(comienzoMarco, &timestamp, sizeof(long long int));
+	void* marcoParaValue = mempcpy(marcoParaKey, &key, sizeof(uint16_t));
 	strcpy(marcoParaValue, value); //maximo carac string
 }
 
@@ -148,8 +146,7 @@ void eliminarRegistro(segmento* seg, pagina* pagEnSeg) {
 	 reg->value = &datosPagina->value;
 	 enviarRegistroComoInsert(reg);
 	 }*/
-	list_remove_by_condition(seg->tablaDePaginas,
-			(void*) encuentroPaginaPorKey);
+	list_remove_by_condition(seg->tablaDePaginas,(void*) encuentroPaginaPorKey);
 	free(pagEnSeg);
 }
 
@@ -198,15 +195,14 @@ int numeroMarcoDondeAlocar() {
 
 }
 
-pagina* nuevoDato(t_list* tablaPaginas, int flagModificado, uint16_t key,
-	unsigned long long timestamp, char* value) {
+pagina* nuevoDato(t_list* tablaPaginas, int flagModificado, uint16_t key,unsigned long long timestamp, char* value) {
 	pagina* nuevaPagina = malloc(sizeof(pagina));
 	nuevaPagina->ultimoUso =  tiempoActual();
 	int nroMarcoAlocar = numeroMarcoDondeAlocar();
 	nuevaPagina->nroMarco = nroMarcoAlocar;
 	if (nroMarcoAlocar > -1) {
 		nuevaPagina->flagModificado = flagModificado;
-		asignoPaginaEnMarco(key, timestamp, value,getMarcoFromPagina(nuevaPagina));
+		asignoPaginaEnMarco(key, timestamp, value,getMarcoFromIndex(nroMarcoAlocar));
 		list_add(tablaPaginas, nuevaPagina);
 	}
 	return nuevaPagina;
@@ -220,14 +216,16 @@ segmento* encuentroTablaPorNombre(char* nombreTabla) {
 	return list_find(tablaSegmentos, (void*) comparoNombreTabla);
 }
 
+marco* getMarcoFromIndex(int index){
+	return comienzoMemoria + index * tamanioMarco;
+}
 marco* getMarcoFromPagina(pagina* pag) {
-
-	return comienzoMemoria + pag->nroMarco * tamanioMarco;
+	return getMarcoFromIndex(pag->nroMarco);
 }
 
 pagina* encuentroDatoPorKey(segmento* tabla, uint16_t key) {
 	bool comparoKey(pagina* pag) {
-//		printf("key a comparar:%d - key encontrada:%d\n", key, pag->dato->key);
+//		printf("key a comparar:%d - key encontrada:%d\n", key, getMarcoFromPagina(pag)->key);
 		return getMarcoFromPagina(pag)->key == key;
 	}
 	return list_find(tabla->tablaDePaginas, (void*) comparoKey);
@@ -237,7 +235,7 @@ pagina* encuentroDatoPorKey(segmento* tabla, uint16_t key) {
 pagina* getPagina(uint16_t key, char* nombreTabla) { //retorna un NULL si no existe la tabla o la pagina
 
 	segmento* tabla = encuentroTablaPorNombre(nombreTabla);
-//	printf("tabla pedida:%p\n", tabla);
+//		printf("tabla pedida:%p\n", tabla);
 	if (tabla != NULL) {
 //		log_info(logger, "Encontre una tabla con el nombre: %s",
 //				tabla->nombreDeTabla);
@@ -275,7 +273,7 @@ char* sacoComillas(char* cadena) {
 
 void Select(char* parametros) {
 	char** parametrosEnVector = string_n_split(parametros, 2, " ");
-	char* tabla = parametrosEnVector[0];
+	char* tabla = string_duplicate(parametrosEnVector[0]);
 	string_to_upper(tabla);
 	uint16_t key = atoi(parametrosEnVector[1]);
 	liberarArrayDeStrings(parametrosEnVector);
@@ -312,27 +310,27 @@ void Select(char* parametros) {
 }
 
 unsigned long long tiempoActual(){
-	return time(NULL) / 1000; //TODO: Hacer la adquisicion del timestamp consistente con el LFS
+	struct timeval tv;
+	gettimeofday(&tv, NULL);
+	return (tv.tv_sec) * 1000 + (tv.tv_usec) / 1000;
 }
 
 void insert(char* parametros) {
 	char** parametrosEnVector = string_n_split(parametros, 3, " ");
 
-	char* tabla = parametrosEnVector[0];
+	char* tabla =string_duplicate( parametrosEnVector[0]);
 	string_to_upper(tabla);
 	uint16_t key = atoi(parametrosEnVector[1]);
 
-	char* value = parametrosEnVector[2];
+	char* value =string_duplicate( parametrosEnVector[2]);
 
 	unsigned long long timestamp = tiempoActual();
 
-	log_info(logger, "INSERT: Tabla:%s - key:%d - timestamp:%llu - value:%s\n",
-			tabla, key, timestamp, value);
+
 
 	liberarArrayDeStrings(parametrosEnVector);
 
 	value = sacoComillas(value);
-
 	if (string_length(value) > caracMaxDeValue) {
 		log_error(logger, "Value excede caracteres maximos");
 		if (idScriptKernel) {
@@ -342,6 +340,10 @@ void insert(char* parametros) {
 		return;
 
 	}
+
+	log_info(logger, "INSERT: Tabla:%s - key:%d - timestamp:%llu - value:%s\n",
+					tabla, key, timestamp, value);
+
 
 	segmento* tablaEncontrada = encuentroTablaPorNombre(tabla);
 	if (tablaEncontrada == NULL) {
@@ -450,14 +452,19 @@ void insertInterno(uint16_t key, char* value, char* tabla, unsigned long long ti
 }
 
 void drop(char* parametro) {
+	dropInterno(parametro);
+	log_info(logger, "Mandando DROP al LFS");
+	mandarRequestALFS(DROP, parametro);
+}
 
+void dropInterno(char* parametro){
 	void liberoDato(pagina* pag) {
 
-		int nroMarco = pag->nroMarco;
-		printf("nro de marco a dropear:%d\n", nroMarco);
-		marcos[nroMarco].vacio = true;
-		printf("cambie valores marco\n");
-		free(pag);
+			int nroMarco = pag->nroMarco;
+			printf("nro de marco a dropear:%d\n", nroMarco);
+			marcos[nroMarco].vacio = true;
+			printf("cambie disponibilidad marco\n");
+			free(pag);
 	}
 	char* tabla = string_duplicate(parametro);
 	string_to_upper(tabla);
@@ -478,9 +485,6 @@ void drop(char* parametro) {
 	}
 	free(tablaADropear);
 	free(tabla);
-	log_info(logger, "Mandando DROP al LFS");
-	mandarRequestALFS(DROP, parametro);
-
 }
 
 void create(char* parametros) {
@@ -589,7 +593,8 @@ t_list* journalPorSegmento(segmento* seg) {
 	list_destroy(paginasModificadas);
 
 	char* nombreTabla = string_duplicate(seg->nombreDeTabla);
-	drop(nombreTabla);
+	dropInterno(nombreTabla);
+	printf("dropie la tabla:%s\n", nombreTabla);
 
 	return insertsAMandar;
 }
@@ -634,6 +639,7 @@ void journal() {
 
 				enviarListaDeRequestsConHeader(socketLFS, insertsAMandar,
 				JOURNAL);
+				printf("le envie el JOURNAL al LFS\n");
 			}
 
 		}

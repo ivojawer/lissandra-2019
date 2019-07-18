@@ -79,16 +79,14 @@ int main() {
 //	}
 
 	//reservo toda la memoria
-
-	log_info(logger, "Cree mi memoria tamanio: %d.", tamanioMemoria);
-
 	comienzoMemoria = malloc(tamanioMemoria);
+	log_info(logger, "Cree mi memoria tamanio: %d.", tamanioMemoria);
 	//printf("comienzo memoria:%p\n", comienzoMemoria);
 	//divido en marcos
 
 	tamanioMarco = caracMaxDeValue * sizeof(char) + sizeof(uint16_t)	+ sizeof(unsigned long long); //value + key + timestamp
 	log_info(logger, "el tamanio de mi marco es: %d", tamanioMarco);
-	cantMarcos = tamanioMemoria / tamanioMarco; //tamanio marco siempre es mult de 2 asi que da entero
+	cantMarcos = tamanioMemoria / tamanioMarco;
 	log_info(logger, "cantidad de marcos: %d", cantMarcos);
 	marcos = malloc(sizeof(disponibilidad) * cantMarcos);
 	for (int i = 0; i < cantMarcos; i++) {

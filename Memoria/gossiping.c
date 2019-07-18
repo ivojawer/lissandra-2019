@@ -18,10 +18,11 @@ void hacerGossipingAutomatico() {
 	while (1) {
 
 		sem_wait(&sem_refreshConfig);
+
 		int sleepMilisegundos = sleepGossiping/1000;
 		sem_post(&sem_refreshConfig);
 
-		sleep(2);
+		sleep(sleepMilisegundos);
 
 		gossiping();
 

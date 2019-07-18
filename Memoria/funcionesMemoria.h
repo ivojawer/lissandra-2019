@@ -63,6 +63,7 @@ int cantMarcos;
 int tamanioMarco;
 
 void ejecutarRequests();
+void dropInterno(char* parametro);
 segmento* encuentroTablaPorNombre(char* nombreTabla);
 marco* getMarcoFromPagina(pagina*);
 marco* getMarcoFromIndex(int);
@@ -90,5 +91,6 @@ void comunicacionConMemoria(memoriaGossip* memoria);
 void enviarSeedsConectadas(memoriaGossip* memoriaDestino,int tipoDeEnvio);
 void sacarMemoriaDeTablaGossip(memoriaGossip* unaMemoria);
 void insertInterno(uint16_t key, char* value, char* tabla, unsigned long long timestamp);
+
 
 #endif /* FUNCIONESMEMORIA_H_ */

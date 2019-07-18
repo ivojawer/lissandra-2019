@@ -467,7 +467,7 @@ t_list* recibirRequests (int deQuien, t_log* logger) //Si hubo error: primer ele
 		list_add(requests,requestFallida);
 		return requests;
 	}
-
+	printf("cantidad de requests esperadas:%d\n", cantidadRequests);
 	for(int i = 0;i<cantidadRequests;i++)
 	{
 		request* unaRequest = recibirRequest(deQuien,logger);
@@ -486,8 +486,11 @@ t_list* recibirRequests (int deQuien, t_log* logger) //Si hubo error: primer ele
 			list_add(requests,requestFallida);
 			return requests;
 		}
+		printf("termine de recibir todas las requests!\n");
+
 		list_add(requests,unaRequest);
 	}
+
 
 	free(requestFallida);
 	return requests;
@@ -537,7 +540,6 @@ registro* recibirRegistro(int deQuien, t_log* logger) { //Si hubo error: registr
 
 request* recibirRequest(int deQuien, t_log* logger) { //Si hubo error: request->requestEnInt = -1
 	char* requestEnString = recibirString(deQuien, logger);
-
 	request* requestNuevo;
 
 	if (!strcmp(requestEnString, " ")) {
@@ -557,7 +559,6 @@ request* recibirRequest(int deQuien, t_log* logger) { //Si hubo error: request->
 char* recibirString(int deQuien, t_log* logger) { //Si hubo error: string = " "
 
 	int tamanioString = recibirInt(deQuien, logger);
-
 	if (tamanioString <= 0) {
 		return " ";
 	}
