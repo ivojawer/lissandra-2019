@@ -116,7 +116,7 @@ void mandarAEjecutarRequest(request* requestAEjecutar)
 void iniciar_variables(){
 
 	//asigno variables globales del LFS.config
-	t_config* config = config_create("../../CONFIG/LFS.config");
+	t_config* config = config_create("/home/utnso/workspace/tp-2019-1c-U-TN-Tecno/CONFIG/LFS.config");
 	puntoDeMontaje = string_duplicate(config_get_string_value(config,"PUNTO_MONTAJE"));
 	retardo = config_get_int_value(config,"RETARDO");
 	tamanioValue = config_get_int_value(config,"TAMAÑO_VALUE");
