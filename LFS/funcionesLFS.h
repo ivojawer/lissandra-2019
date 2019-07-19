@@ -32,6 +32,11 @@
 
 /*** ESTRUCTURAS ***/
 
+struct parametros{
+	int socket_cliente;
+	char *comando;
+};
+
 struct op_control{
 	pthread_mutex_t tabla_sem;
 	pthread_mutex_t mutex;
@@ -94,7 +99,7 @@ typedef struct{
 
 //Generales
 void consola();
-void mandarAEjecutarRequest(request* requestAEjecutar);
+void mandarAEjecutarRequest(request* requestAEjecutar, int socket);
 void iniciar_variables();
 void controlExistenciaLFS();
 void crear_control_op(char *tabla);
@@ -153,7 +158,7 @@ int get_particiones(char *comando);
 int get_tiempo_compactacion(char *comando);
 
 //funciones de rutina para cada tipo de operacion, el parametro comando es el choclo entero leido por consola
-void rutina_select(char* comando);
+void rutina_select(void* parametros);
 void rutina_insert(char* comando);
 void rutina_create(char* comando);
 void rutina_drop(char* comando);

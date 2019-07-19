@@ -3,16 +3,20 @@
 extern int tamanioValue;
 extern int retardo;
 extern t_log* logger;
-int socket_memoria;
-int socket_cliente;
+//int socket_memoria;
+//int socket_cliente;
 
-void manejo_error_memoria() {
+void manejo_error_memoria(int socket_memoria) {
 	log_error(logger,
 			"Se recibio algo incorrecto de Memoria, se cierra la conexion.");
 	close(socket_memoria);
 }
 
-void comunicacion_con_memoria() {
+void comunicacion_con_memoria(void *arg) {
+	struct socket_info *socket_info;
+	socket_info = (struct socket_info *)arg;
+	int socket_cliente = socket_info->socket_memoria;
+
 	while (1) {
 
 		int operacion = recibirInt(socket_cliente, logger);
@@ -28,7 +32,7 @@ void comunicacion_con_memoria() {
 
 			request* una_request = recibirRequest(socket_cliente, logger);
 			if (una_request->requestEnInt == -1) {
-				manejo_error_memoria();
+				manejo_error_memoria(socket_cliente);
 				return;
 			}
 
@@ -69,7 +73,7 @@ void comunicacion_con_memoria() {
 			continue;
 		}
 		default: {
-			manejo_error_memoria();
+			manejo_error_memoria(socket_cliente);
 			return;
 		}
 
@@ -79,6 +83,7 @@ void comunicacion_con_memoria() {
 }
 
 void aceptar_conexiones() {
+
 	t_config* config = config_create("../../CONFIG/LFS.config");
 
 	int puerto_servidor = config_get_int_value(config, "PUERTO_ESCUCHA");
@@ -97,7 +102,7 @@ void aceptar_conexiones() {
 	while (1) {
 
 		sleep(retardo);
-		socket_cliente = accept(socket_servidor, (void*) NULL, NULL);
+		int socket_cliente = accept(socket_servidor, (void*) NULL, NULL);
 
 		enviarVariosIntsConHeader(socket_cliente, lista_ints, HANDSHAKE); //HANDSHAKE-LFS-MEMORIA
 
@@ -114,11 +119,17 @@ void aceptar_conexiones() {
 		switch (modulo) {
 		case MEMORIA: {
 			log_info(logger, "Se conecto una Memoria");
-			socket_memoria = socket_cliente;
+			int socket_memoria = socket_cliente;
+
+			//struct para hilo
+			struct socket_info *socket_info = malloc(sizeof(struct socket_info));
+//			socket_info->socket_cliente = socket_cliente;
+			socket_info->socket_memoria = socket_memoria;
+
 			pthread_t h_conexion_memoria;
 			pthread_create(&h_conexion_memoria, NULL,
 					(void *) comunicacion_con_memoria,
-					NULL);
+					socket_info);
 			pthread_detach(h_conexion_memoria);
 
 			continue;
@@ -166,6 +177,6 @@ void messageHandler(char* lectura) {
 	request* requestParaHilo = malloc(sizeof(request));
 	requestParaHilo = crearStructRequest(lectura);
 
-	mandarAEjecutarRequest(requestParaHilo);
+	mandarAEjecutarRequest(requestParaHilo, 0);
 }
 

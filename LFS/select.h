@@ -22,5 +22,6 @@ t_list *filtrar_registros_particion(t_list *particion_encontrada, uint16_t key);
 t_par_valor_timestamp *filtrar_timestamp_mayor(t_list *timestamp_valor, int list_size);
 void buscar_en_todos_lados(char *tabla, uint16_t key, int particion_buscar);
 void comparar_key_y_agregar_valor (uint16_t key_recv, uint16_t key, char *valor, unsigned long timestamp, t_list *timestamp_valor);
+int socket_cliente;
 
 #endif /* SELECT_H_ */
