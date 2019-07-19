@@ -160,11 +160,13 @@ void rutina_create(char* comando)
 
 	if (existe_tabla(tabla)) {
 		log_info(logger, "Se intento crear la tabla ya existente: %s.\n", tabla);
-		enviarIntConHeader(socket_memoria, TODO_BIEN, RESPUESTA);
+		enviarIntConHeader(socket_memoria, ERROR, RESPUESTA);
 	}else if(crear_tabla_FS(tabla, particiones, consistencia, compactacion) == 0){
 		printf("Se creo la tabla [%s].\n",tabla);
-		enviarIntConHeader(socket_memoria, ERROR, RESPUESTA);
+		enviarIntConHeader(socket_memoria, TODO_BIEN, RESPUESTA);
+
 	}else{
 		printf("Ocurrio un problema\nNo se pudo crear la Tabla\n");
+		enviarIntConHeader(socket_memoria, ERROR, RESPUESTA);
 	}
 }

@@ -34,9 +34,9 @@ void ejecutar_peticion()
 {
 	while(1){
 		sem_wait(&requests_disponibles);
-		printf("Tengo %d peticiones para ejecutar\n", cola_requests->elements_count);
+//		printf("Tengo %d peticiones para ejecutar\n", cola_requests->elements_count);
 		request* request_a_ejecutar = list_get(cola_requests, 0); //Si por x motivo se acumulan varias, esto deberia cambiar
-		printf("mande a ejecutar:%s\n", request_a_ejecutar->parametros);
+		log_info(logger,"Se va a ejecutar %s",requestStructAString(request_a_ejecutar));
 		mandarAEjecutarRequest(request_a_ejecutar);
 		list_remove(cola_requests,0); //Esto no se que tan bien esta pero en algun lado tengo que sacar la request
 	}

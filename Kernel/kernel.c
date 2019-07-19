@@ -113,9 +113,9 @@ int main() {
 	NULL);
 	pthread_detach(h_planificador);
 
-	pthread_create(&h_refreshMetadatas, NULL, (void *) refreshMetadatas,
-	NULL);
-	pthread_detach(h_refreshMetadatas);
+//	pthread_create(&h_refreshMetadatas, NULL, (void *) refreshMetadatas,
+//	NULL);
+//	pthread_detach(h_refreshMetadatas);
 
 	pthread_create(&h_refreshConfig, NULL, (void *) refreshConfig,
 	NULL);

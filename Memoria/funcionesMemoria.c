@@ -612,18 +612,18 @@ void journal() {
 	}
 	sem_post(&sem_LFSconectandose);
 
-	if (list_size(tablaSegmentos) != 0) { //bueno hay que tener cuidado :)
+	if (tablaSegmentos == NULL || list_size(tablaSegmentos) != 0) { //bueno hay que tener cuidado :)
 		t_list* listasDeInserts = list_map(tablaSegmentos,
 				(void*) journalPorSegmento);
 
-		if (list_size(listasDeInserts) != 0) {
+		if (listasDeInserts == NULL || list_size(listasDeInserts) != 0) {
 
 			t_list* seedInsertsInicial = list_remove(listasDeInserts, 0);
 
 			t_list* insertsAMandar = list_fold(listasDeInserts,
 					seedInsertsInicial, (void*) list_add_all);
 
-			if (list_size(insertsAMandar) != 0) {
+			if (insertsAMandar == NULL || list_size(insertsAMandar) != 0) {
 
 				sem_wait(&sem_LFSconectandose);
 				if (socketLFS == -1) {

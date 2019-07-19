@@ -711,7 +711,7 @@ int manejarRespuestaDeMemoria(script* elScript, request* laRequest, int memoria)
 
 	else if (respuesta == MEM_LLENA) {
 		log_info(logger,
-				"La memoria %i esta llena, se va a enviar un JOURNAL.");
+				"La memoria %i esta llena, se va a enviar un JOURNAL.",memoria);
 
 		journal();
 
@@ -750,6 +750,8 @@ int manejarRespuestaDeMemoria(script* elScript, request* laRequest, int memoria)
 		sem_post(&laMemoria->sem_cambioScriptsEsperando);
 
 		respuesta = manejarRespuestaDeMemoria(elScript, laRequest, memoria);
+
+		elScript->resultadoDeEnvio = malloc(1); //Para que no rompa en el free de despues
 	}
 
 	else {
@@ -809,6 +811,13 @@ int manejarRespuestaDeMemoria(script* elScript, request* laRequest, int memoria)
 
 		default: {
 
+			if (laRequest->requestEnInt == CREATE)
+			{
+				agregarUnaMetadataEnString(laRequest->parametros);
+
+				log_info(logger,"Se agrego la metadata %s",laRequest->parametros);
+			}
+
 			if (laRequest->requestEnInt == INSERT) {
 
 				sem_wait(&sem_borradoMemoria);
@@ -826,9 +835,6 @@ int manejarRespuestaDeMemoria(script* elScript, request* laRequest, int memoria)
 				sem_post(&sem_borradoMemoria);
 
 
-				agregarUnaMetadataEnString(laRequest->parametros);
-
-
 			}
 
 			log_info(logger, "%s: Se pudo realizar. (Enviado a %i)",
@@ -838,7 +844,11 @@ int manejarRespuestaDeMemoria(script* elScript, request* laRequest, int memoria)
 		}
 	}
 
-	free(elScript->resultadoDeEnvio);
+	if (elScript->resultadoDeEnvio != NULL)
+	{
+		free(elScript->resultadoDeEnvio);
+	}
+
 
 	if(respuesta == ERROR)
 	{

@@ -186,17 +186,20 @@ void enviarRequestConHeaderEId(int aQuien, request* requestAEnviar, int header,
 void enviarMetadatasConHeaderEId(int aQuien, t_list* metadatas, int header,
 		int id) {
 
-	int cantidadMetadatas = list_size(metadatas);
 
-	if (cantidadMetadatas == 0) {
 
+	if (metadatas == NULL || list_size(metadatas) == 0) {
+
+		int cantidadCero = 0;
 		t_list* listaInts = list_create();
 		list_add(listaInts, &id);
-		list_add(listaInts, &cantidadMetadatas);
+		list_add(listaInts, &cantidadCero);
 
 		enviarVariosIntsConHeader(aQuien, listaInts, header);
 		return;
 	}
+
+	int cantidadMetadatas = list_size(metadatas);
 
 	int tamanioPaquete = sizeof(int) + sizeof(int) + sizeof(int); //Se pone "= sizeof(int)" por el int de cantidadMetadatas, el header e id que va a ir al principio
 
@@ -253,12 +256,12 @@ void enviarMetadatasConHeaderEId(int aQuien, t_list* metadatas, int header,
 
 void enviarMetadatasConHeader(int aQuien, t_list* metadatas, int header) {
 
-	int cantidadMetadatas = list_size(metadatas);
-
-	if (cantidadMetadatas == 0) {
-		enviarIntConHeader(aQuien, cantidadMetadatas, header);
+	if (metadatas == NULL || list_size(metadatas) == 0) {
+		enviarIntConHeader(aQuien, 0, header);
 		return;
 	}
+
+	int cantidadMetadatas = list_size(metadatas);
 	int tamanioPaquete = sizeof(int) + sizeof(int); //Se pone "= sizeof(int)" por el int de cantidadMetadatas y el header que va a ir al principio
 
 	for (int i = 0; i < list_size(metadatas); i++) {
@@ -313,12 +316,11 @@ void enviarMetadatasConHeader(int aQuien, t_list* metadatas, int header) {
 
 void enviarSeedsConHeader(int aQuien, t_list* seeds, int header) {
 
-	int cantidadSeeds = list_size(seeds);
-
-	if (cantidadSeeds == 0) {
-		enviarIntConHeader(aQuien, cantidadSeeds, header);
+	if (seeds == NULL || list_size(seeds) == 0) {
+		enviarIntConHeader(aQuien, 0, header);
 		return;
 	}
+	int cantidadSeeds = list_size(seeds);
 
 	int tamanioPaquete = sizeof(int) + sizeof(int); //Se pone "= sizeof(int)" por el int de cantidadSeeds y el header que va a ir al principio
 
@@ -428,12 +430,14 @@ void enviarRegistroConHeader(int aQuien, registro* unRegistro, int header) {
 }
 
 void enviarListaDeRequestsConHeader(int aQuien, t_list* requests, int header) {
-	int cantidadRequests = list_size(requests);
 
-	if (list_size(requests) == 0) {
-		enviarIntConHeader(aQuien, cantidadRequests, header);
+
+	if (requests == NULL || list_size(requests) == 0) {
+		enviarIntConHeader(aQuien, 0, header);
 		return;
 	}
+
+	int cantidadRequests = list_size(requests);
 
 	t_list* requestsEnString = list_map(requests, (void*) requestStructAString);
 
