@@ -6,16 +6,14 @@ extern t_log* logger;
 int socket_memoria;
 int socket_cliente;
 
-
-void manejo_error_memoria(){
+void manejo_error_memoria() {
 	log_error(logger,
 			"Se recibio algo incorrecto de Memoria, se cierra la conexion.");
 	close(socket_memoria);
 }
 
-void comunicacion_con_memoria()
-{
-	while(1){
+void comunicacion_con_memoria() {
+	while (1) {
 
 		int operacion = recibirInt(socket_cliente, logger);
 		switch (operacion) {
@@ -49,19 +47,23 @@ void comunicacion_con_memoria()
 			//int nr_registros = recibirInt(socket_cliente, logger);
 			//printf("cantidad de registros a recibir:%d\n",nr_registros);
 			t_list *lista_journal = recibirRequests(socket_cliente, logger); //lista de requests *
-			request* primerRequest = (request*)lista_journal->head->data;
-			printf("primer request:%s\n",primerRequest->parametros);
-			for(i = 0; i < list_size(lista_journal); i++){
-				request* request_procesar = malloc(sizeof(request));
-				request_procesar = list_get(lista_journal, i);
-				request* request_para_hilo = malloc(sizeof(request));
-				request_para_hilo->requestEnInt = INSERT;
-				request_para_hilo->parametros = request_procesar->parametros;
-				list_add(cola_requests, request_para_hilo);
-				sem_post(&requests_disponibles);
-			 }
-			void liberar_elemento(void *elemento){
-				return liberarRequest((request *)elemento);
+			if (list_size(lista_journal) != 0) {
+				request* primerRequest = (request*) lista_journal->head->data;
+				printf("primer request:%s\n", primerRequest->parametros);
+				for (i = 0; i < list_size(lista_journal); i++) {
+					request* request_procesar = malloc(sizeof(request));
+					request_procesar = list_get(lista_journal, i);
+					request* request_para_hilo = malloc(sizeof(request));
+					request_para_hilo->requestEnInt = INSERT;
+					request_para_hilo->parametros =
+							request_procesar->parametros;
+					list_add(cola_requests, request_para_hilo);
+					sem_post(&requests_disponibles);
+				}
+			}
+
+			void liberar_elemento(void *elemento) {
+				return liberarRequest((request *) elemento);
 			}
 			//list_destroy_and_destroy_elements(lista_journal, (void*)liberarRequest); TODO: esta linea hace explotar pero habria que hacer un free en algun lado
 			continue;
@@ -76,60 +78,59 @@ void comunicacion_con_memoria()
 	}
 }
 
+void aceptar_conexiones() {
+	t_config* config = config_create("../../CONFIG/LFS.config");
 
-void aceptar_conexiones()
-{
-		t_config* config = config_create("../../CONFIG/LFS.config");
+	int puerto_servidor = config_get_int_value(config, "PUERTO_ESCUCHA");
 
-		int puerto_servidor = config_get_int_value(config, "PUERTO_ESCUCHA");
+	int socket_servidor = crearServidor(puerto_servidor);
 
-		int socket_servidor = crearServidor(puerto_servidor);
+	t_list* lista_ints = list_create();
 
-		t_list* lista_ints = list_create();
+	int nombre_modulo = LFS;
 
-		int nombre_modulo = LFS;
+	list_add(lista_ints, &nombre_modulo);
+	list_add(lista_ints, &tamanioValue);
 
-		list_add(lista_ints, &nombre_modulo);
-		list_add(lista_ints, &tamanioValue);
+	config_destroy(config);
 
-		config_destroy(config);
+	while (1) {
 
-		while (1) {
+		sleep(retardo);
+		socket_cliente = accept(socket_servidor, (void*) NULL, NULL);
 
-			sleep(retardo);
-			socket_cliente = accept(socket_servidor, (void*) NULL, NULL);
+		enviarVariosIntsConHeader(socket_cliente, lista_ints, HANDSHAKE); //HANDSHAKE-LFS-MEMORIA
 
-			enviarVariosIntsConHeader(socket_cliente, lista_ints, HANDSHAKE); //HANDSHAKE-LFS-MEMORIA
+		int operacion = recibirInt(socket_cliente, logger);
 
-			int operacion = recibirInt(socket_cliente, logger);
-
-			if (operacion != HANDSHAKE) {
-				log_error(logger, "Se envio un handshake y se devolvio otra cosa.");
-				close(socket_cliente);
-				continue;
-			}
-
-			int modulo = recibirInt(socket_cliente, logger);
-
-			switch (modulo){
-			case MEMORIA: {
-				log_info(logger, "Se conecto una Memoria");
-				socket_memoria = socket_cliente;
-				pthread_t h_conexion_memoria;
-				pthread_create(&h_conexion_memoria, NULL, (void *)comunicacion_con_memoria,
-							   NULL);
-				pthread_detach(h_conexion_memoria);
-
-				continue;
-			}
-			default: {
-				log_error(logger, "Algo se conecto indebidamente.");
-				close(socket_cliente);
-				continue;
-			}
-
-			}
+		if (operacion != HANDSHAKE) {
+			log_error(logger, "Se envio un handshake y se devolvio otra cosa.");
+			close(socket_cliente);
+			continue;
 		}
+
+		int modulo = recibirInt(socket_cliente, logger);
+
+		switch (modulo) {
+		case MEMORIA: {
+			log_info(logger, "Se conecto una Memoria");
+			socket_memoria = socket_cliente;
+			pthread_t h_conexion_memoria;
+			pthread_create(&h_conexion_memoria, NULL,
+					(void *) comunicacion_con_memoria,
+					NULL);
+			pthread_detach(h_conexion_memoria);
+
+			continue;
+		}
+		default: {
+			log_error(logger, "Algo se conecto indebidamente.");
+			close(socket_cliente);
+			continue;
+		}
+
+		}
+	}
 }
 
 void messageHandler(char* lectura) {

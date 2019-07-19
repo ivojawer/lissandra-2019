@@ -1,0 +1,11 @@
+cd LFS;
+cd Filesystem;
+cd Tablas;
+rm -R -- */;
+cd ..;
+cd Bloques;
+rm *;
+cd ..;
+cd Metadata;
+rm Bitmap.bin;
+touch Bitmap.bin;

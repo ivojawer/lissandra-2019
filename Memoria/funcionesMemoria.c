@@ -599,6 +599,21 @@ t_list* journalPorSegmento(segmento* seg) {
 	return insertsAMandar;
 }
 
+void combinarListaInserts(t_list* listaALaQueAgregar, t_list* listaQueAgregar) //Esta funcion destruye listaQueAgregar asi que cuidadoOoOo
+{
+	if(listaQueAgregar == NULL)
+	{
+		return;
+	}
+
+	while(list_size(listaQueAgregar) != 0)
+	{
+		request* unaRequest = list_remove(listaQueAgregar,0);
+		list_add(listaALaQueAgregar,unaRequest);
+	}
+	list_destroy(listaQueAgregar);
+}
+
 void journal() {
 	//TODO: Hay algun problema si las listas son vacias? En haskell no, en C puede ocurrir magia siempre pero no creo.
 
@@ -612,18 +627,22 @@ void journal() {
 	}
 	sem_post(&sem_LFSconectandose);
 
-	if (tablaSegmentos == NULL || list_size(tablaSegmentos) != 0) { //bueno hay que tener cuidado :)
+	if (tablaSegmentos != NULL && list_size(tablaSegmentos) != 0) { //bueno hay que tener cuidado :)
 		t_list* listasDeInserts = list_map(tablaSegmentos,
 				(void*) journalPorSegmento);
 
-		if (listasDeInserts == NULL || list_size(listasDeInserts) != 0) {
+		if (listasDeInserts != NULL && list_size(listasDeInserts) != 0) {
 
-			t_list* seedInsertsInicial = list_remove(listasDeInserts, 0);
+			t_list* insertsAMandar = list_remove(listasDeInserts, 0);
 
-			t_list* insertsAMandar = list_fold(listasDeInserts,
-					seedInsertsInicial, (void*) list_add_all);
+			while(list_size(listasDeInserts) != 0) //El fold no funcionaba como queria. Tal vez porque soy un pelotudo (re pelotudo) y no lo usaba bien
+			{
+				t_list* unaListaDeInserts= list_remove(listasDeInserts,0);
+				combinarListaInserts(insertsAMandar, unaListaDeInserts);
+			}
+			list_destroy(listasDeInserts);
 
-			if (insertsAMandar == NULL || list_size(insertsAMandar) != 0) {
+			if (insertsAMandar != NULL && list_size(insertsAMandar) != 0) {
 
 				sem_wait(&sem_LFSconectandose);
 				if (socketLFS == -1) {

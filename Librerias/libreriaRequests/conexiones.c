@@ -441,7 +441,7 @@ void enviarListaDeRequestsConHeader(int aQuien, t_list* requests, int header) {
 
 	t_list* requestsEnString = list_map(requests, (void*) requestStructAString);
 
-	int tamanioPaquete = sizeof(int); //Header
+	int tamanioPaquete = sizeof(int)+sizeof(int); //Header + cantidadRequests
 
 	for (int i = 0; i < cantidadRequests; i++) {
 		char* unaRequest = list_get(requestsEnString, i);

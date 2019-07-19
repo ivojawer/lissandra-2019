@@ -27,3 +27,13 @@
 
 [ERROR] 20:23:20:348 LFS/(6970:6979): La tabla 2 no existe.
 [INFO] 00:00:29:950 LFS/(15649:15660): Se conecto una Memoria
+[INFO] 12:21:52:347 LFS/(3281:3292): Se conecto una Memoria
+[INFO] 12:22:12:69 LFS/(3281:3293): Se va a ejecutar CREATE CITIES SC 5 60000
+[INFO] 12:22:13:87 LFS/(3281:3293): Se va a ejecutar CREATE COUNTRIES SC 1 60000
+[INFO] 12:31:38:310 LFS/(3645:3656): Se conecto una Memoria
+[INFO] 12:31:55:711 LFS/(3645:3657): Se va a ejecutar CREATE CITIES SC 5 60000
+[INFO] 12:31:56:725 LFS/(3645:3657): Se va a ejecutar CREATE COUNTRIES SC 1 60000
+[ERROR] 12:32:31:878 LFS/(3645:3660): Se recibio algo incorrecto de Memoria, se cierra la conexion.
+[INFO] 12:38:44:586 LFS/(3904:3917): Se conecto una Memoria
+[INFO] 12:38:57:909 LFS/(3904:3918): Se va a ejecutar CREATE CITIES SC 5 60000
+[INFO] 12:38:58:929 LFS/(3904:3918): Se va a ejecutar CREATE COUNTRIES SC 1 60000

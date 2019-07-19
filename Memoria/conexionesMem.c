@@ -666,7 +666,7 @@ void manejarRespuestaLFS() {
 			}
 
 			insertInterno(registroRecibido->key, registroRecibido->value,
-					tablaSelect, registroRecibido->timestamp);
+					tablaSelect, registroRecibido->timestamp); //TODO: Marca de que esto puede no insertar si la memoria esta llena
 			sem_post(&sem_recepcionLFS);
 			continue;
 		}
