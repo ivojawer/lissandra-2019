@@ -82,6 +82,13 @@ void conectarseAUnaMemoria(seed* unaSeed) {
 
 	log_info(logger, "Se conecto la memoria %i", nuevaMemoria->nombre);
 
+//	request* fuggenRequest = malloc(sizeof(request));
+//
+//		fuggenRequest->requestEnInt = DESCRIBE;
+//		fuggenRequest->parametros = " ";
+//
+//		enviarRequestConHeaderEId(nuevaMemoria->socket,fuggenRequest,REQUEST,0);
+
 	comunicacionConMemoria(nuevaMemoria);
 
 }
@@ -197,7 +204,7 @@ void comunicacionConMemoria(memoriaEnLista* memoria) {
 
 			int respuesta;
 
-			switch (tipoDeRespuesta) {
+			switch (tipoDeRespuesta) { //Juro que esto tiene algun sentido, pero me lo olvide
 
 			case TODO_BIEN: {
 
@@ -253,7 +260,7 @@ void comunicacionConMemoria(memoriaEnLista* memoria) {
 				return;
 			}
 
-			int respuesta = 1;
+			int respuesta = TODO_BIEN;
 
 			int tamanioString = strlen(datoRecibido) + 1;
 
@@ -290,7 +297,7 @@ void comunicacionConMemoria(memoriaEnLista* memoria) {
 
 			if (seedPrueba->puerto == -1) {
 				manejoErrorMemoria(memoria->nombre);
-				list_remove(seeds,0);
+				list_remove(seeds, 0);
 				list_destroy(seeds);
 				free(seedPrueba);
 				return;
@@ -329,16 +336,19 @@ void comunicacionConMemoria(memoriaEnLista* memoria) {
 
 			t_list* metadatas = recibirMetadatas(socketMemoria, logger);
 
-			metadataTablaLFS* metadataPrueba = list_get(metadatas, 0);
+			if (list_size(metadatas) != 0) {
+				metadataTablaLFS* metadataPrueba = list_get(metadatas, 0);
 
-			if (metadataPrueba->consistencia == -1) {
-				manejoErrorMemoria(memoria->nombre);
-				free(metadataPrueba);
-				list_destroy(metadatas);
-				return;
+				if (metadataPrueba->consistencia == -1) {
+					manejoErrorMemoria(memoria->nombre);
+					free(metadataPrueba);
+					list_destroy(metadatas);
+					return;
+				}
+
 			}
 
-			int respuesta = 1;
+			int respuesta = TODO_BIEN;
 
 			scriptReceptor->resultadoDeEnvio = malloc(
 					sizeof(int) + sizeof(t_list*));

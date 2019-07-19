@@ -1,0 +1,115 @@
+[INFO] 00:07:11:21 kernel/(16119:16129): Se conecto la memoria 5
+[INFO] 00:07:13:962 kernel/(16119:16139): 1000: NEW->READY
+[INFO] 00:07:13:964 kernel/(16119:16130): 1000: READY->EXEC
+[ERROR] 00:07:14:965 kernel/(16119:16140): No hay memorias conectadas para ejecutar la request 3.
+[ERROR] 00:07:14:965 kernel/(16119:16140): Hubo un error en la ejecucion del script 1000
+[INFO] 00:07:14:965 kernel/(16119:16140): 1000: EXEC->EXIT
+[INFO] 00:07:21:562 kernel/(16119:16138): Se agrego la memoria 5 al criterio SC
+[ERROR] 00:07:23:32 kernel/(16119:16129): Se desconecto la memoria 5.
+[INFO] 00:07:23:73 kernel/(16119:16148): 1001: NEW->READY
+[INFO] 00:07:23:74 kernel/(16119:16130): 1001: READY->EXEC
+[ERROR] 00:07:24:79 kernel/(16119:16149): No hay memorias conectadas para ejecutar la request 3.
+[ERROR] 00:07:24:80 kernel/(16119:16149): Hubo un error en la ejecucion del script 1001
+[INFO] 00:07:24:80 kernel/(16119:16149): 1001: EXEC->EXIT
+[INFO] 00:07:31:47 kernel/(16119:16136): Se va a empezar a hacer el GOSSIPING
+[INFO] 00:07:31:50 kernel/(16119:16150): Se conecto la memoria 5
+[INFO] 00:08:03:386 kernel/(16202:16210): Se conecto la memoria 5
+[INFO] 00:08:06:377 kernel/(16202:16217): Se agrego la memoria 5 al criterio SC
+[INFO] 00:08:08:450 kernel/(16202:16220): 1000: NEW->READY
+[INFO] 00:08:08:450 kernel/(16202:16211): 1000: READY->EXEC
+[ERROR] 00:08:09:402 kernel/(16202:16210): Se desconecto la memoria 5.
+[ERROR] 00:08:09:454 kernel/(16202:16221): No hay memorias conectadas para ejecutar la request 3.
+[ERROR] 00:08:09:454 kernel/(16202:16221): Hubo un error en la ejecucion del script 1000
+[INFO] 00:08:09:454 kernel/(16202:16221): 1000: EXEC->EXIT
+[INFO] 00:09:35:907 kernel/(16259:16267): Se conecto la memoria 5
+[INFO] 00:09:43:874 kernel/(16259:16279): 1000: NEW->READY
+[INFO] 00:09:43:874 kernel/(16259:16268): 1000: READY->EXEC
+[INFO] 00:09:57:615 kernel/(16310:16318): Se conecto la memoria 5
+[INFO] 00:10:02:464 kernel/(16310:16326): Se agrego la memoria 5 al criterio SC
+[ERROR] 00:10:03:623 kernel/(16310:16318): Se desconecto la memoria 5.
+[INFO] 00:10:12:371 kernel/(16310:16329): 1000: NEW->READY
+[INFO] 00:10:12:373 kernel/(16310:16319): 1000: READY->EXEC
+[INFO] 00:10:31:151 kernel/(16310:16324): Se va a empezar a hacer el GOSSIPING
+[INFO] 00:10:31:151 kernel/(16310:16323): ----METRICS----
+[INFO] 00:10:31:151 kernel/(16310:16323): Read latency: ---
+[INFO] 00:10:31:151 kernel/(16310:16323): Write latency: ---
+[INFO] 00:10:31:151 kernel/(16310:16323): Reads: 0
+[INFO] 00:10:31:151 kernel/(16310:16323): Writes: 0
+[INFO] 00:10:31:151 kernel/(16310:16323): Operaciones totales: 0
+[INFO] 00:10:31:693 kernel/(16310:16338): Se conecto la memoria 5
+[ERROR] 00:10:44:679 kernel/(16310:16330): No hay memorias conectadas para ejecutar la request 3.
+[INFO] 00:11:11:794 kernel/(16389:16399): Se conecto la memoria 5
+[INFO] 00:11:15:512 kernel/(16389:16407): Se agrego la memoria 5 al criterio SC
+[INFO] 00:11:17:697 kernel/(16389:16409): 1000: NEW->READY
+[INFO] 00:11:17:697 kernel/(16389:16400): 1000: READY->EXEC
+[ERROR] 00:11:19:652 kernel/(16389:16399): Se desconecto la memoria 5.
+[INFO] 00:12:51:825 kernel/(16473:16481): Se conecto la memoria 5
+[INFO] 00:13:09:902 kernel/(16473:16495): Se agrego la memoria 5 al criterio SC
+[INFO] 00:13:33:548 kernel/(16473:16494): Se va a empezar a hacer el GOSSIPING
+[INFO] 00:13:33:548 kernel/(16473:16493): ----METRICS----
+[INFO] 00:13:33:548 kernel/(16473:16493): Read latency: ---
+[INFO] 00:13:33:548 kernel/(16473:16493): Write latency: ---
+[INFO] 00:13:33:548 kernel/(16473:16493): Reads: 0
+[INFO] 00:13:33:548 kernel/(16473:16493): Writes: 0
+[INFO] 00:13:33:548 kernel/(16473:16493): Operaciones totales: 0
+[ERROR] 00:13:43:108 kernel/(16473:16481): Se desconecto la memoria 5.
+[INFO] 00:41:56:71 kernel/(18047:18065): Se conecto la memoria 5
+[INFO] 00:42:03:329 kernel/(18047:18071): Se agrego la memoria 5 al criterio SC
+[INFO] 00:42:08:375 kernel/(18047:18073): 1000: NEW->READY
+[INFO] 00:42:08:375 kernel/(18047:18066): 1000: READY->EXEC
+[ERROR] 00:42:24:731 kernel/(18047:18065): Se desconecto la memoria 5.
+[ERROR] 00:42:31:450 kernel/(18047:18081): DESCRIBE: No se pudo realizar. (Enviado a 5)
+[ERROR] 00:42:31:451 kernel/(18047:18081): Hubo un error en la ejecucion del script 1000
+[INFO] 00:42:31:451 kernel/(18047:18081): 1000: EXEC->EXIT
+[INFO] 00:42:54:454 kernel/(18141:18149): Se conecto la memoria 5
+[INFO] 00:43:10:360 kernel/(18141:18152): Se agrego la memoria 5 al criterio SC
+[INFO] 00:43:12:827 kernel/(18141:18162): 1000: NEW->READY
+[INFO] 00:43:12:827 kernel/(18141:18150): 1000: READY->EXEC
+[INFO] 01:05:18:149 kernel/(18994:19004): Se conecto la memoria 5
+[INFO] 01:05:26:742 kernel/(18994:19012): Se agrego la memoria 5 al criterio SC
+[INFO] 01:05:28:387 kernel/(18994:19014): 1000: NEW->READY
+[INFO] 01:05:28:387 kernel/(18994:19005): 1000: READY->EXEC
+[INFO] 01:05:38:165 kernel/(18994:19011): Se va a empezar a hacer el GOSSIPING
+[INFO] 01:05:50:736 kernel/(18994:19010): ----METRICS----
+[INFO] 01:05:50:736 kernel/(18994:19010): Read latency: ---
+[INFO] 01:05:50:736 kernel/(18994:19010): Write latency: ---
+[INFO] 01:05:50:736 kernel/(18994:19010): Reads: 0
+[INFO] 01:05:50:736 kernel/(18994:19010): Writes: 0
+[INFO] 01:05:50:736 kernel/(18994:19010): Operaciones totales: 0
+[INFO] 01:05:50:737 kernel/(18994:19010): --Memoria 5-- 
+Inserts Completos: 0 
+Inserts Fallidos: 0 
+Selects Completos: 0 
+Selects Fallidos: 0 
+Operaciones totales: 1
+[INFO] 01:07:30:788 kernel/(19148:19156): Se conecto la memoria 5
+[INFO] 01:07:41:850 kernel/(19148:19164): Se agrego la memoria 5 al criterio SC
+[INFO] 01:07:51:289 kernel/(19148:19162): Se va a empezar a hacer el GOSSIPING
+[INFO] 01:07:51:291 kernel/(19148:19156): Se recibio el gossiping de la memoria
+[ERROR] 01:07:51:292 kernel/(19148:19159): No se pudo realizar el DESCRIBE automatico
+[INFO] 01:07:51:292 kernel/(19148:19171): 1000: NEW->READY
+[INFO] 01:07:51:292 kernel/(19148:19157): 1000: READY->EXEC
+[ERROR] 01:08:06:0 kernel/(19148:19172): DESCRIBE: No se pudo realizar. (Enviado a 5)
+[ERROR] 01:08:06:0 kernel/(19148:19159): No se pudo realizar el DESCRIBE automatico
+[ERROR] 01:08:06:0 kernel/(19148:19172): Hubo un error en la ejecucion del script 1000
+[INFO] 01:08:06:0 kernel/(19148:19172): 1000: EXEC->EXIT
+[INFO] 01:08:06:0 kernel/(19148:19161): ----METRICS----
+[INFO] 01:08:06:0 kernel/(19148:19161): Read latency: ---
+[INFO] 01:08:06:1 kernel/(19148:19161): Write latency: ---
+[INFO] 01:08:06:1 kernel/(19148:19161): Reads: 0
+[INFO] 01:08:06:1 kernel/(19148:19161): Writes: 0
+[INFO] 01:08:06:1 kernel/(19148:19161): Operaciones totales: 1
+[INFO] 01:08:06:1 kernel/(19148:19161): --Memoria 5-- 
+Inserts Completos: 0 
+Inserts Fallidos: 0 
+Selects Completos: 0 
+Selects Fallidos: 0 
+Operaciones totales: 1
+[INFO] 01:08:26:977 kernel/(19229:19238): Se conecto la memoria 5
+[INFO] 01:08:30:177 kernel/(19229:19245): Se agrego la memoria 5 al criterio SC
+[INFO] 01:08:31:393 kernel/(19229:19251): 1000: NEW->READY
+[INFO] 01:08:31:393 kernel/(19229:19239): 1000: READY->EXEC
+[INFO] 01:08:59:266 kernel/(19291:19299): Se conecto la memoria 5
+[INFO] 01:09:07:169 kernel/(19291:19306): Se agrego la memoria 5 al criterio SC
+[INFO] 01:09:08:360 kernel/(19291:19309): 1000: NEW->READY
+[INFO] 01:09:08:360 kernel/(19291:19301): 1000: READY->EXEC

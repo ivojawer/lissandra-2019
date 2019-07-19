@@ -189,7 +189,12 @@ void enviarMetadatasConHeaderEId(int aQuien, t_list* metadatas, int header,
 	int cantidadMetadatas = list_size(metadatas);
 
 	if (cantidadMetadatas == 0) {
-		enviarIntConHeader(aQuien, cantidadMetadatas, header);
+
+		t_list* listaInts = list_create();
+		list_add(listaInts, &id);
+		list_add(listaInts, &cantidadMetadatas);
+
+		enviarVariosIntsConHeader(aQuien, listaInts, header);
 		return;
 	}
 
@@ -467,50 +472,43 @@ void enviarListaDeRequestsConHeader(int aQuien, t_list* requests, int header) {
 	free(paquete);
 }
 
-t_list* recibirRequests (int deQuien, t_log* logger) //Si hubo error: primer elemento de lista tiene requestEnInt == -1
+t_list* recibirRequests(int deQuien, t_log* logger) //Si hubo error: primer elemento de lista tiene requestEnInt == -1
 {
 	request* requestFallida = malloc(sizeof(request));
 	requestFallida->parametros = NULL;
 	requestFallida->requestEnInt = -1;
 
-	int cantidadRequests = recibirInt(deQuien,logger);
+	int cantidadRequests = recibirInt(deQuien, logger);
 
 	t_list* requests = list_create();
 
-	if (cantidadRequests == 0)
-	{
+	if (cantidadRequests == 0) {
 		free(requestFallida);
 		return requests; //Lista vacia
-	}
-	else if(cantidadRequests == -1)
-	{
-		list_add(requests,requestFallida);
+	} else if (cantidadRequests == -1) {
+		list_add(requests, requestFallida);
 		return requests;
 	}
 	printf("cantidad de requests esperadas:%d\n", cantidadRequests);
-	for(int i = 0;i<cantidadRequests;i++)
-	{
-		request* unaRequest = recibirRequest(deQuien,logger);
+	for (int i = 0; i < cantidadRequests; i++) {
+		request* unaRequest = recibirRequest(deQuien, logger);
 
-		if (unaRequest->requestEnInt == -1)
-		{
+		if (unaRequest->requestEnInt == -1) {
 			free(unaRequest);
 
-			while(list_size(requests) != 0)
-			{
-				request* requestARemover = list_remove(requests,0);
+			while (list_size(requests) != 0) {
+				request* requestARemover = list_remove(requests, 0);
 				free(requestARemover->parametros);
 				free(requestARemover);
 			}
 
-			list_add(requests,requestFallida);
+			list_add(requests, requestFallida);
 			return requests;
 		}
 		printf("termine de recibir todas las requests!\n");
 
-		list_add(requests,unaRequest);
+		list_add(requests, unaRequest);
 	}
-
 
 	free(requestFallida);
 	return requests;
@@ -562,7 +560,7 @@ request* recibirRequest(int deQuien, t_log* logger) { //Si hubo error: request->
 	char* requestEnString = recibirString(deQuien, logger);
 	request* requestNuevo;
 
-	if (!strcmp(requestEnString, " ")) {
+	if (!strcmp(requestEnString, " ") || requestEnString == NULL) {
 		requestNuevo = malloc(sizeof(request));
 		requestNuevo->requestEnInt = -1;
 		requestNuevo->parametros = NULL;
@@ -570,7 +568,9 @@ request* recibirRequest(int deQuien, t_log* logger) { //Si hubo error: request->
 		requestNuevo = crearStructRequest(requestEnString);
 	}
 
-	free(requestEnString);
+	if (requestEnString != NULL) {
+		free(requestEnString);
+	}
 
 	return requestNuevo;
 

@@ -170,16 +170,13 @@ void aceptarConexiones() {
 
 			}
 
-			if(!seedExiste(seedMemoria))
-			{
-				list_add(seedsConocidas,seedMemoria);
+			if (!seedExiste(seedMemoria)) {
+				list_add(seedsConocidas, seedMemoria);
 			}
 
 			list_add(tablaGossiping, nuevaMemoriaConectada);
 
-
 			log_info(logger, "Se conecto la memoria %i.", nombre);
-
 
 			sem_post(&conexionMemoria);
 //			tratarDeConectarseASeeds();
@@ -281,7 +278,6 @@ void conectarseAOtraMemoria(seed* laSeed) { //Esto es secuencial al hilo de goss
 	nuevaMemoriaConectada->nombre = nombre;
 	nuevaMemoriaConectada->elSocket = socketMemoria;
 	nuevaMemoriaConectada->laSeed = laSeed;
-
 
 	if (nombre != nombreMemoria) {
 
@@ -668,23 +664,25 @@ void manejarRespuestaLFS() {
 		case METADATAS: {
 			t_list* metadatas = recibirMetadatas(socketLFS, logger);
 
-			metadataTablaLFS* metadataPrueba = list_get(metadatas, 0);
+			if (list_size(metadatas) != 0) {
+				metadataTablaLFS* metadataPrueba = list_get(metadatas, 0);
 
-			if (metadataPrueba->consistencia == -1) {
-				enviarRespuestaAlKernel(idScriptKernel, ERROR);
-				free(metadataPrueba);
-				list_remove(metadatas, 0);
-				list_destroy(metadatas);
-				manejoErrorLFS();
-				log_error(logger, "No se pudo ejecutar el request");
-
-				if (idScriptKernel) {
-					log_info(logger, "Enviando ERROR al kernel");
+				if (metadataPrueba->consistencia == -1) {
 					enviarRespuestaAlKernel(idScriptKernel, ERROR);
-				}
+					free(metadataPrueba);
+					list_remove(metadatas, 0);
+					list_destroy(metadatas);
+					manejoErrorLFS();
+					log_error(logger, "No se pudo ejecutar el request");
 
-				sem_post(&sem_recepcionLFS);
-				return;
+					if (idScriptKernel) {
+						log_info(logger, "Enviando ERROR al kernel");
+						enviarRespuestaAlKernel(idScriptKernel, ERROR);
+					}
+
+					sem_post(&sem_recepcionLFS);
+					return;
+				}
 			}
 
 			describirMetadatas(metadatas);
