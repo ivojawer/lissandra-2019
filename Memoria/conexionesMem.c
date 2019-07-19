@@ -656,6 +656,15 @@ void manejarRespuestaLFS() {
 				return;
 			}
 
+			log_info(logger, "Resultado: %s", registroRecibido->value);
+
+			if (idScriptKernel) {
+
+				log_info(logger, "Enviando el resultado al kernel");
+				enviarStringConHeaderEId(socketKernel, registroRecibido->value,
+						DATO, idScriptKernel);
+			}
+
 			insertInterno(registroRecibido->key, registroRecibido->value,
 					tablaSelect, registroRecibido->timestamp);
 			sem_post(&sem_recepcionLFS);
