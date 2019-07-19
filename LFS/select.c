@@ -473,6 +473,5 @@ void rutina_select(char* comando)
 	}else{
 		printf("No se ha podido realizar la operacion\n");
 		enviarIntConHeader(socket_memoria, ERROR, RESPUESTA);
-
 	}
 }

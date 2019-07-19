@@ -2,7 +2,7 @@
 #define FUNCIONESMEMORIA_H_
 
 
-#define RAIZCONFIG "/home/ivan/eclipse-workspace/tp-2019-1c-U-TN-Tecno/CONFIG/"
+#define RAIZCONFIG "/home/utnso/workspace/tp-2019-1c-U-TN-Tecno/CONFIG/"
 
 #include<stdio.h>
 #include<stdlib.h>
@@ -63,6 +63,7 @@ int cantMarcos;
 int tamanioMarco;
 
 void ejecutarRequests();
+void dropInterno(char* parametro);
 segmento* encuentroTablaPorNombre(char* nombreTabla);
 marco* getMarcoFromPagina(pagina*);
 marco* getMarcoFromIndex(int);
@@ -90,6 +91,7 @@ void comunicacionConMemoria(memoriaGossip* memoria);
 void enviarSeedsConectadas(memoriaGossip* memoriaDestino,int tipoDeEnvio);
 void sacarMemoriaDeTablaGossip(memoriaGossip* unaMemoria);
 void insertInterno(uint16_t key, char* value, char* tabla, unsigned long long timestamp);
-
+memoriaGossip* structMemoriaDadoElNombre(int nombreMemoria);
+int seedExiste(seed* unaSeed);
 
 #endif /* FUNCIONESMEMORIA_H_ */

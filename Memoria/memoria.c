@@ -13,6 +13,7 @@ sem_t sem_journal;
 sem_t sem_refreshConfig;
 sem_t sem_LFSconectandose;
 sem_t sem_recepcionLFS;
+sem_t conexionMemoria;
 int nombreMemoria;
 int socketKernel;
 int sleepJournal;
@@ -21,6 +22,7 @@ int retardoAccesoLFS;
 int retardoAccesoMemoria;
 int idScriptKernel;
 int caracMaxDeValue;
+int puertoServidor;
 char* tablaSelect;
 char* dirConfig;
 
@@ -48,6 +50,7 @@ int main() {
 	sem_init(&sem_refreshConfig, 0, 1);
 	sem_init(&sem_LFSconectandose, 0, 1);
 	sem_init(&sem_recepcionLFS, 0, 0);
+	sem_init(&conexionMemoria,0,1);
 
 	int tamanioMemoria = config_get_int_value(config, "TAM_MEM");
 
@@ -56,6 +59,7 @@ int main() {
 	sleepGossiping = config_get_int_value(config, "RETARDO_GOSSIPING");
 	retardoAccesoLFS = config_get_int_value(config, "RETARDO_FS");
 	retardoAccesoMemoria = config_get_int_value(config, "RETARDO_MEM");
+	puertoServidor = config_get_int_value(config, "PUERTO_ESCUCHA");
 	idScriptKernel = -1;
 
 	config_destroy(config);
@@ -107,19 +111,19 @@ int main() {
 	pthread_t h_refreshConfig;
 	pthread_t h_journalAutomatico;
 
-	pthread_create(&h_ejecucionRequests, NULL, (void *) ejecutarRequests, NULL);
 	pthread_create(&h_conexiones, NULL, (void *) aceptarConexiones, NULL);
-	pthread_create(&h_refreshGossiping, NULL, (void *) hacerGossipingAutomatico, NULL);
+	pthread_create(&h_ejecucionRequests, NULL, (void *) ejecutarRequests, NULL);
 	pthread_create(&h_refreshConfig, NULL, (void *) refreshConfig, NULL);
 	pthread_create(&h_journalAutomatico, NULL, (void *) journalAutomatico,
 	NULL);
+	pthread_create(&h_refreshGossiping, NULL, (void *) hacerGossipingAutomatico, NULL);
 	pthread_create(&h_consola, NULL, (void *) consola, NULL);
 
-	pthread_detach(h_ejecucionRequests);
 	pthread_detach(h_conexiones);
-	pthread_detach(h_refreshGossiping);
+	pthread_detach(h_ejecucionRequests);
 	pthread_detach(h_refreshConfig);
 	pthread_detach(h_journalAutomatico);
+	pthread_detach(h_refreshGossiping);
 	pthread_join(h_consola, NULL);
 
 	//Se cerro la consola

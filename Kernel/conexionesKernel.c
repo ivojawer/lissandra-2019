@@ -66,7 +66,6 @@ void conectarseAUnaMemoria(seed* unaSeed) {
 
 	nuevaMemoria->scriptsEsperando = list_create();
 
-
 	nuevaMemoria->estadisticas.insertsCompletos = 0;
 	nuevaMemoria->estadisticas.insertsFallidos = 0;
 	nuevaMemoria->estadisticas.selectsCompletos = 0;
@@ -145,7 +144,8 @@ void conectarseASeedsDesconectadas() {
 	for (int i = 0; i < list_size(seedsMemorias); i++) {
 		seed* unaSeed = list_get(seedsMemorias, i);
 
-		if (!seedYaEstaConectada(unaSeed) && !memoriaEstaSiendoCreada(unaSeed)) {
+		if (!seedYaEstaConectada(unaSeed)
+				&& !memoriaEstaSiendoCreada(unaSeed)) {
 
 			sem_wait(&sem_seedSiendoCreada);
 			list_add(seedsSiendoCreadas, unaSeed);
@@ -277,10 +277,23 @@ void comunicacionConMemoria(memoriaEnLista* memoria) {
 
 		case GOSSIPING: {
 
+			log_info(logger, "Se recibio el gossiping de la memoria",
+					memoria->nombre);
+
 			t_list* seeds = recibirSeeds(socketMemoria, logger);
 
 			if (list_size(seeds) == 0) {
 				continue; //Seeds vacias, no hay nada que hacer
+			}
+
+			seed* seedPrueba = list_get(seeds, 0);
+
+			if (seedPrueba->puerto == -1) {
+				manejoErrorMemoria(memoria->nombre);
+				list_remove(seeds,0);
+				list_destroy(seeds);
+				free(seedPrueba);
+				return;
 			}
 
 			pthread_t h_gossiping;

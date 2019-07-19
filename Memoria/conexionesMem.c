@@ -12,9 +12,10 @@ extern sem_t sem_recepcionLFS;
 extern sem_t sem_LFSconectandose;
 extern sem_t sem_gossiping;
 extern sem_t requestsDisponibles;
+extern sem_t conexionMemoria;
 extern char* tablaSelect;
 extern char* dirConfig;
-int puertoServidor;
+extern int puertoServidor;
 int socketLFS;
 
 int primeraConexionLFS() {
@@ -67,9 +68,6 @@ int primeraConexionLFS() {
 }
 
 void aceptarConexiones() {
-	t_config* config = config_create(dirConfig);
-
-	puertoServidor = config_get_int_value(config, "PUERTO_ESCUCHA");
 
 	int socketServidor = crearServidor(puertoServidor);
 
@@ -79,8 +77,6 @@ void aceptarConexiones() {
 
 	list_add(listaInts, &nombreModulo);
 	list_add(listaInts, &nombreMemoria);
-
-	config_destroy(config);
 
 	while (1) {
 
@@ -116,24 +112,36 @@ void aceptarConexiones() {
 		}
 
 		case MEMORIA: {
+			sem_wait(&conexionMemoria);
+
 			int nombre = recibirInt(socketMisterioso, logger);
+
+			int puertoMemoriaConectandose = recibirInt(socketMisterioso,
+					logger);
 
 			if (nombre == nombreMemoria) //Si se conecto la memoria misma
 					{
+				sem_post(&conexionMemoria);
 				continue; //El hilo que envio se encarga de agregarse a la tabla
 			}
 
 			sem_wait(&sem_gossiping);
 			if (nombre == -1 || memoriaYaEstaConectada(nombre)) { //Si la memoria ya esta conectada, ya se conoce su seed
-//				close(socketMisterioso);
+//				close(socketMisterioso); TODO: ???
 				sem_post(&sem_gossiping);
+				sem_post(&conexionMemoria);
 				continue;
 			}
+
+			seed* seedMemoria = malloc(sizeof(seed));
+			seedMemoria->ip = ipDelCliente(socketMisterioso);
+			seedMemoria->puerto = puertoMemoriaConectandose;
+
 			memoriaGossip* nuevaMemoriaConectada = malloc(
 					sizeof(memoriaGossip));
 			nuevaMemoriaConectada->nombre = nombre;
 			nuevaMemoriaConectada->elSocket = socketMisterioso;
-			nuevaMemoriaConectada->laSeed = NULL;
+			nuevaMemoriaConectada->laSeed = seedMemoria;
 
 			enviarSeedsConectadas(nuevaMemoriaConectada, GOSSIPING);
 
@@ -147,25 +155,36 @@ void aceptarConexiones() {
 				if (seedPrueba->puerto == -1 || operacion != GOSSIPING) {
 
 					close(socketMisterioso);
+					free(seedMemoria->ip);
+					free(seedMemoria);
 					free(nuevaMemoriaConectada);
 					free(seedPrueba);
 					list_destroy(seedsRecibidas);
 					log_error(logger, "Fallo la conexion a la memoria %i.",
 							nombre);
 					sem_post(&sem_gossiping);
+					sem_post(&conexionMemoria);
 					continue;
 				}
 				agregarNuevasSeeds(seedsRecibidas);
 
 			}
 
+			if(!seedExiste(seedMemoria))
+			{
+				list_add(seedsConocidas,seedMemoria);
+			}
+
 			list_add(tablaGossiping, nuevaMemoriaConectada);
 
-			tratarDeConectarseASeeds();
-
-			sem_post(&sem_gossiping);
 
 			log_info(logger, "Se conecto la memoria %i.", nombre);
+
+
+			sem_post(&conexionMemoria);
+//			tratarDeConectarseASeeds();
+
+			sem_post(&sem_gossiping);
 
 			pthread_t h_comunicacionConMemoria;
 			pthread_create(&h_comunicacionConMemoria, NULL,
@@ -189,9 +208,12 @@ void aceptarConexiones() {
 
 void conectarseAOtraMemoria(seed* laSeed) { //Esto es secuencial al hilo de gossiping, no es necesario sincronizar
 
+	sem_wait(&conexionMemoria);
+
 	int socketMemoria = conectarseAServidor(laSeed->ip, laSeed->puerto);
 
 	if (socketMemoria == -1) {
+		sem_post(&conexionMemoria);
 		return;
 	}
 
@@ -201,6 +223,7 @@ void conectarseAOtraMemoria(seed* laSeed) { //Esto es secuencial al hilo de goss
 
 	list_add(listaInts, &nombreModulo);
 	list_add(listaInts, &nombreMemoria);
+	list_add(listaInts, &puertoServidor);
 
 	enviarVariosIntsConHeader(socketMemoria, listaInts, HANDSHAKE); //HANDSHAKE-MEMORIA-NOMBRE
 
@@ -214,6 +237,7 @@ void conectarseAOtraMemoria(seed* laSeed) { //Esto es secuencial al hilo de goss
 		log_error(logger,
 				"Se envio un handshake a una memoria y se devolvio otra cosa.");
 		close(socketMemoria);
+		sem_post(&conexionMemoria);
 		return;
 	}
 
@@ -223,6 +247,7 @@ void conectarseAOtraMemoria(seed* laSeed) { //Esto es secuencial al hilo de goss
 		log_error(logger,
 				"Se conecto indebidamente algo que no es una memoria.");
 		close(socketMemoria);
+		sem_post(&conexionMemoria);
 		return;
 	}
 
@@ -231,20 +256,22 @@ void conectarseAOtraMemoria(seed* laSeed) { //Esto es secuencial al hilo de goss
 	if (nombre == -1) {
 		log_error(logger, "Se recibio algo indebido de una memoria.");
 		close(socketMemoria);
+		sem_post(&conexionMemoria);
 		return;
 	}
 
 	if (memoriaYaEstaConectada(nombre)) {
 
-		int index = posicionMemoriaEnLista(nombre);
+		memoriaGossip* memoriaYaConectada = structMemoriaDadoElNombre(nombre);
 
-		memoriaGossip* memoriaYaConectada = list_get(tablaGossiping, index);
 		if (memoriaYaConectada->laSeed == NULL) { //Si la memoria no tenia seed, se le agrega
 			memoriaYaConectada->laSeed = laSeed;
 		}
 
 		free(laSeed->ip);
 		free(laSeed);
+
+		sem_post(&conexionMemoria);
 
 		return; //Ya se hizo gossiping
 
@@ -255,7 +282,9 @@ void conectarseAOtraMemoria(seed* laSeed) { //Esto es secuencial al hilo de goss
 	nuevaMemoriaConectada->elSocket = socketMemoria;
 	nuevaMemoriaConectada->laSeed = laSeed;
 
+
 	if (nombre != nombreMemoria) {
+
 		enviarSeedsConectadas(nuevaMemoriaConectada, GOSSIPING);
 
 		int operacion = recibirInt(socketMemoria, logger);
@@ -280,18 +309,19 @@ void conectarseAOtraMemoria(seed* laSeed) { //Esto es secuencial al hilo de goss
 
 		}
 		list_add(tablaGossiping, nuevaMemoriaConectada);
+
 		log_info(logger, "Se conecto a la memoria %i.", nombre);
 
-		tratarDeConectarseASeeds();
+		sem_post(&conexionMemoria);
+//		tratarDeConectarseASeeds();
 
 		pthread_t h_comunicacionConMemoria;
 		pthread_create(&h_comunicacionConMemoria, NULL,
 				(void *) comunicacionConMemoria, nuevaMemoriaConectada);
 		pthread_detach(h_comunicacionConMemoria);
 
-	}
-	else
-	{
+	} else {
+		sem_post(&conexionMemoria);
 		list_add(tablaGossiping, nuevaMemoriaConectada);
 	}
 
@@ -321,7 +351,7 @@ void comunicacionConMemoria(memoriaGossip* memoria) {
 					return;
 				}
 				agregarNuevasSeeds(seedsRecibidas);
-				tratarDeConectarseASeeds();
+//				tratarDeConectarseASeeds();
 
 			} //Si list_size == 0 no se hace nada
 			list_destroy(seedsRecibidas);
@@ -349,7 +379,7 @@ void comunicacionConMemoria(memoriaGossip* memoria) {
 
 			sem_wait(&sem_gossiping);
 			agregarNuevasSeeds(seedsRecibidas);
-			tratarDeConectarseASeeds();
+//			tratarDeConectarseASeeds();
 			sem_post(&sem_gossiping);
 			continue;
 		}
@@ -404,6 +434,8 @@ void comunicacionConKernel() {
 
 				return !seedNoEstaConectada(unaSeed);
 			}
+
+			log_info(logger, "Se recibio la peticion de GOSSIPING del kernel.");
 
 			sem_wait(&sem_gossiping);
 			t_list* seedsConectadas = list_filter(seedsConocidas,
@@ -501,7 +533,7 @@ int memoriaYaEstaConectada(int nombreMemoria) { //Sincronizar por afuera
 	return resultado;
 }
 
-int posicionMemoriaEnLista(int nombreMemoria) { //Sincronizar por afuera
+memoriaGossip* structMemoriaDadoElNombre(int nombreMemoria) { //Sincronizar por afuera
 
 	int esLaMismaMemoria(memoriaGossip* otraMemoria) {
 		if (otraMemoria->nombre == nombreMemoria) {
@@ -510,9 +542,7 @@ int posicionMemoriaEnLista(int nombreMemoria) { //Sincronizar por afuera
 		return 0;
 	}
 
-	int* resultado = list_find(tablaGossiping, (void*) esLaMismaMemoria);
-
-	return *resultado;
+	return list_find(tablaGossiping, (void*) esLaMismaMemoria);
 }
 
 void enviarRespuestaAlKernel(int id, int respuesta) {

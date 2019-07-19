@@ -13,7 +13,6 @@ void manejoErrorKernel();
 void manejoErrorLFS();
 void enviarRespuestaAlKernel(int id, int respuesta);
 void conectarseAOtraMemoria(seed* laSeed);
-int posicionMemoriaEnLista(int nombreMemoria);
 int memoriaYaEstaConectada(int nombreMemoria);
 void enviarRegistroComoInsert(registro* registroAEnviar);
 void manejarRespuestaLFS();

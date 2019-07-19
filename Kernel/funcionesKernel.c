@@ -498,8 +498,8 @@ void gossipingAutomatico() {
 		int retardoGossip = retardoGossiping; //En segundos
 		sem_post(&sem_refreshConfig);
 
-		sleep(2);
-
+		sleep(retardoGossip);
+		log_info(logger,"Se va a empezar a hacer el GOSSIPING");
 		conectarseASeedsDesconectadas();
 
 		enviarPeticionesDeGossip();

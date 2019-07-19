@@ -29,7 +29,9 @@ char* ipDelCliente(int socketCliente) {
 		inet_ntop(AF_INET6, &s->sin6_addr, ipstr, sizeof ipstr);
 	}
 
-	return ipstr;
+	char* laIp = string_duplicate(ipstr);
+
+	return laIp;
 }
 
 int conectarseAServidor(char* ip, int puerto) {
@@ -465,41 +467,50 @@ void enviarListaDeRequestsConHeader(int aQuien, t_list* requests, int header) {
 	free(paquete);
 }
 
-t_list* recibirRequests(int deQuien, t_log* logger) //Si hubo error: primer elemento de lista tiene requestEnInt == -1
+t_list* recibirRequests (int deQuien, t_log* logger) //Si hubo error: primer elemento de lista tiene requestEnInt == -1
 {
 	request* requestFallida = malloc(sizeof(request));
 	requestFallida->parametros = NULL;
 	requestFallida->requestEnInt = -1;
 
-	int cantidadRequests = recibirInt(deQuien, logger);
+	int cantidadRequests = recibirInt(deQuien,logger);
 
 	t_list* requests = list_create();
 
-	if (cantidadRequests == 0) {
+	if (cantidadRequests == 0)
+	{
 		free(requestFallida);
 		return requests; //Lista vacia
-	} else if (cantidadRequests == -1) {
-		list_add(requests, requestFallida);
+	}
+	else if(cantidadRequests == -1)
+	{
+		list_add(requests,requestFallida);
 		return requests;
 	}
+	printf("cantidad de requests esperadas:%d\n", cantidadRequests);
+	for(int i = 0;i<cantidadRequests;i++)
+	{
+		request* unaRequest = recibirRequest(deQuien,logger);
 
-	for (int i = 0; i < cantidadRequests; i++) {
-		request* unaRequest = recibirRequest(deQuien, logger);
-
-		if (unaRequest->requestEnInt == -1) {
+		if (unaRequest->requestEnInt == -1)
+		{
 			free(unaRequest);
 
-			while (list_size(requests) != 0) {
-				request* requestARemover = list_remove(requests, 0);
+			while(list_size(requests) != 0)
+			{
+				request* requestARemover = list_remove(requests,0);
 				free(requestARemover->parametros);
 				free(requestARemover);
 			}
 
-			list_add(requests, requestFallida);
+			list_add(requests,requestFallida);
 			return requests;
 		}
-		list_add(requests, unaRequest);
+		printf("termine de recibir todas las requests!\n");
+
+		list_add(requests,unaRequest);
 	}
+
 
 	free(requestFallida);
 	return requests;

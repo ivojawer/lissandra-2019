@@ -131,6 +131,7 @@ t_list* recibirRequests (int deQuien, t_log* logger);
 //Sockets:
 int crearServidor(int puerto);
 int conectarseAServidor(char* ip, int puerto);
+char* ipDelCliente(int socketCliente);
 
 #include "requests.h"
 
