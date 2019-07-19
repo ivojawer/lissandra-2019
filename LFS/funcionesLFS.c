@@ -28,7 +28,7 @@ t_list *tabla_encontrada;
 t_list *lista_describe;
 int wait_particiones = 1;
 char *consistency;
-
+extern int socket_cliente;
 
 
 void ejecutar_peticion()
@@ -38,18 +38,19 @@ void ejecutar_peticion()
 //		printf("Tengo %d peticiones para ejecutar\n", cola_requests->elements_count);
 		request* request_a_ejecutar = list_get(cola_requests, 0); //Si por x motivo se acumulan varias, esto deberia cambiar
 		log_info(logger,"Se va a ejecutar %s",requestStructAString(request_a_ejecutar));
-		mandarAEjecutarRequest(request_a_ejecutar);
+		mandarAEjecutarRequest(request_a_ejecutar, socket_cliente);
 		list_remove(cola_requests,0); //Esto no se que tan bien esta pero en algun lado tengo que sacar la request
 	}
 }
 
 
 
-void mandarAEjecutarRequest(request* requestAEjecutar)
+void mandarAEjecutarRequest(request* requestAEjecutar, int socket)
 {
-
-
-	char *parametros = string_duplicate(requestAEjecutar->parametros); //Esto es para que se pueda hacer un free() en consola.c sin que rompa
+	struct parametros *parametros = malloc(sizeof(struct parametros));
+	parametros->socket_cliente = socket;
+	parametros->comando = string_duplicate(requestAEjecutar->parametros); //Esto es para que se pueda hacer un free() en consola.c sin que rompa
+//	char *parametros = string_duplicate(requestAEjecutar->parametros); //Esto es para que se pueda hacer un free() en consola.c sin que rompa
 	switch (requestAEjecutar->requestEnInt) {
 	case SELECT:
 		{

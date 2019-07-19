@@ -1,9 +1,8 @@
 #include "funcionesLFS.h"
+#include "select.h"
 
-extern int socket_memoria;
 extern t_list* memtable;
 extern char* puntoDeMontaje;
-
 
 t_list *particion_encontrada;
 t_list *registros_encontrados;
@@ -433,7 +432,7 @@ t_par_valor_timestamp *filtrar_timestamp_mayor(t_list *timestamp_valor, int list
 	t_list *timestamp_valor = list_create();
 	buscar_bloques_particion(tabla, particion_buscar, 0, bloques_buscar); //Busca particion.bin
 	buscar_bloques_particion(tabla, particion_buscar, 1, bloques_buscar); //Busca .tmp
-	buscar_bloques_particion(tabla, particion_buscar, 1, bloques_buscar); //Busca .tmpc
+	buscar_bloques_particion(tabla, particion_buscar, 2, bloques_buscar); //Busca .tmpc
 	cargar_timestamp_value(bloques_buscar, timestamp_valor, key); //Lee en los bloques y carga los pares en lista "timestamp_valor"
 
 	pthread_mutex_lock(&dump_semaphore);
@@ -457,15 +456,15 @@ t_par_valor_timestamp *filtrar_timestamp_mayor(t_list *timestamp_valor, int list
 //	printf("Largo lista *timestamp_valor* %d\n", list_size(timestamp_valor));
 	if(lista_vacia(timestamp_valor)){
 //		printf("*timestamp_valor* VACIO\n");
-		enviarIntConHeader(socket_memoria, ERROR, RESPUESTA);//no testeado
+		enviarIntConHeader(socket_cliente, ERROR, RESPUESTA);//no testeado
 	}else{
 		t_par_valor_timestamp *timestamp_value_max = filtrar_timestamp_mayor(timestamp_valor, list_size(timestamp_valor));
 		printf("El valor de la key ingresada es: %s\n", timestamp_value_max->valor);
 
 		if(timestamp_value_max->valor == NULL){
-			enviarIntConHeader(socket_memoria, ERROR, RESPUESTA);
+			enviarIntConHeader(socket_cliente, ERROR, RESPUESTA);
 		}else{
-			enviarStringConHeader(socket_memoria, timestamp_value_max->valor, DATO);
+			enviarStringConHeader(socket_cliente, timestamp_value_max->valor, DATO);
 		}
 	}
 	liberar_bloques_buscar(bloques_buscar);
@@ -473,9 +472,13 @@ t_par_valor_timestamp *filtrar_timestamp_mayor(t_list *timestamp_valor, int list
 }
 
 
-void rutina_select(char* comando)
+void rutina_select(void* parametros)
 {
 	printf("operacion: select\n");
+
+	struct parametros *info = (struct parametros*)parametros;
+	char *comando = strdup(info->comando);
+	socket_cliente = info->socket_cliente;
 
 	char *tabla = get_tabla(comando);
 	printf("tabla: %s\n", get_tabla(comando));
@@ -494,6 +497,6 @@ void rutina_select(char* comando)
 		modificar_op_control(tabla, 2);
 	}else{
 		printf("No se ha podido realizar la operacion\n");
-		enviarIntConHeader(socket_memoria, ERROR, RESPUESTA);
+		enviarIntConHeader(socket_cliente, ERROR, RESPUESTA);
 	}
 }

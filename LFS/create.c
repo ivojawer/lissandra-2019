@@ -1,7 +1,7 @@
 #include "funcionesLFS.h"
 
+extern int socket_cliente;
 extern t_log *logger;
-extern int socket_memoria;
 extern int cantidadBloques;
 extern char* puntoDeMontaje;
 extern void iniciar_compactacion(void *arg);
@@ -163,20 +163,20 @@ void rutina_create(char* comando)
 	printf("Tiempo de compactacion: %d\n", compactacion);
 
 	if (controlar_bloques_disponibles(particiones)  ==  0) {
-		enviarIntConHeader(socket_memoria, ERROR, RESPUESTA);
+		enviarIntConHeader(socket_cliente, ERROR, RESPUESTA);
 		printf("Se excede la cantidad de particiones disponibles\n");
 		return;
 	}
 
 	if (existe_tabla(tabla)) {
 		log_info(logger, "Se intento crear la tabla ya existente: %s.\n", tabla);
-		enviarIntConHeader(socket_memoria, ERROR, RESPUESTA);
+		enviarIntConHeader(socket_cliente, ERROR, RESPUESTA);
 	}else if(crear_tabla_FS(tabla, particiones, consistencia, compactacion) == 0){
 		printf("Se creo la tabla [%s].\n",tabla);
 		crear_hilo_compactacion(tabla, compactacion);
-		enviarIntConHeader(socket_memoria, TODO_BIEN, RESPUESTA);
+		enviarIntConHeader(socket_cliente, TODO_BIEN, RESPUESTA);
 	}else{
 		printf("Ocurrio un problema\nNo se pudo crear la Tabla\n");
-		enviarIntConHeader(socket_memoria, ERROR, RESPUESTA);
+		enviarIntConHeader(socket_cliente, ERROR, RESPUESTA);
 	}
 }
