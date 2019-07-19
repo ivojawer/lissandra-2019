@@ -6,9 +6,10 @@ t_config*config;
 t_config*metadataLFS;
 
 //variables del config CONFIG/LFS.config
-t_log* logger;
-t_log* dump_logger;
-char* puntoDeMontaje;
+t_log *logger;
+t_log *dump_logger;
+t_log *compact_logger;
+char *puntoDeMontaje;
 int retardo; //en milisegundos
 int tamanioValue;
 int tiempoDump; //en milisegundos
@@ -26,6 +27,7 @@ int main() {
 
 	logger = log_create("LFS.log", "LFS", 1, 0);
 	dump_logger = log_create("Dump.log", "LFS", 0, 0);
+	compact_logger = log_create("Compactacion.log", "LFS", 0, 0);
 
 	iniciar_variables();
 

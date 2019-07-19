@@ -340,31 +340,6 @@ void buscar_bloques_particion(char *tabla, int particion_buscar, int type_flag, 
 		printf("Error en pedido de SELECT\n");
 		break;
 	}
-
-
-//	if(type_flag == 1){ //Buscar temporales
-//		 DIR *dir;
-//		 dir = opendir(root);
-//		 struct dirent *entrada;
-//		 char **entrada_aux;
-//		 while ((entrada = readdir(dir)) != NULL){
-//			 entrada_aux = string_split(entrada->d_name, ".");
-//			 if(entrada_aux[1] != NULL){
-//				 if (strcmp(entrada_aux[1],"tmp")==0){
-//					 char root_aux[256] = "";
-//					 sprintf(root_aux, "%s/%s", root, entrada->d_name);
-//					 cargar_bloques(root_aux, bloques_buscar);
-//					 memset(root_aux, 0x0, sizeof(root_aux));
-//				 }
-//			 }
-//		 }
-//		closedir(dir);
-//	 }else{
-//		 string_append(&root, "/part");
-//		 string_append(&root, string_itoa(particion_buscar));
-//	 	 string_append(&root,".bin");
-//	 	cargar_bloques(root, bloques_buscar);
-//	 }
 	free(root);
 }//fin buscar_bloques_particion
 

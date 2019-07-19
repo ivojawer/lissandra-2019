@@ -3,7 +3,7 @@
 extern char* puntoDeMontaje;
 extern int tamanioBloques;
 extern int cantidadBloques;
-extern t_log* logger;
+extern t_log *compact_logger;
 clock_t t_ini_compact, t_fin_compact;
 double secs;
 
@@ -193,7 +193,7 @@ void iniciar_compactacion(void *arg)
 			t_fin_compact = medir_tiempo();
 			secs = (double)(t_fin_compact - t_ini_compact) / CLOCKS_PER_SEC;
 			// printf("Tiempo Compactacion: %.16g milisegundos\n", secs * 1000.0);
-			log_info(logger, "Compactacion finalizada. Tiempo Bloqueo: %.16g milisegundos", secs * 1000.0);
+			log_info(compact_logger, "Compactacion finalizada. Tiempo Bloqueo: %.16g milisegundos", secs * 1000.0);
 			modificar_op_control(p_comp->tabla, 6);
 		}else{ //abortar compactacion
 			eliminar_tabla_lista_compac(p_comp->tabla);
