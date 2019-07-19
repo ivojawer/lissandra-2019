@@ -137,6 +137,15 @@ int crear_tabla_FS(char *tabla, int particiones, char *consistencia, int compact
 	return flag_creacion;
 }
 
+void crear_hilo_compactacion(char *tabla, int tiempo_compactacion)
+{
+	struct param_compactacion *p_comp = malloc(sizeof(struct param_compactacion));
+	p_comp->tabla = strdup(tabla);
+	p_comp->tiempo_compact = tiempo_compactacion;
+	pthread_create(&h_compactacion, NULL, (void *)iniciar_compactacion, (void *)p_comp);//pasar parametros
+	pthread_join(h_compactacion, NULL);
+}
+
 void rutina_create(char* comando)
 {
 	printf("Operacion: CREATE\n");
