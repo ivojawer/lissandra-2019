@@ -154,6 +154,7 @@ void rutina_create(char* comando)
 	printf("Tiempo de compactacion: %d\n", compactacion);
 
 	if(controlar_bloques_disponibles(particiones) == 0){
+		enviarIntConHeader(socket_memoria, ERROR, RESPUESTA);
 		printf("Se excede la cantidad de particiones disponibles\n");
 		return;
 	}
