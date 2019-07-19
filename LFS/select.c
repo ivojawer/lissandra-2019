@@ -296,15 +296,23 @@ void buscar_bloques_particion(char *tabla, int particion_buscar, int type_flag, 
 	string_append(&root,"Tablas/");
 	string_append(&root,tabla);
 
-	if(type_flag == 1){ //Buscar temporales
-		 DIR *dir;
-		 dir = opendir(root);
-		 struct dirent *entrada;
-		 char **entrada_aux;
+	DIR *dir;
+	dir = opendir(root);
+	struct dirent *entrada;
+	char **entrada_aux;
+
+	switch(type_flag){
+	case 0:
+		string_append(&root, "/part");
+		string_append(&root, string_itoa(particion_buscar));
+		string_append(&root,".bin");
+		cargar_bloques(root, bloques_buscar);
+		break;
+	case 1:
 		 while ((entrada = readdir(dir)) != NULL){
 			 entrada_aux = string_split(entrada->d_name, ".");
 			 if(entrada_aux[1] != NULL){
-				 if (strcmp(entrada_aux[1],"tmp")==0){
+				 if (strcmp(entrada_aux[1],"tmp")==0) {
 					 char root_aux[256] = "";
 					 sprintf(root_aux, "%s/%s", root, entrada->d_name);
 					 cargar_bloques(root_aux, bloques_buscar);
@@ -313,14 +321,52 @@ void buscar_bloques_particion(char *tabla, int particion_buscar, int type_flag, 
 			 }
 		 }
 		closedir(dir);
-	 }else{
-		 string_append(&root, "/part");
-		 string_append(&root, string_itoa(particion_buscar));
-	 	 string_append(&root,".bin");
-	 	cargar_bloques(root, bloques_buscar);
-	 }
+		break;
+	case 2:
+		while ((entrada = readdir(dir)) != NULL){
+			entrada_aux = string_split(entrada->d_name, ".");
+			if(entrada_aux[1] != NULL){
+				if (strcmp(entrada_aux[1],"tmpc")==0) {
+					char root_aux[256] = "";
+					sprintf(root_aux, "%s/%s", root, entrada->d_name);
+					cargar_bloques(root_aux, bloques_buscar);
+					memset(root_aux, 0x0, sizeof(root_aux));
+				}
+			}
+		}
+		closedir(dir);
+		break;
+	default:
+		printf("Error en pedido de SELECT\n");
+		break;
+	}
+
+
+//	if(type_flag == 1){ //Buscar temporales
+//		 DIR *dir;
+//		 dir = opendir(root);
+//		 struct dirent *entrada;
+//		 char **entrada_aux;
+//		 while ((entrada = readdir(dir)) != NULL){
+//			 entrada_aux = string_split(entrada->d_name, ".");
+//			 if(entrada_aux[1] != NULL){
+//				 if (strcmp(entrada_aux[1],"tmp")==0){
+//					 char root_aux[256] = "";
+//					 sprintf(root_aux, "%s/%s", root, entrada->d_name);
+//					 cargar_bloques(root_aux, bloques_buscar);
+//					 memset(root_aux, 0x0, sizeof(root_aux));
+//				 }
+//			 }
+//		 }
+//		closedir(dir);
+//	 }else{
+//		 string_append(&root, "/part");
+//		 string_append(&root, string_itoa(particion_buscar));
+//	 	 string_append(&root,".bin");
+//	 	cargar_bloques(root, bloques_buscar);
+//	 }
 	free(root);
- }//fin buscar_bloques_particion
+}//fin buscar_bloques_particion
 
 
 
@@ -412,6 +458,7 @@ t_par_valor_timestamp *filtrar_timestamp_mayor(t_list *timestamp_valor, int list
 	t_list *timestamp_valor = list_create();
 	buscar_bloques_particion(tabla, particion_buscar, 0, bloques_buscar); //Busca particion.bin
 	buscar_bloques_particion(tabla, particion_buscar, 1, bloques_buscar); //Busca .tmp
+	buscar_bloques_particion(tabla, particion_buscar, 1, bloques_buscar); //Busca .tmpc
 	cargar_timestamp_value(bloques_buscar, timestamp_valor, key); //Lee en los bloques y carga los pares en lista "timestamp_valor"
 
 	pthread_mutex_lock(&dump_semaphore);

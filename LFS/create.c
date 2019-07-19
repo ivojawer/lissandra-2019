@@ -173,6 +173,7 @@ void rutina_create(char* comando)
 		enviarIntConHeader(socket_memoria, ERROR, RESPUESTA);
 	}else if(crear_tabla_FS(tabla, particiones, consistencia, compactacion) == 0){
 		printf("Se creo la tabla [%s].\n",tabla);
+		crear_hilo_compactacion(tabla, compactacion);
 		enviarIntConHeader(socket_memoria, TODO_BIEN, RESPUESTA);
 	}else{
 		printf("Ocurrio un problema\nNo se pudo crear la Tabla\n");
