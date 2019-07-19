@@ -8,8 +8,9 @@ void compactar(char* tabla);
 void escribirEnBloquesTabla(t_list* tablaParticiones,char* nombreTabla);
 void escribirEnBloquesParticion(t_list* registrosDeParticion, int numeroParticion, char* tabla);
 int renombrarATmpc(char* tabla);
+void destruirTmpc(char* tabla, int cantidadTmpc);
 t_list* traerRegistrosBloques(char** bloques);
-void string_append_char(char* string, char c);
+void string_append_char(char** string, char c);
 
 //-----------------------------------------------------
 // ------------- getters paths completos --------------
