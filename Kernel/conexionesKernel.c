@@ -82,12 +82,6 @@ void conectarseAUnaMemoria(seed* unaSeed) {
 
 	log_info(logger, "Se conecto la memoria %i", nuevaMemoria->nombre);
 
-//	request* fuggenRequest = malloc(sizeof(request));
-//
-//		fuggenRequest->requestEnInt = DESCRIBE;
-//		fuggenRequest->parametros = " ";
-//
-//		enviarRequestConHeaderEId(nuevaMemoria->socket,fuggenRequest,REQUEST,0);
 
 	comunicacionConMemoria(nuevaMemoria);
 

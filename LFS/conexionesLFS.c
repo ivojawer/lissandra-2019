@@ -79,7 +79,7 @@ void comunicacion_con_memoria()
 
 void aceptar_conexiones()
 {
-		t_config* config = config_create("/home/utnso/workspace/tp-2019-1c-U-TN-Tecno/CONFIG/LFS.config");
+		t_config* config = config_create("../../CONFIG/LFS.config");
 
 		int puerto_servidor = config_get_int_value(config, "PUERTO_ESCUCHA");
 
