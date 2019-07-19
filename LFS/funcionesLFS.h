@@ -48,6 +48,11 @@ struct describe {
 	int compaction_time;
 };
 
+struct param_compactacion {
+	char *tabla;
+	int tiempo_compact;
+};
+
 typedef struct {
 	unsigned long timestamp;
 	uint16_t key;
@@ -96,6 +101,15 @@ t_list* op_control_list;
 sem_t requests_disponibles;
 sem_t bloques_bitmap;
 
+//Compactacion
+t_list *lista_tabla_compact;
+pthread_t h_compactacion;
+
+struct flag_y_tabla{
+	char *tabla;
+	int exit_flag;
+};
+
 //Usadas por varias funciones
 t_bitarray *bitarray;
 int obtener_particiones_metadata(char* tabla);
@@ -120,6 +134,7 @@ int controlar_bloques_disponibles(int cantArchivos);
 void desmarcar_bloque_bitmap(t_bloque *elemento);
 t_bloque *crear_bloque_buscar(char *bloque);
 void bloque_destroy(t_bloque *self);
+void compactacion_tablas_existentes();
 
 
 //para ejecutar requests
@@ -158,6 +173,7 @@ void guardar_bitarray(int index);
 int elegir_bloque_libre(int nr_bloques);
 void crear_particiones(char *dir, int particiones);
 int crear_tabla_FS(char *tabla, int particiones, char *consistencia, int compact_time);
+void crear_hilo_compactacion(char *tabla, int tiempo_compactacion);
 
 //DESCRIBE
 int tipo_describe(char *comando);

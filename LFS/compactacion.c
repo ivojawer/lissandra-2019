@@ -3,6 +3,66 @@
 extern char* puntoDeMontaje;
 extern int tamanioBloques;
 extern int cantidadBloques;
+extern t_log* logger;
+clock_t t_ini_compact, t_fin_compact;
+double secs;
+
+
+clock_t medir_tiempo ()
+{
+	clock_t t_inst;
+	t_inst = clock();
+	return t_inst;
+}
+
+
+bool coincide_tabla(void *elemento, char *tabla)
+{
+	return(strcmp(((struct flag_y_tabla *)elemento)->tabla, tabla) == 0);
+}
+
+
+int check_drop_on_table(char *tabla)
+{
+	int exit_value = 0;
+//	printf("T:%s\n", tabla);
+	bool coincide_valor(void *elemento){
+		return coincide_tabla(elemento, tabla);
+	}
+
+	struct flag_y_tabla *tabla_buscada = malloc(sizeof(struct flag_y_tabla));
+	tabla_buscada = list_find(lista_tabla_compact, coincide_valor);
+
+	if (tabla_buscada->exit_flag == 1)
+		exit_value = 1;
+
+	return exit_value;
+}
+
+
+void crear_tabla_compact(char *tabla)
+{
+	struct flag_y_tabla *new_tabla = malloc(sizeof(struct flag_y_tabla));
+	new_tabla->tabla = strdup(tabla);
+	new_tabla->exit_flag = 0;
+	list_add(lista_tabla_compact, new_tabla);
+}
+
+void destruir_tabla_compac(void *self)
+{
+	struct flag_y_tabla *tabla = (struct flag_y_tabla *)self;
+	free(tabla->tabla);
+	free(tabla);
+}
+
+void eliminar_tabla_lista_compac(char *tabla)
+{
+	bool coincide_valor(void *elemento){
+		return coincide_tabla(elemento, tabla);
+	}
+
+	list_remove_and_destroy_by_condition(lista_tabla_compact, coincide_valor, destruir_tabla_compac);
+}
 
 
 
@@ -52,8 +112,6 @@ void compactar(char* tabla){
 	}
 	list_iterate(tablaTemporales,(void*)recorrerListaDeRegistros);
 
-	// aca se deberia: Bloquear la tabla para cualquier operación sobre la misma
-
 	//liberar bloques de todos:
 	void vaciarBloque(char* bloque){
 		t_bloque* bloq = crear_bloque_buscar(bloque);
@@ -68,7 +126,6 @@ void compactar(char* tabla){
 		char** bloquesTemporal = getBloquesTemporal(tabla,i);
 		string_iterate_lines(bloquesTemporal, (void*)vaciarBloque);
 	}
-	//
 
 	t_list* particionesEnChar = list_create();
 	void transformarAStrings(t_list* lista){
@@ -113,9 +170,39 @@ void compactar(char* tabla){
 	//list_destroy_and_destroy_elements(bytes_por_particion,(void*)funcionDestroyerInts);
 	//list_destroy_and_destroy_elements(tablaParticiones,(void*)funcionDestroyerLista); // hay que borrar una lista de listas
 	//list_destroy_and_destroy_elements(tablaTemporales,(void*)funcionDestroyerLista); // hay que borrar una lista de listas
+}//Fin_Compactar
 
-	//Desbloquear la tabla y dejar un registro de cuánto tiempo estuvo bloqueada la tabla para realizar esta operatoria
+
+void iniciar_compactacion(void *arg)
+{
+	struct param_compactacion *p_comp = malloc(sizeof(struct param_compactacion));
+	p_comp = (struct param_compactacion *)arg;
+
+	crear_tabla_compact(p_comp->tabla);
+
+	struct timespec tim, tim_2;
+	tim.tv_sec = p_comp->tiempo_compact*0.001;
+	tim.tv_nsec = 0;
+
+	while(1) {
+		nanosleep(&tim, &tim_2);
+		if (!check_drop_on_table(p_comp->tabla)) {
+			modificar_op_control(p_comp->tabla, 5);
+			t_ini_compact = medir_tiempo();
+			compactar(p_comp->tabla);
+			t_fin_compact = medir_tiempo();
+			secs = (double)(t_fin_compact - t_ini_compact) / CLOCKS_PER_SEC;
+			// printf("Tiempo Compactacion: %.16g milisegundos\n", secs * 1000.0);
+			log_info(logger, "Compactacion finalizada. Tiempo Bloqueo: %.16g milisegundos", secs * 1000.0);
+			modificar_op_control(p_comp->tabla, 6);
+		}else{ //abortar compactacion
+			eliminar_tabla_lista_compac(p_comp->tabla);
+			pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+			pthread_exit("");
+		}
+	}
 }
+
 
 void destruirTmpc(char* tabla, int cantidadTmpc){
 	for(int i = 0; i < cantidadTmpc; i++){

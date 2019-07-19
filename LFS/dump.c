@@ -325,31 +325,14 @@ void dump() {
 	}
 }
 
-void ejecutar_dump() {
+void ejecutar_dump()
+{
+	struct timespec tim, tim_2;
+	tim.tv_sec = tiempoDump*0.001;
+	tim.tv_nsec = 0;
 
-	struct sigaction sa;
-	sa.sa_handler = dump;
-	sa.sa_flags = SA_RESTART; //Porque setitimer es una funcion reentrante.
-
-	struct itimerval initial;
-	struct timeval tiempo_inicial;
-
-	tiempo_inicial.tv_usec = 0;
-	tiempo_inicial.tv_sec = 0;
-	tiempo_inicial.tv_usec = 900 * 1000; //Dejar hardcodeado así.
-	tiempo_inicial.tv_sec = 0.3; //Acá iría el tiempo de Dump pasado a segundos.
-
-	initial.it_interval = tiempo_inicial;
-	initial.it_value = tiempo_inicial;
-
-	sigaction(SIGALRM, &sa, NULL);
-
-	if (setitimer(ITIMER_REAL, &initial, NULL) == -1) {
-		perror("error calling setitimer()");
-	}
-
-	while (1) {
-		pause();
-		sleep(1);//RETARDO
+	while(1) {
+		nanosleep(&tim, &tim_2);
+		dump();
 	}
 }

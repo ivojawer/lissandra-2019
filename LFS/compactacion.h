@@ -4,6 +4,7 @@
 #include "funcionesLFS.h"
 
 void compactar(char* tabla);
+bool coincide_tabla(void *elemento, char *tabla);
 
 void escribirEnBloquesTabla(t_list* tablaParticiones,char* nombreTabla);
 void escribirEnBloquesParticion(t_list* registrosDeParticion, int numeroParticion, char* tabla);

@@ -4,6 +4,7 @@ extern t_log *logger;
 extern int socket_memoria;
 extern int cantidadBloques;
 extern char* puntoDeMontaje;
+extern void iniciar_compactacion(void *arg);
 
 void agregar_salto_de_linea(char *string) {
 	string_append(&string,"\n");
@@ -138,7 +139,6 @@ int crear_tabla_FS(char *tabla, int particiones, char *consistencia, int compact
 
 void rutina_create(char* comando)
 {
-	//CREATE [NOMBRE_TABLA] [TIPO_CONSISTENCIA] [NUMERO_PARTICIONES] [COMPACTION_TIME]
 	printf("Operacion: CREATE\n");
 
 	char *tabla = strdup(get_tabla(comando));
@@ -153,7 +153,7 @@ void rutina_create(char* comando)
 	int compactacion = get_tiempo_compactacion(comando);
 	printf("Tiempo de compactacion: %d\n", compactacion);
 
-	if(controlar_bloques_disponibles(particiones) == 0){
+	if (controlar_bloques_disponibles(particiones)  ==  0) {
 		enviarIntConHeader(socket_memoria, ERROR, RESPUESTA);
 		printf("Se excede la cantidad de particiones disponibles\n");
 		return;
@@ -165,7 +165,6 @@ void rutina_create(char* comando)
 	}else if(crear_tabla_FS(tabla, particiones, consistencia, compactacion) == 0){
 		printf("Se creo la tabla [%s].\n",tabla);
 		enviarIntConHeader(socket_memoria, TODO_BIEN, RESPUESTA);
-
 	}else{
 		printf("Ocurrio un problema\nNo se pudo crear la Tabla\n");
 		enviarIntConHeader(socket_memoria, ERROR, RESPUESTA);

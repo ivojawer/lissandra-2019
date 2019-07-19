@@ -5,6 +5,7 @@ extern void liberar_tabla(void *elemento);
 extern bool comparar_nombre(char *tabla, void *tabla_mt);
 extern char* puntoDeMontaje;
 extern t_list *memtable;
+extern bool coincide_tabla(void *elemento, char *tabla);
 
 void iterar_busqueda_de_bloques(void (foo)(char *, int, int, t_list *),
 		char *name, int part, int flag, t_list *lista, int cant) {
@@ -67,6 +68,19 @@ void eliminar_tabla(char *tabla) {
 	liberar_bloques(bloques_buscar);
 }
 
+void exit_tabla_compact(char *tabla){
+	bool coincide_valor(void *elemento){
+		return coincide_tabla(elemento, tabla);
+	}
+
+	struct flag_y_tabla *tabla_buscada = malloc(sizeof(struct flag_y_tabla));
+	tabla_buscada = list_find(lista_tabla_compact, coincide_valor);
+	tabla_buscada->exit_flag = 1;
+	list_remove_by_condition(lista_tabla_compact, coincide_valor);
+	list_add(lista_tabla_compact, tabla_buscada);
+}
+
+
 void rutina_drop(char* comando) {
 	printf("Rutina DROP\n");
 	char *tabla = get_tabla(comando);
@@ -74,6 +88,7 @@ void rutina_drop(char* comando) {
 	modificar_op_control(tabla, 3); //para no cruzarse con niguno
 	if (existe_tabla(tabla)){
 		eliminar_tabla(tabla);
+		exit_tabla_compact(tabla);
 
 		t_list *tabla_encontrada = list_create();
 		tabla_encontrada = filtrar_tabla_memtable(tabla);

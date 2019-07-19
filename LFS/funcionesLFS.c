@@ -12,6 +12,7 @@ extern int retardo; //en milisegundos
 extern int tamanioValue;
 extern int tiempoDump; //en milisegundos
 extern int full_space;
+extern void crear_hilo_compactacion(char *tabla, int tiempo_compactacion);
 
 extern FILE *fp_dump;
 
@@ -142,6 +143,7 @@ void iniciar_variables(){
 	memset(array_aux, 0X0, sizeof(array_aux));
 
 	op_control_list = list_create();
+	lista_tabla_compact = list_create();
 	cargar_op_control_tablas();
 
 	sem_init(&requests_disponibles,0,0);
@@ -149,33 +151,11 @@ void iniciar_variables(){
 
 	//agrego bitarray de cargar_configuracion_FS()
 	crear_bitarray(cantidadBloques);
-	//crear_bloques(cantidadBloques);
 
 	config_destroy(config);
 	config_destroy(metadataLFS);
 	free(dirMetadata);
 }
-
-void crear_bloques(int nr_blocks){
-
-	char* path_absoluto = string_new();
-	string_append(&path_absoluto, puntoDeMontaje);
-	string_append(&path_absoluto, "/Bloques/bloque");
-
-	for(int i = 0; i < nr_blocks; i++){
-		char* bloque = string_new();
-		string_append(&bloque,path_absoluto);
-		string_append(&bloque,string_itoa(i));
-		string_append(&bloque,".bin");
-
-		FILE* archivo_bloque = fopen(bloque,"a"); //con "a" si ya existe un bloque no lo sobreescribe
-		fclose(archivo_bloque);
-
-		free(bloque);
-	}
-	free(path_absoluto);
-}
-
 
 
 char* get_tabla(char* comando)
@@ -411,6 +391,28 @@ void cargar_op_control_tablas()
 	free(tablas);
 }
 
+
+
+void compactacion_tablas_existentes()
+{
+		struct dirent *sd;
+		char* tablas = string_new();
+		string_append(&tablas, puntoDeMontaje);
+		string_append(&tablas, "Tablas/");
+		DIR* dir = opendir(tablas);
+		while ((sd = readdir(dir)) != NULL) {
+			if ((strcmp((sd->d_name), ".") != 0) &&
+				(strcmp((sd->d_name), "..") != 0)){
+				crear_hilo_compactacion(sd->d_name,
+						obtener_tiempo_compactacion_metadata(sd->d_name));
+			}
+		}
+		closedir(dir);
+		free(tablas);
+}
+
+
+
 bool comparar_nombre_op_control(void *elemento, char *tabla)
 {
 	return (!strcmp(((struct op_control *)elemento)->tabla, tabla));
@@ -454,6 +456,7 @@ void modificar_op_control(char *tabla, int mod_flag)
 				pthread_mutex_unlock(&dump_semaphore); //si no puede ejecutar Drop, libera Dump
 				sem_wait(&(tabla_a_controlar->drop_sem));
 			} else {
+				tabla_a_controlar->drop_flag = 1;
 				pthread_mutex_unlock(&(tabla_a_controlar->mutex));
 				pthread_mutex_lock(&(tabla_a_controlar->tabla_sem));
 			}
@@ -466,6 +469,22 @@ void modificar_op_control(char *tabla, int mod_flag)
 			}
 
 			list_remove_and_destroy_by_condition(op_control_list, coincide_nombre_op, destruir_elemento);
+			break;
+		case 5: //Compactacion (se comporta parecido a Drop)
+			pthread_mutex_lock(&(tabla_a_controlar->mutex));
+			if (tabla_a_controlar->otros_flag > 0 ||
+				tabla_a_controlar->drop_flag == 1){
+			pthread_mutex_unlock(&(tabla_a_controlar->mutex));
+			sem_wait(&(tabla_a_controlar->drop_sem));
+			} else {
+				tabla_a_controlar->drop_flag = 1;
+				pthread_mutex_unlock(&(tabla_a_controlar->mutex));
+				pthread_mutex_lock(&(tabla_a_controlar->tabla_sem));
+			}
+			break;
+		case 6: //fin Compactacion
+			tabla_a_controlar->drop_flag = 0;
+			pthread_mutex_unlock(&(tabla_a_controlar->tabla_sem));
 			break;
 		default :
 			printf("mod_flag No reconocido\n");
