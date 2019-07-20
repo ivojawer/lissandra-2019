@@ -539,7 +539,7 @@ registro* recibirRegistro(int deQuien, t_log* logger) { //Si hubo error: registr
 
 	free(bufferTimestamp);
 
-	int tamanioKey = sizeof(typeof(elRegistro->timestamp));
+	int tamanioKey = sizeof(typeof(elRegistro->key));
 
 	void* bufferKey = malloc(tamanioKey);
 

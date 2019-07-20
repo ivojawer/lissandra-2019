@@ -426,8 +426,10 @@ t_par_valor_timestamp *filtrar_timestamp_mayor(t_list *timestamp_valor, int list
 }
 
 
- void buscar_en_todos_lados(char *tabla, uint16_t key, int particion_buscar)
+registro* buscar_en_todos_lados(char *tabla, uint16_t key, int particion_buscar)
  {
+	 registro* registroEncontrado = NULL;
+
 	t_list *bloques_buscar= list_create();
 	t_list *timestamp_valor = list_create();
 	buscar_bloques_particion(tabla, particion_buscar, 0, bloques_buscar); //Busca particion.bin
@@ -456,19 +458,25 @@ t_par_valor_timestamp *filtrar_timestamp_mayor(t_list *timestamp_valor, int list
 //	printf("Largo lista *timestamp_valor* %d\n", list_size(timestamp_valor));
 	if(lista_vacia(timestamp_valor)){
 //		printf("*timestamp_valor* VACIO\n");
-		enviarIntConHeader(socket_cliente, ERROR, RESPUESTA);//no testeado
+//		enviarIntConHeader(socket_cliente, ERROR, RESPUESTA);//no testeado
 	}else{
 		t_par_valor_timestamp *timestamp_value_max = filtrar_timestamp_mayor(timestamp_valor, list_size(timestamp_valor));
 		printf("El valor de la key ingresada es: %s\n", timestamp_value_max->valor);
 
-		if(timestamp_value_max->valor == NULL){
-			enviarIntConHeader(socket_cliente, ERROR, RESPUESTA);
-		}else{
-			enviarStringConHeader(socket_cliente, timestamp_value_max->valor, DATO);
+		if(timestamp_value_max->valor != NULL){
+
+			registroEncontrado = malloc(sizeof(registro));
+			registroEncontrado->key = key;
+			registroEncontrado->timestamp = timestamp_value_max->timestamp;
+			registroEncontrado->value = string_duplicate(timestamp_value_max->valor);
+
 		}
+
 	}
 	liberar_bloques_buscar(bloques_buscar);
 	liberar_timestamp_valor(timestamp_valor);
+
+	return registroEncontrado;
 }
 
 
@@ -478,7 +486,7 @@ void rutina_select(void* parametros)
 
 	struct parametros *info = (struct parametros*)parametros;
 	char *comando = strdup(info->comando);
-	socket_cliente = info->socket_cliente;
+	int socket_cliente = info->socket_cliente;
 
 	char *tabla = get_tabla(comando);
 	printf("tabla: %s\n", get_tabla(comando));
@@ -492,11 +500,22 @@ void rutina_select(void* parametros)
 
 		modificar_op_control(tabla, 1); //para no cruzarse con Drop
 
-		buscar_en_todos_lados(tabla, key, particion_buscar);
+		registro* resultadoBusqueda = buscar_en_todos_lados(tabla, key, particion_buscar);
+
+		if(resultadoBusqueda != NULL && socket_cliente != -1)
+		{
+//			log_info(logger,"Enviando resultado a la memoria");
+			enviarRegistroConHeader(socket_cliente,resultadoBusqueda,REGISTRO);
+		}
 
 		modificar_op_control(tabla, 2);
 	}else{
 		printf("No se ha podido realizar la operacion\n");
-		enviarIntConHeader(socket_cliente, ERROR, RESPUESTA);
+		if(socket_cliente != -1)
+		{
+//			log_info(logger,"Enviando ERROR a la memoria");
+			enviarIntConHeader(socket_cliente, ERROR, RESPUESTA);
+		}
+
 	}
 }

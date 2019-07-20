@@ -185,6 +185,7 @@ void iniciar_compactacion(void *arg)
 	tim.tv_nsec = 0;
 
 	while(1) {
+
 		nanosleep(&tim, &tim_2);
 		if (!check_drop_on_table(p_comp->tabla)) {
 			modificar_op_control(p_comp->tabla, 5);

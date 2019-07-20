@@ -132,6 +132,7 @@ t_list* recibirRequests (int deQuien, t_log* logger);
 int crearServidor(int puerto);
 int conectarseAServidor(char* ip, int puerto);
 char* ipDelCliente(int socketCliente);
+void enviarRegistroConHeader(int aQuien, registro* unRegistro, int header);
 
 #include "requests.h"
 

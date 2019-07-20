@@ -1,6 +1,7 @@
 #include "funcionesKernel.h"
 
 t_log* logger;
+t_log* loggerSigiloso;
 t_list* colaNEW;
 t_list* colaREADY;
 t_list* listaEXEC;
@@ -37,6 +38,7 @@ script* scriptRefreshMetadata;
 int main() {
 
 	logger = log_create("kernel.log", "kernel", 1, 0);
+	loggerSigiloso = log_create("kernel.log", "kernel", 0, 0);
 	t_config* config = config_create(DIRCONFIG);
 
 	quantum = config_get_int_value(config, "QUANTUM");

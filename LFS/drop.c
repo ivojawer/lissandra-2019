@@ -42,13 +42,12 @@ void eliminar_contenido_de_tabla(char *tabla) {
 
 void eliminar_tabla_fisicamente(char *tabla) {
 	char *root = string_new();
-	string_append(&root,puntoDeMontaje);
-	string_append(&root,"Tablas/");
+	string_append(&root, puntoDeMontaje);
+	string_append(&root, "Tablas/");
 	string_append(&root, tabla);
 	rmdir(root);
 	free(root);
 }
-
 
 void liberar_bloques(t_list *bloques_buscar) {
 	void desmarcar_bloque(void *elemento) {
@@ -68,8 +67,8 @@ void eliminar_tabla(char *tabla) {
 	liberar_bloques(bloques_buscar);
 }
 
-void exit_tabla_compact(char *tabla){
-	bool coincide_valor(void *elemento){
+void exit_tabla_compact(char *tabla) {
+	bool coincide_valor(void *elemento) {
 		return coincide_tabla(elemento, tabla);
 	}
 
@@ -80,34 +79,48 @@ void exit_tabla_compact(char *tabla){
 	list_add(lista_tabla_compact, tabla_buscada);
 }
 
+void rutina_drop(void* parametros) {
 
-void rutina_drop(char* comando) {
+	struct parametros *info = (struct parametros*) parametros;
+	char *comando = strdup(info->comando);
+	int socket_cliente = info->socket_cliente;
+
 	printf("Rutina DROP\n");
 	char *tabla = get_tabla(comando);
 	pthread_mutex_lock(&dump_semaphore);
 	modificar_op_control(tabla, 3); //para no cruzarse con niguno
-	if (existe_tabla(tabla)){
+	if (existe_tabla(tabla)) {
 		eliminar_tabla(tabla);
 		exit_tabla_compact(tabla);
 
 		t_list *tabla_encontrada = list_create();
 		tabla_encontrada = filtrar_tabla_memtable(tabla);
-		if(!lista_vacia(tabla_encontrada)){
+		if (!lista_vacia(tabla_encontrada)) {
 
-			void destruir_tabla(void *elemento){
+			void destruir_tabla(void *elemento) {
 				return liberar_tabla(elemento);
 			}
 
-			bool coincide_nombre(void *tabla_mt){
-					return comparar_nombre(tabla, tabla_mt);
+			bool coincide_nombre(void *tabla_mt) {
+				return comparar_nombre(tabla, tabla_mt);
 			}
 
-			list_remove_and_destroy_by_condition(memtable, coincide_nombre, destruir_tabla);
-			enviarIntConHeader(socket_memoria, TODO_BIEN, RESPUESTA);
+			list_remove_and_destroy_by_condition(memtable, coincide_nombre,
+					destruir_tabla);
+
+			if(socket_cliente != -1)
+			{
+				enviarIntConHeader(socket_cliente, TODO_BIEN, RESPUESTA);
+			}
+
 		}
-	}else{
+	} else {
 		printf("La tabla no se encuentra en el sistema\n");
-		enviarIntConHeader(socket_memoria, ERROR, RESPUESTA);
+		if(socket_cliente != -1)
+		{
+			enviarIntConHeader(socket_cliente, ERROR, RESPUESTA);
+		}
+
 	}
 	modificar_op_control(strdup(tabla), 4);
 	pthread_mutex_unlock(&dump_semaphore);

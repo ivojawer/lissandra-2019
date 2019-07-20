@@ -327,12 +327,15 @@ void dump() {
 
 void ejecutar_dump()
 {
-	struct timespec tim, tim_2;
-	tim.tv_sec = tiempoDump*0.001;
-	tim.tv_nsec = 0;
+//	struct timespec tim, tim_2;
+//	tim.tv_sec = tiempoDump*0.001;
+//	tim.tv_nsec = 0;
+
+	int sleepDump = tiempoDump/1000;
 
 	while(1) {
-		nanosleep(&tim, &tim_2);
+//		nanosleep(&tim, &tim_2);
+		sleep(sleepDump);
 		dump();
 	}
 }

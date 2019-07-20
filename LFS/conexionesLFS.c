@@ -12,10 +12,7 @@ void manejo_error_memoria(int socket_memoria) {
 	close(socket_memoria);
 }
 
-void comunicacion_con_memoria(void *arg) {
-	struct socket_info *socket_info;
-	socket_info = (struct socket_info *)arg;
-	int socket_cliente = socket_info->socket_memoria;
+void comunicacion_con_memoria(int socket_cliente) {
 
 	while (1) {
 
@@ -41,8 +38,7 @@ void comunicacion_con_memoria(void *arg) {
 			request_para_hilo->parametros = una_request->parametros;
 			request_para_hilo->requestEnInt = una_request->requestEnInt;
 
-			list_add(cola_requests, request_para_hilo);
-			sem_post(&requests_disponibles);
+			mandarAEjecutarRequest(request_para_hilo,socket_cliente);
 
 			break;
 		}
@@ -61,8 +57,8 @@ void comunicacion_con_memoria(void *arg) {
 					request_para_hilo->requestEnInt = INSERT;
 					request_para_hilo->parametros =
 							request_procesar->parametros;
-					list_add(cola_requests, request_para_hilo);
-					sem_post(&requests_disponibles);
+
+					mandarAEjecutarRequest(request_para_hilo,-1);
 				}
 			}
 
@@ -78,7 +74,7 @@ void comunicacion_con_memoria(void *arg) {
 		}
 
 		}
-		sleep(retardo);
+//		sleep(retardo);
 	}
 }
 
@@ -101,10 +97,10 @@ void aceptar_conexiones() {
 
 	while (1) {
 
-		sleep(retardo);
+//		sleep(retardo);
 		int socket_cliente = accept(socket_servidor, (void*) NULL, NULL);
 
-		enviarVariosIntsConHeader(socket_cliente, lista_ints, HANDSHAKE); //HANDSHAKE-LFS-MEMORIA
+		enviarVariosIntsConHeader(socket_cliente, lista_ints, HANDSHAKE); //HANDSHAKE-LFS-TamValue
 
 		int operacion = recibirInt(socket_cliente, logger);
 
@@ -122,14 +118,14 @@ void aceptar_conexiones() {
 			int socket_memoria = socket_cliente;
 
 			//struct para hilo
-			struct socket_info *socket_info = malloc(sizeof(struct socket_info));
+			struct socket_info *socket_info = malloc(
+					sizeof(struct socket_info));
 //			socket_info->socket_cliente = socket_cliente;
 			socket_info->socket_memoria = socket_memoria;
 
 			pthread_t h_conexion_memoria;
 			pthread_create(&h_conexion_memoria, NULL,
-					(void *) comunicacion_con_memoria,
-					socket_info);
+					(void *) comunicacion_con_memoria, socket_memoria);
 			pthread_detach(h_conexion_memoria);
 
 			continue;
@@ -143,40 +139,3 @@ void aceptar_conexiones() {
 		}
 	}
 }
-
-void messageHandler(char* lectura) {
-	if (string_is_empty(lectura)) {
-		log_info(logger, "No es una request valida, vuelva prontos \n");
-		free(lectura);
-
-	}
-
-	char** requestYParametros = string_n_split(lectura, 2, " ");
-
-	int requestEnInt = queRequestEs(requestYParametros[0]);
-
-	if (!esUnaRequestValida(lectura) || requestEnInt == JOURNAL
-	|| requestEnInt == ADD || requestEnInt == RUN) { //Si es invalida o es una request que no vale en el LFS
-
-		log_info(logger, "No es una request valida, vuelva prontos \n");
-
-		free(requestYParametros[1]);
-		free(requestYParametros[0]);
-		free(requestYParametros);
-		free(lectura);
-		return;
-
-	}
-
-	if (requestYParametros[1] == NULL) { //Para que no rompa en el string_duplicate de funcionesLFS.c
-		requestYParametros[1] = (char *) malloc(sizeof(" "));
-		strcpy(requestYParametros[1], " ");
-	}
-	log_info(logger, "mando a ejecutar una request");
-
-	request* requestParaHilo = malloc(sizeof(request));
-	requestParaHilo = crearStructRequest(lectura);
-
-	mandarAEjecutarRequest(requestParaHilo, 0);
-}
-
