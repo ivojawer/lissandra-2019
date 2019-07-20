@@ -118,6 +118,7 @@ void control_inotify(void *param);
 t_list* op_control_list;
 sem_t requests_disponibles;
 sem_t bloques_bitmap;
+sem_t refresh_config;
 pthread_t h_inotify;
 
 //Compactacion

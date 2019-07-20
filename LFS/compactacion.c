@@ -180,13 +180,16 @@ void iniciar_compactacion(void *arg)
 
 	crear_tabla_compact(p_comp->tabla);
 
+//	sem_wait(&refresh_config);
 	struct timespec tim, tim_2;
-	tim.tv_sec = p_comp->tiempo_compact*0.001;
-	tim.tv_nsec = 0;
+//	sem_post(&refresh_config);
 
 	while(1) {
-
+		tim.tv_sec = p_comp->tiempo_compact*0.001;
+		tim.tv_nsec = 0;
 		nanosleep(&tim, &tim_2);
+
+		printf("Se va a hacer la compactacion de la tabla %s",p_comp->tabla);
 		if (!check_drop_on_table(p_comp->tabla)) {
 			modificar_op_control(p_comp->tabla, 5);
 			t_ini_compact = medir_tiempo();

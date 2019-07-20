@@ -3,6 +3,8 @@
 extern t_list* memtable;
 extern t_log *dump_logger;
 
+extern sem_t sem_memtable;
+
 extern int cantidadBloques;
 extern int tamanioBloques;
 
@@ -47,9 +49,8 @@ void agregar_bloque_lista_tmp(t_list *bloques, int bloque_dump) {
 }
 
 void grabar_registro(char *root, char *registro_completo, int length_registro,
-					 int space_full, int index, int table_change,
-					 struct bloques_tmp *bloques_tmp, int flag_close_file)
-{
+		int space_full, int index, int table_change,
+		struct bloques_tmp *bloques_tmp, int flag_close_file) {
 	if (flag_close_file == 1 && fp_dump != NULL) {
 		fclose(fp_dump);
 		fp_dump = NULL;
@@ -80,7 +81,7 @@ void grabar_registro(char *root, char *registro_completo, int length_registro,
 			space_full = 2;
 		}
 
-		if (space_full == 0){ //Escribo registro
+		if (space_full == 0) { //Escribo registro
 			j = 0;
 			while ((j < length_registro) && (suma_size < espacio_libre)) {
 				fputc(registro_completo[j], fp_dump);
@@ -89,24 +90,25 @@ void grabar_registro(char *root, char *registro_completo, int length_registro,
 				j++;
 				bloques_tmp->size_total += size;
 			}
-			if ((j < length_registro) && ((suma_size == espacio_libre)
-			    || (suma_size > espacio_libre))){ //Si se queda sin espacio
+			if ((j < length_registro)
+					&& ((suma_size == espacio_libre)
+							|| (suma_size > espacio_libre))) { //Si se queda sin espacio
 				bloque_dump = elegir_bloque_libre(cantidadBloques); //Si devuelve -1, eliminar lo del otro registro y abortar.
 
-				 if(bloque_dump == -1){
-					 int i;
-					 char empty[1] = "";
-					 strcpy(empty, " ");
-					 bloques_tmp->size_total -= j; //MENTIRA, pero solo me quedo con el size de datos
-					 fp_dump->_offset = suma_size-j; //vuelvo al inicio de la ultima linea
-					 fseek(fp_dump, 0l, SEEK_CUR);
-					 for(i = 0; i < j; i++){
-						 fputc(empty[0], fp_dump);
-					 }
-					 fclose(fp_dump);
-					 err_flag = 1;
-					 return;
-				 }
+				if (bloque_dump == -1) {
+					int i;
+					char empty[1] = "";
+					strcpy(empty, " ");
+					bloques_tmp->size_total -= j; //MENTIRA, pero solo me quedo con el size de datos
+					fp_dump->_offset = suma_size - j; //vuelvo al inicio de la ultima linea
+					fseek(fp_dump, 0l, SEEK_CUR);
+					for (i = 0; i < j; i++) {
+						fputc(empty[0], fp_dump);
+					}
+					fclose(fp_dump);
+					err_flag = 1;
+					return;
+				}
 
 				fclose(fp_dump);
 				agregar_bloque_lista_tmp(bloques_tmp->bloques, bloque_dump);
@@ -122,8 +124,7 @@ void grabar_registro(char *root, char *registro_completo, int length_registro,
 }
 
 void guardar_registros_en_bloques(t_registro *registro_recv, int table_change,
-								 struct bloques_tmp *bloques_tmp_tabla)
-{
+		struct bloques_tmp *bloques_tmp_tabla) {
 	/*
 	 * table_change = 0 NUEVA TABLA/CAMBIAR TABLA
 	 * table_change = 1 NO CAMBIAR TABLA
@@ -142,18 +143,18 @@ void guardar_registros_en_bloques(t_registro *registro_recv, int table_change,
 	if (table_change == 0) {
 		memset(&root[0], 0x0, sizeof(root));
 		bloque_dump = elegir_bloque_libre(cantidadBloques);
-		if(bloque_dump != -1){
+		if (bloque_dump != -1) {
 			agregar_bloque_lista_tmp(bloques_tmp_tabla->bloques, bloque_dump); //Para crear el archivo temporal
-			sprintf(root, "%s/Bloques/bloque%d.bin", puntoDeMontaje, bloque_dump);
-		}else{
+			sprintf(root, "%s/Bloques/bloque%d.bin", puntoDeMontaje,
+					bloque_dump);
+		} else {
 			err_flag = 1;
 			return;
 		}
 	}
-	grabar_registro(root, registro_completo, strlen(registro_completo), 0,
-					0, table_change, bloques_tmp_tabla, 0);
+	grabar_registro(root, registro_completo, strlen(registro_completo), 0, 0,
+			table_change, bloques_tmp_tabla, 0);
 }
-
 
 int obtener_size(char *size_array) //Se puede usar en COMPACTACION. Recibe la primer linea leída
 {
@@ -182,7 +183,7 @@ void agregar_bloque_particion(void *elemento) {
 	char* root = string_duplicate(puntoDeMontaje);
 	string_append(&root, "Tablas/");
 	string_append(&root, blocks_info->tabla);
-	next_tmp = contar_archivos_con_extension(root,"tmp");// + 1;
+	next_tmp = contar_archivos_con_extension(root, "tmp"); // + 1;
 
 	free(root);
 
@@ -214,30 +215,30 @@ void agregar_bloque_particion(void *elemento) {
 
 void liberar_elementos_particiones(void *elemento) {
 	t_particion *particion = elemento;
-	void liberar_elementos_particion(void *elemento){
-		if(elemento != NULL)
-		return registro_destroy((t_registro *) elemento);
+	void liberar_elementos_particion(void *elemento) {
+		if (elemento != NULL)
+			return registro_destroy((t_registro *) elemento);
 	}
 	list_iterate(particion->lista_registros, liberar_elementos_particion);
 }
 
 void liberar_tabla(void *elemento) {
 	t_tabla *tabla = elemento;
-	if(tabla != NULL){
-	void liberar_elementos_tabla(void *elemento) {
-		if(elemento != NULL)
-			return liberar_elementos_particiones(elemento);
-	}
-
-	if(list_size(tabla->lista_particiones) > 0){
-		list_iterate(tabla->lista_particiones, liberar_elementos_tabla);
-
-		void liberar_particiones(void *elemento) {
-			if(elemento != NULL)
-				return particion_destroy((t_particion *) elemento);
+	if (tabla != NULL) {
+		void liberar_elementos_tabla(void *elemento) {
+			if (elemento != NULL)
+				return liberar_elementos_particiones(elemento);
 		}
-		list_iterate(tabla->lista_particiones, liberar_particiones);
-	}
+
+		if (list_size(tabla->lista_particiones) > 0) {
+			list_iterate(tabla->lista_particiones, liberar_elementos_tabla);
+
+			void liberar_particiones(void *elemento) {
+				if (elemento != NULL)
+					return particion_destroy((t_particion *) elemento);
+			}
+			list_iterate(tabla->lista_particiones, liberar_particiones);
+		}
 	}
 }
 
@@ -263,44 +264,52 @@ void liberar_lista_bloques(t_list *lista_bloques_tmp) {
 }
 
 void dump() {
+	pthread_mutex_lock(&dump_semaphore); //influye en todas las tablas
 	err_flag = 0;
-	if(!lista_vacia(memtable)){
+
+	if (!lista_vacia(memtable)) {
 		int i, j, k;
 		int table_change;
 		int siga_siga = 0;
 		lista_bloques_tmp = list_create();
-		pthread_mutex_lock(&dump_semaphore); //influye en todas las tablas
-		for (i = 0; i < list_size(memtable); i++){
+		log_info(dump_logger, "Se va a hacer el dump");
+		sem_wait(&sem_memtable);
+		for (i = 0; i < list_size(memtable); i++) {
 			space_full = 0;
 			fp_dump = NULL;
 			table_change = 0;
 			t_tabla *tabla = malloc(sizeof(t_tabla));
 			tabla = list_get(memtable, i);
-			if(existe_tabla(tabla->name_tabla)){
-				struct bloques_tmp *bloques_tmp_tabla = malloc(sizeof(struct bloques_tmp));
+			if (existe_tabla(tabla->name_tabla)) {
+				struct bloques_tmp *bloques_tmp_tabla = malloc(
+						sizeof(struct bloques_tmp));
 				bloques_tmp_tabla = crear_bloques_tmp(tabla->name_tabla); //Bloques donde se guardan registros
-				for(j = 0; j < list_size(tabla->lista_particiones); j++){
+				for (j = 0; j < list_size(tabla->lista_particiones); j++) {
 					t_particion *particion = malloc(sizeof(t_particion));
 					particion = list_get(tabla->lista_particiones, j);
-					for (k = 0; k < list_size(particion->lista_registros); k++) {
+					for (k = 0; k < list_size(particion->lista_registros);
+							k++) {
 						t_registro *registro = malloc(sizeof(t_registro));
 						registro = list_get(particion->lista_registros, k);
-						if(strlen(registro->value) > 0){
+						if (strlen(registro->value) > 0) {
 							if (table_change == 0 && k == 1)
 								table_change = 1;
 							guardar_registros_en_bloques(registro, table_change,
-													 bloques_tmp_tabla);//Control de error aca
-							if(err_flag == 1){
+									bloques_tmp_tabla); //Control de error aca
+							if (err_flag == 1) {
 								full_space++;
-								log_info(dump_logger, "Dump finalizado. No se pudo guardar un registro por falta de espacio.");
-								if(full_space == 1)
-									printf("Dump finalizado. No se pudo guardar un registro por falta de espacio\n");
+								log_info(dump_logger,
+										"Dump finalizado. No se pudo guardar un registro por falta de espacio.");
+								if (full_space == 1)
+									printf(
+											"Dump finalizado. No se pudo guardar un registro por falta de espacio\n");
 								pthread_mutex_unlock(&dump_semaphore);
+								sem_post(&sem_memtable);
 								return;
 							}
 							full_space = 0;
 							siga_siga = 1;
-						}else{
+						} else {
 							free(bloques_tmp_tabla);
 							free(lista_bloques_tmp);
 							siga_siga = 0;
@@ -308,34 +317,45 @@ void dump() {
 						void liberar_elementos_particion(void *elemento) {
 							return registro_destroy((t_registro *) elemento);
 						}
-						list_remove_and_destroy_element(particion->lista_registros, k, liberar_elementos_particion);
+						list_remove_and_destroy_element(
+								particion->lista_registros, k,
+								liberar_elementos_particion);
 					}
 				}
-				grabar_registro("NULL", "NULL", 0, 0, 0, 0, bloques_tmp_tabla, 1); //Close fp_dump
-				if(siga_siga == 1){
+				grabar_registro("NULL", "NULL", 0, 0, 0, 0, bloques_tmp_tabla,
+						1); //Close fp_dump
+				if (siga_siga == 1) {
 					list_add(lista_bloques_tmp, bloques_tmp_tabla);
 				}
 			}
 		}
-		if(siga_siga == 1){
+		if (siga_siga == 1) {
 			guardar_bloques_metadata(lista_bloques_tmp);
 			liberar_lista_bloques(lista_bloques_tmp);
 		}
-	pthread_mutex_unlock(&dump_semaphore);
+		sem_post(&sem_memtable);
+		pthread_mutex_unlock(&dump_semaphore);
+	}
+	else
+	{
+		pthread_mutex_unlock(&dump_semaphore);
 	}
 }
 
-void ejecutar_dump()
-{
+void ejecutar_dump() {
 //	struct timespec tim, tim_2;
 //	tim.tv_sec = tiempoDump*0.001;
 //	tim.tv_nsec = 0;
 
-	int sleepDump = tiempoDump/1000;
+	int sleepDump;
 
-	while(1) {
+	while (1) {
 //		nanosleep(&tim, &tim_2);
+//		sem_wait(&refresh_config); //Con los semaforos no lo reconoce
+		sleepDump = tiempoDump/1000;
 		sleep(sleepDump);
+
 		dump();
+//		sem_post(&refresh_config);
 	}
 }
