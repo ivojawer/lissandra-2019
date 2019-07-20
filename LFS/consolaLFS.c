@@ -21,7 +21,7 @@ void consola() {
 			continue;
 		}
 		request* requestParaHilo = crearStructRequest(lectura);
-		mandarAEjecutarRequest(requestParaHilo, 0); //Esto podria ser un hilo?
+		mandarAEjecutarRequest(requestParaHilo, -1); //Esto podria ser un hilo?
 		liberarArrayDeStrings(requestYParametros);
 	}
 }

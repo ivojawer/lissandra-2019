@@ -37,3 +37,16 @@
 [INFO] 12:38:44:586 LFS/(3904:3917): Se conecto una Memoria
 [INFO] 12:38:57:909 LFS/(3904:3918): Se va a ejecutar CREATE CITIES SC 5 60000
 [INFO] 12:38:58:929 LFS/(3904:3918): Se va a ejecutar CREATE COUNTRIES SC 1 60000
+[INFO] 19:59:17:944 LFS/(13406:13427): Se conecto una Memoria
+[ERROR] 20:01:39:323 LFS/(13406:13430): Se recibio algo incorrecto de Memoria, se cierra la conexion.
+[INFO] 20:02:36:463 LFS/(13561:13574): Se conecto una Memoria
+[ERROR] 20:04:15:8 LFS/(13561:13591): Se recibio algo incorrecto de Memoria, se cierra la conexion.
+[INFO] 20:05:14:824 LFS/(13713:13724): Se conecto una Memoria
+[ERROR] 20:06:39:957 LFS/(13713:13728): Se recibio algo incorrecto de Memoria, se cierra la conexion.
+[INFO] 20:40:47:141 LFS/(14751:14762): Se conecto una Memoria
+[INFO] 20:46:18:689 LFS/(14907:14918): Se conecto una Memoria
+[INFO] 21:30:03:968 LFS/(16372:16400): Se conecto una Memoria
+[INFO] 21:57:25:487 LFS/(17246:17259): Se conecto una Memoria
+[INFO] 22:00:06:523 LFS/(17371:17383): Se conecto una Memoria
+[INFO] 22:04:43:755 LFS/(17557:17570): Se conecto una Memoria
+[INFO] 22:42:06:20 LFS/(18702:18713): Se conecto una Memoria

@@ -14,6 +14,7 @@ extern sem_t sem_borradoMemoria;
 extern sem_t sem_refreshConfig;
 extern sem_t sem_operacionesTotales;
 extern t_log* logger;
+extern t_log* loggerSigiloso;
 extern int idInicial;
 extern int proximaMemoriaEC;
 extern int sleepEjecucion;
@@ -97,7 +98,7 @@ void journal() {
 	sem_post(&sem_borradoMemoria);
 
 	log_info(logger,
-			"Se ha mandado el JOURNAL a todas las memorias conocidas.");
+			"Se mando JOURNAL a todas las memorias conocidas.");
 }
 
 int ejecutarRequest(request* requestAEjecutar, script* elScript) {
@@ -210,7 +211,7 @@ int ejecutarRequest(request* requestAEjecutar, script* elScript) {
 
 	time_t tiempoFinal = time(NULL);
 
-	if (respuesta == 1) {
+	if (respuesta == TODO_BIEN) {
 		insertarTiempo(tiempoInicial, tiempoFinal,
 				requestAEjecutar->requestEnInt);
 	}
@@ -228,26 +229,30 @@ void metrics(int loggear) {
 	int promedioSelect = promedioDeTiemposDeOperaciones(tiemposSelectAux);
 	int promedioInsert = promedioDeTiemposDeOperaciones(tiemposInsertAux);
 
+
+
 	if (loggear) {
 
-		log_info(logger, "----METRICS----");
+
+
+		log_info(loggerSigiloso, "----METRICS----");
 		if (promedioSelect == -1) {
-			log_info(logger, "Read latency: ---");
+			log_info(loggerSigiloso, "Read latency: ---");
 		} else {
-			log_info(logger, "Read latency: %i", promedioSelect);
+			log_info(loggerSigiloso, "Read latency: %i", promedioSelect);
 		}
 
 		if (promedioInsert == -1) {
-			log_info(logger, "Write latency: ---");
+			log_info(loggerSigiloso, "Write latency: ---");
 		} else {
-			log_info(logger, "Write latency: %i", promedioInsert);
+			log_info(loggerSigiloso, "Write latency: %i", promedioInsert);
 		}
 
-		log_info(logger, "Reads: %i", list_size(tiemposSelectAux));
-		log_info(logger, "Writes: %i", list_size(tiemposInsertAux));
+		log_info(loggerSigiloso, "Reads: %i", list_size(tiemposSelectAux));
+		log_info(loggerSigiloso, "Writes: %i", list_size(tiemposInsertAux));
 
 		sem_wait(&sem_operacionesTotales);
-		log_info(logger, "Operaciones totales: %i", operacionesTotales);
+		log_info(loggerSigiloso, "Operaciones totales: %i", operacionesTotales);
 		sem_post(&sem_operacionesTotales);
 
 		sem_wait(&sem_borradoMemoria);
@@ -256,7 +261,7 @@ void metrics(int loggear) {
 			memoriaEnLista* unaMemoria = list_get(memorias, i);
 
 			if (unaMemoria->estaViva) {
-				log_info(logger,
+				log_info(loggerSigiloso,
 						"--Memoria %i-- \nInserts Completos: %i \nInserts Fallidos: %i \nSelects Completos: %i \nSelects Fallidos: %i \nOperaciones totales: %i",
 						unaMemoria->nombre,
 						unaMemoria->estadisticas.insertsCompletos,
@@ -269,6 +274,7 @@ void metrics(int loggear) {
 		}
 
 		sem_post(&sem_borradoMemoria);
+
 
 	} else {
 		printf("\n\n----METRICS----");
@@ -307,10 +313,11 @@ void metrics(int loggear) {
 			}
 		}
 		sem_post(&sem_borradoMemoria);
+		printf("\n\n");
 
 	}
 
-	printf("\n\n");
+
 
 	list_destroy(tiemposSelectAux);
 	list_destroy(tiemposInsertAux);
@@ -341,14 +348,14 @@ void status() {
 	printf("SLEEP EJECUCION: %i\n", sleepEjecucion);
 	printf("REFRESH METADATA: %i\n", intervaloDeRefreshMetadata);
 	sem_post(&sem_refreshConfig);
-	printf("Memorias conectadas:");
+	printf("Memorias conectadas: ");
 	sem_wait(&sem_borradoMemoria);
 
 	for (int i = 0; i < list_size(memorias); i++) {
 		memoriaEnLista* unaMemoria = list_get(memorias, i);
 
 		if (unaMemoria->estaViva) {
-			printf(" %i,", unaMemoria->nombre);
+			printf("%i ", unaMemoria->nombre);
 		}
 
 	}
@@ -461,7 +468,7 @@ void refreshMetadatas() {
 
 		actualizarMetadatas(metadatas);
 
-		describirMetadatas(metadatas);
+//		log_info(logger,"Se actualizaron automaticamente las metadatas");
 
 	}
 
@@ -499,7 +506,7 @@ void gossipingAutomatico() {
 		sem_post(&sem_refreshConfig);
 
 		sleep(retardoGossip);
-		log_info(logger,"Se va a empezar a hacer el GOSSIPING");
+//		log_info(logger,"Se va a empezar a hacer el GOSSIPING");
 		conectarseASeedsDesconectadas();
 
 		enviarPeticionesDeGossip();

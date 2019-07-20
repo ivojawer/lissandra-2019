@@ -159,10 +159,10 @@ int get_tiempo_compactacion(char *comando);
 
 //funciones de rutina para cada tipo de operacion, el parametro comando es el choclo entero leido por consola
 void rutina_select(void* parametros);
-void rutina_insert(char* comando);
-void rutina_create(char* comando);
-void rutina_drop(char* comando);
-void rutina_describe(char* comando);
+void rutina_insert(void* parametros);
+void rutina_create(void* parametros);
+void rutina_drop(void* parametros);
+void rutina_describe(void* parametros);
 
 //INSERT
 t_registro *crear_registro(unsigned long timestamp, uint16_t key, char *value);
@@ -190,8 +190,9 @@ void cargar_datos_tabla(char *tabla);
 void mostrar_campos_describe(void *element);
 void mostrar_descripciones_metadata(t_list *lista_describe);
 void agregar_tablas_a_describir();
-void describe_full();
-void describe_particular(char *comando);
+void describe_full(int socket_cliente);
+void describe_particular(char *comando, int socket_cliente);
+
 
 //DROP
 void iterar_busqueda_de_bloques(void (foo)(char *, int, int, t_list *), char *name, int part, int flag, t_list *lista, int cant);

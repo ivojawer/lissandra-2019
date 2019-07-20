@@ -28,19 +28,18 @@ t_list *tabla_encontrada;
 t_list *lista_describe;
 int wait_particiones = 1;
 char *consistency;
-extern int socket_cliente;
 
 
 void ejecutar_peticion()
 {
-	while(1){
-		sem_wait(&requests_disponibles);
-//		printf("Tengo %d peticiones para ejecutar\n", cola_requests->elements_count);
-		request* request_a_ejecutar = list_get(cola_requests, 0); //Si por x motivo se acumulan varias, esto deberia cambiar
-		log_info(logger,"Se va a ejecutar %s",requestStructAString(request_a_ejecutar));
-		mandarAEjecutarRequest(request_a_ejecutar, socket_cliente);
-		list_remove(cola_requests,0); //Esto no se que tan bien esta pero en algun lado tengo que sacar la request
-	}
+//	while(1){
+//		sem_wait(&requests_disponibles);
+////		printf("Tengo %d peticiones para ejecutar\n", cola_requests->elements_count);
+//		requestConSocket* request_a_ejecutar = list_get(cola_requests, 0); //Si por x motivo se acumulan varias, esto deberia cambiar
+//		log_info(logger,"Se va a ejecutar %s",requestStructAString(request_a_ejecutar));
+//		mandarAEjecutarRequest(request_a_ejecutar, socket_cliente);
+//		list_remove(cola_requests,0); //Esto no se que tan bien esta pero en algun lado tengo que sacar la request
+//	}
 }
 
 

@@ -3,6 +3,7 @@ extern int sleepEjecucion;
 extern int intervaloDeRefreshMetadata;
 extern int quantum;
 extern sem_t sem_refreshConfig;
+extern t_list* listaTablas;
 
 void consola() {
 
@@ -22,16 +23,21 @@ void consola() {
 			continue;
 		}
 
+		if (!strcmp(lectura, "EXIT")) {
+			free(lectura);
+			return;
+		}
+		if (!strcmp(lectura, "METADATAS")) {
+			describirMetadatas(listaTablas);
+			free(lectura);
+			continue;
+		}
+
 		char** requestYParametros = string_n_split(lectura, 2, " ");
 
 		int requestEnInt = queRequestEs(requestYParametros[0]);
 
-		if (!strcmp(requestYParametros[0], "EXIT")) {
-			liberarArrayDeStrings(requestYParametros);
-			free(lectura);
-			return;
-
-		} else if (!strcmp(requestYParametros[0], "STATUS")) {
+		if (!strcmp(requestYParametros[0], "STATUS")) {
 			status();
 
 		} else if (!strcmp(requestYParametros[0], "METRICS")) {

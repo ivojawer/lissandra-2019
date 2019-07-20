@@ -650,7 +650,7 @@ void actualizarMetadatas(t_list* metadatas) {
 
 	listaTablas = metadatas;
 
-	log_info(logger, "Se termino de actualizar las metadatas.");
+	log_info(logger, "Se actualizaron las metadatas.");
 
 	sem_post(&sem_actualizacionMetadatas);
 }
@@ -722,7 +722,7 @@ int manejarRespuestaDeMemoria(script* elScript, request* laRequest, int memoria)
 		if (index == -1) {
 			sem_post(&sem_borradoMemoria);
 			free(elScript->resultadoDeEnvio);
-			return -1;
+			return ERROR;
 		}
 
 		memoriaEnLista* laMemoria = list_get(memorias,
@@ -852,10 +852,10 @@ int manejarRespuestaDeMemoria(script* elScript, request* laRequest, int memoria)
 
 	if(respuesta == ERROR)
 	{
-		return -1;
+		return ERROR;
 	}
 	else{
-		return 1;
+		return TODO_BIEN;
 	}
 
 }

@@ -106,7 +106,7 @@ void planificadorEXEC(int idScript) {
 		operacionesTotales++;
 		sem_post(&sem_operacionesTotales);
 
-		if (resultado == -1) {
+		if (resultado == ERROR) {
 
 			log_error(logger, "%s%i",
 					"Hubo un error en la ejecucion del script ",
