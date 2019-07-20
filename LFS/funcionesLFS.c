@@ -168,7 +168,7 @@ void controlExistenciaLFS(){
 		mkdir(directorioBloques,0700);
 		log_info(logger,"[Control existencia]: Creacion del directorio Bloques");
 	}else{
-		closedir(directorioBloques);
+		closedir(directorio);
 		log_info(logger,"[Control existencia]: Se encuentra el directorio Bloques");
 	}
 	free(directorioBloques);
@@ -182,7 +182,7 @@ void controlExistenciaLFS(){
 		mkdir(directorioTablas,0700);
 		log_info(logger,"[Control existencia]: Creacion del directorio Tablas");
 	}else{
-		closedir(directorioTablas);
+		closedir(directorio);
 		log_info(logger,"[Control existencia]: Se encuentra el directorio Tablas");
 	}
 	free(directorioTablas);
@@ -238,7 +238,7 @@ void controlExistenciaLFS(){
 		free(pathMetadata);
 
 	}else{
-		closedir(directorioMetadata);
+		closedir(directorio);
 		log_info(logger,"[Control existencia]: Se encuentra el directorio Metadata");
 	}
 	free(directorioMetadata);
