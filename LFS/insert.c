@@ -112,6 +112,7 @@ void agregar_registro_en_particion_existente(char *tabla, int particion_buscar,
 //}
 
 void rutina_insert(void* parametros) {
+	pthread_mutex_lock(&dump_semaphore);
 	printf("Operacion: INSERT\n");
 
 	struct parametros *info = (struct parametros*) parametros;
@@ -196,5 +197,6 @@ void rutina_insert(void* parametros) {
 		}
 	}
 //	liberar_tabla_encontrada(tabla_encontrada);
+	pthread_mutex_unlock(&dump_semaphore);
 }
 
