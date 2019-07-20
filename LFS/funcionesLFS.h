@@ -30,6 +30,9 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 
+#define CONFIG_RETARDO 16
+#define CONFIG_DUMP 17
+
 /*** ESTRUCTURAS ***/
 
 struct inotify{
@@ -104,6 +107,10 @@ typedef struct{
 //Generales
 void consola();
 void mandarAEjecutarRequest(request* requestAEjecutar, int socket);
+request* crearStructRequestInternaLFS(char* requestEnString);
+int queRequestEsInterno(char* palabra);
+void cambiarRetardo(void* parametros);
+void cambiarTiempoDump(void* parametros);
 void iniciar_variables();
 void controlExistenciaLFS();
 void crear_control_op(char *tabla);

@@ -108,10 +108,53 @@ void mandarAEjecutarRequest(request* requestAEjecutar, int socket)
 			break;
 
 		}
+	case CONFIG_RETARDO:
+		{
+			pthread_t h_configRetardo;
+
+			pthread_create(&h_configRetardo,NULL, (void*) cambiarRetardo, parametros);
+
+			pthread_detach(h_configRetardo);
+
+			break;
+		}
+
+	case CONFIG_DUMP:
+		{
+			pthread_t h_configDump;
+
+			pthread_create(&h_configDump,NULL, (void*) cambiarTiempoDump, parametros);
+
+			pthread_detach(h_configDump);
+
+			break;
+		}
 
 	}
 
 	liberarRequest(requestAEjecutar);
+}
+
+void cambiarRetardo(void* parametros){
+
+	struct parametros* info = (struct parametros*) parametros;
+	char* retardo = info->comando;
+
+	t_config* config = config_create("../../CONFIG/LFS.config");
+	config_set_value(config,"RETARDO",retardo);
+	config_save(config);
+	config_destroy(config);
+}
+
+void cambiarTiempoDump(void* parametros){
+
+	struct parametros* info = (struct parametros*) parametros;
+	char* tiempoDump = info->comando;
+
+	t_config* config = config_create("../../CONFIG/LFS.config");
+	config_set_value(config,"TIEMPO_DUMP",tiempoDump);
+	config_save(config);
+	config_destroy(config);
 }
 
 
