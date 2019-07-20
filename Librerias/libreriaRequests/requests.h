@@ -14,7 +14,8 @@
 #define ADD 6
 #define RUN 7
 #define METRICS 8
-#define STATUS 9
+
+#define STATUS 9 //no se si esta va a aca, de ultima lo saco
 
 //Cosos de comunicacion:
 

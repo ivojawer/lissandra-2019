@@ -1,11 +1,11 @@
 #include "requests.h"
 
 char *palabrasReservadas[10] = { "SELECT", "INSERT", "CREATE", "DESCRIBE",
-		"DROP", "JOURNAL", "ADD", "RUN", "METRICS", "STATUS" };
+		"DROP", "JOURNAL", "ADD", "RUN", "METRICS"};
 
 int queRequestEs(char* palabra) {
 
-	for (int i = 0; i < 10; i++) {
+	for (int i = 0; i < 9; i++) {
 
 		if (!strcmp(palabra, palabrasReservadas[i])) {
 			return i;
@@ -47,7 +47,7 @@ int queConsistenciaEs(char* string)
 
 int esUnParametroValido(int request, char* parametro) {
 
-	if (parametro == NULL && request != JOURNAL && request != DESCRIBE && request != STATUS) {
+	if (parametro == NULL && request != JOURNAL && request != DESCRIBE) {
 		return 0; //Se aborta la mision porque si no se rompe everything
 	}
 
@@ -276,16 +276,7 @@ int esUnParametroValido(int request, char* parametro) {
 		return 0;
 	}
 
-	case STATUS: {
 
-			if (parametro == NULL) { //Hay un parametro?
-
-				return 1; //No tiene que tener parametro
-
-			}
-
-			return 0;
-		}
 	}
 	return -1;
 

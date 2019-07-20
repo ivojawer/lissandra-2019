@@ -753,7 +753,7 @@ void status(){
 
 	list_iterate(tablaSegmentos, (void*)statusPorSegmento);
 
-	printf("Listado Marcos (M=modificado,K=key,TS=timestamp,T=tabla,V=value,)\n");
+	printf("Listado Marcos (M=modificado,K=key,TS=timestamp,T=tabla,V=value)\n");
 
 	for(int i = 0;i<cantMarcos;i++){
 		printf("Nro Marco:%d Status:%s\n",i,statusMarcos[i]);

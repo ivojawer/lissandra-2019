@@ -70,8 +70,8 @@ void consola() {
 
 		int requestEnInt = queRequestEs(requestYParametros[0]);
 
-		if (!esUnaRequestValida(
-				lectura) || requestEnInt == ADD || requestEnInt == RUN || requestEnInt == METRICS) { //Si es invalida o es una request que no vale en la memoria
+		if ((!esUnaRequestValida(lectura) && strcmp(lectura, "STATUS") != 0)||
+				requestEnInt == ADD || requestEnInt == RUN || requestEnInt == METRICS) { //Si es invalida o es una request que no vale en la memoria
 
 			printf("No es una request valida, vuelva prontos \n");
 
@@ -80,10 +80,19 @@ void consola() {
 
 			continue;
 		}
-		requestConID* requestAEjecutar = malloc(sizeof(requestConID));
-		requestAEjecutar->laRequest = crearStructRequest(lectura);
-		requestAEjecutar->idKernel = 0;
 
+
+		requestConID* requestAEjecutar = malloc(sizeof(requestConID));
+		if(strcmp(lectura, "STATUS") == 0){
+			request* requestNuevo = malloc(sizeof(request));
+			requestNuevo->parametros= string_duplicate(" ");
+			requestNuevo->requestEnInt= STATUS;
+			requestAEjecutar->laRequest = requestNuevo;
+			requestAEjecutar->idKernel = 0;
+		}else{
+			requestAEjecutar->laRequest = crearStructRequest(lectura);
+			requestAEjecutar->idKernel = 0;
+		}
 		list_add(colaDeRequests,requestAEjecutar);
 		sem_post(&requestsDisponibles);
 
