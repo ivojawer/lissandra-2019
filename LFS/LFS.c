@@ -38,11 +38,11 @@ int main() {
 
 	pthread_create(&h_consola, NULL, (void *) consola, NULL);
 	pthread_create(&h_dump, NULL, (void *)ejecutar_dump, NULL);
-//	pthread_create(&h_conexiones, NULL, (void *) aceptar_conexiones, NULL);
+	pthread_create(&h_conexiones, NULL, (void *) aceptar_conexiones, NULL);
 	pthread_create(&h_peticiones, NULL, (void *) ejecutar_peticion, NULL);
 	compactacion_tablas_existentes();
 
-//	pthread_detach(h_conexiones);
+	pthread_detach(h_conexiones);
 	pthread_join(h_peticiones,NULL);
 	pthread_join(h_dump, NULL);
 	pthread_join(h_consola, NULL);

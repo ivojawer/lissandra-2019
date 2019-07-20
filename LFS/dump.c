@@ -263,14 +263,13 @@ void liberar_lista_bloques(t_list *lista_bloques_tmp) {
 }
 
 void dump() {
-	printf("Dumpy\n");
+	pthread_mutex_lock(&dump_semaphore); //influye en todas las tablas
 	err_flag = 0;
 	if(!lista_vacia(memtable)){
 		int i, j, k;
 		int table_change;
 		int siga_siga = 0;
 		lista_bloques_tmp = list_create();
-		pthread_mutex_lock(&dump_semaphore); //influye en todas las tablas
 		for (i = 0; i < list_size(memtable); i++){
 			space_full = 0;
 			fp_dump = NULL;
