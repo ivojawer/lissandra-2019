@@ -30,9 +30,6 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 
-#define CONFIG_RETARDO 16
-#define CONFIG_DUMP 17
-
 /*** ESTRUCTURAS ***/
 
 struct inotify{
@@ -66,7 +63,7 @@ struct param_compactacion {
 };
 
 typedef struct {
-	unsigned long long timestamp;
+	unsigned long timestamp;
 	uint16_t key;
 	char* value;
 }t_registro;
@@ -107,10 +104,6 @@ typedef struct{
 //Generales
 void consola();
 void mandarAEjecutarRequest(request* requestAEjecutar, int socket);
-request* crearStructRequestInternaLFS(char* requestEnString);
-int queRequestEsInterno(char* palabra);
-void cambiarRetardo(void* parametros);
-void cambiarTiempoDump(void* parametros);
 void iniciar_variables();
 void controlExistenciaLFS();
 void crear_control_op(char *tabla);
@@ -120,6 +113,10 @@ sem_t requests_disponibles;
 sem_t bloques_bitmap;
 sem_t refresh_config;
 pthread_t h_inotify;
+
+
+void liberar_registro_dump(t_registro * elemento);
+
 
 //Compactacion
 t_list *lista_tabla_compact;

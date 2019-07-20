@@ -1,8 +1,7 @@
 #include "funcionesLFS.h"
 
+extern int socket_memoria;
 extern t_list* memtable;
-
-extern sem_t sem_memtable;
 
 extern int tamanioValue;
 
@@ -14,6 +13,16 @@ t_registro *crear_registro(unsigned long timestamp, uint16_t key, char *value) {
 
 	return new;
 }
+
+void liberar_registro_dump(t_registro * elemento)
+{
+	elemento->key = 0;
+	elemento->timestamp = 0;
+	elemento->value = NULL;
+}
+
+
+
 
 void registro_destroy(t_registro *self) {
 	if (self != NULL) {
@@ -72,14 +81,12 @@ void agregar_particion_en_tabla_existente(char* tabla,
 		t_particion *nueva_particion) {
 	int i;
 	t_tabla *tabla_extraida;
-	sem_wait(&sem_memtable);
 	for (i = 0; i < list_size(memtable); i++) {
 		tabla_extraida = (t_tabla *) list_get(memtable, i);
 		if (!strcmp(tabla_extraida->name_tabla, tabla)) {
 			list_add(tabla_extraida->lista_particiones, nueva_particion);
 		}
 	}
-	sem_post(&sem_memtable);
 }
 
 void agregar_registro_en_particion_existente(char *tabla, int particion_buscar,
@@ -88,7 +95,6 @@ void agregar_registro_en_particion_existente(char *tabla, int particion_buscar,
 	t_tabla *tabla_extraida = malloc(sizeof(t_tabla));
 	t_particion *particion_extraida = malloc(sizeof(t_particion));
 
-	sem_wait(&sem_memtable);
 	for (i = 0; i < list_size(memtable); i++) {
 		tabla_extraida = (t_tabla*) list_get(memtable, i);
 		if (!strcmp(tabla_extraida->name_tabla, tabla)) {
@@ -102,7 +108,6 @@ void agregar_registro_en_particion_existente(char *tabla, int particion_buscar,
 			}
 		}
 	}
-	sem_post(&sem_memtable);
 	//free(particion_extraida);
 	//free(tabla_extraida);
 }
@@ -138,7 +143,7 @@ void rutina_insert(void* parametros) {
 		{
 			enviarIntConHeader(socket_cliente, ERROR, RESPUESTA);
 		}
-		pthread_mutex_unlock(&dump_semaphore);
+
 		return;
 	} else {
 		printf("Value: %s\n", value);
@@ -171,9 +176,7 @@ void rutina_insert(void* parametros) {
 					nueva_tabla = crear_tabla_memtable(tabla);
 					agregar_particion_en_tabla_nueva(nueva_tabla,
 							nueva_particion);
-					sem_wait(&sem_memtable);
 					agregar_tabla_memtable(memtable, nueva_tabla);
-					sem_post(&sem_memtable);
 				} else if (lista_vacia(lista_particion_encontrada)) { //tabla en memtable pero la particion esta vacia
 					t_particion *nueva_particion = crear_particion_memtable(
 							size, particion_buscar);
