@@ -46,6 +46,7 @@ int main() {
 	pthread_join(h_peticiones,NULL);
 	pthread_join(h_dump, NULL);
 	pthread_join(h_consola, NULL);
+	pthread_join(h_inotify, NULL);
 
 	return 1;
 }

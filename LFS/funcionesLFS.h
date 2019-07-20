@@ -32,6 +32,10 @@
 
 /*** ESTRUCTURAS ***/
 
+struct inotify{
+	char *config_root;
+};
+
 struct parametros{
 	int socket_cliente;
 	char *comando;
@@ -103,9 +107,11 @@ void mandarAEjecutarRequest(request* requestAEjecutar, int socket);
 void iniciar_variables();
 void controlExistenciaLFS();
 void crear_control_op(char *tabla);
+void control_inotify(void *param);
 t_list* op_control_list;
 sem_t requests_disponibles;
 sem_t bloques_bitmap;
+pthread_t h_inotify;
 
 //Compactacion
 t_list *lista_tabla_compact;

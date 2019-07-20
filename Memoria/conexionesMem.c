@@ -78,6 +78,8 @@ void aceptarConexiones() {
 	list_add(listaInts, &nombreModulo);
 	list_add(listaInts, &nombreMemoria);
 
+
+
 	while (1) {
 
 		int socketMisterioso = accept(socketServidor, (void*) NULL, NULL);
