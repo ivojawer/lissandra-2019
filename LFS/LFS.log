@@ -90,3 +90,223 @@
 [INFO] 04:55:13:198 LFS/(32711:32739): Se intento crear la tabla ya existente: POSTRES.
 
 [ERROR] 04:58:43:71 LFS/(32711:32731): Se recibio algo incorrecto de Memoria, se cierra la conexion.
+[INFO] 08:06:31:983 LFS/(8394:8394): [Control existencia]: Se encuentra el directorio Bloques
+[INFO] 08:06:31:983 LFS/(8394:8394): [Control existencia]: Se encuentra el directorio Tablas
+[INFO] 08:06:31:983 LFS/(8394:8394): [Control existencia]: Se encuentra el directorio Metadata
+[INFO] 08:06:40:896 LFS/(8394:8418): Se conecto una Memoria
+[INFO] 08:10:42:806 LFS/(8596:8596): [Control existencia]: Se encuentra el directorio Bloques
+[INFO] 08:10:42:807 LFS/(8596:8596): [Control existencia]: Se encuentra el directorio Tablas
+[INFO] 08:10:42:807 LFS/(8596:8596): [Control existencia]: Se encuentra el directorio Metadata
+[INFO] 08:10:48:478 LFS/(8596:8619): Se conecto una Memoria
+[INFO] 08:22:16:82 LFS/(9067:9067): [Control existencia]: Se encuentra el directorio Bloques
+[INFO] 08:22:16:82 LFS/(9067:9067): [Control existencia]: Se encuentra el directorio Tablas
+[INFO] 08:22:16:82 LFS/(9067:9067): [Control existencia]: Se encuentra el directorio Metadata
+[INFO] 08:22:22:158 LFS/(9067:9092): Se conecto una Memoria
+[INFO] 08:28:09:529 LFS/(9339:9339): [Control existencia]: Se encuentra el directorio Bloques
+[INFO] 08:28:09:529 LFS/(9339:9339): [Control existencia]: Se encuentra el directorio Tablas
+[INFO] 08:28:09:529 LFS/(9339:9339): [Control existencia]: Se encuentra el directorio Metadata
+[INFO] 08:28:21:252 LFS/(9339:9355): Se conecto una Memoria
+[INFO] 09:05:30:682 LFS/(9908:9908): [Control existencia]: Se encuentra el directorio Bloques
+[INFO] 09:05:30:683 LFS/(9908:9908): [Control existencia]: Se encuentra el directorio Tablas
+[INFO] 09:05:30:683 LFS/(9908:9908): [Control existencia]: Se encuentra el directorio Metadata
+[INFO] 09:05:39:577 LFS/(9908:9953): Se conecto una Memoria
+[INFO] 12:13:34:176 LFS/(15288:15288): [Control existencia]: Se encuentra el directorio Bloques
+[INFO] 12:13:34:177 LFS/(15288:15288): [Control existencia]: Se encuentra el directorio Tablas
+[INFO] 12:13:34:178 LFS/(15288:15288): [Control existencia]: Se encuentra el directorio Metadata
+[INFO] 12:13:45:653 LFS/(15288:15311): Se va a hacer el dump
+[INFO] 12:13:48:140 LFS/(15288:15311): Se termino el dump
+[INFO] 12:14:11:142 LFS/(15288:15311): Se va a hacer el dump
+[INFO] 12:14:11:143 LFS/(15288:15311): Se termino el dump
+[INFO] 12:14:33:338 LFS/(15288:15311): Se va a hacer el dump
+[INFO] 12:14:38:956 LFS/(15288:15311): Se termino el dump
+[INFO] 12:14:44:45 LFS/(15288:15311): Se va a hacer el dump
+[INFO] 12:20:15:891 LFS/(15504:15504): [Control existencia]: Se encuentra el directorio Bloques
+[INFO] 12:20:15:891 LFS/(15504:15504): [Control existencia]: Se encuentra el directorio Tablas
+[INFO] 12:20:15:891 LFS/(15504:15504): [Control existencia]: Se encuentra el directorio Metadata
+[INFO] 12:20:18:903 LFS/(15504:15516): Se va a hacer el dump
+[INFO] 12:20:18:903 LFS/(15504:15516): Se termino el dump
+[INFO] 12:20:21:904 LFS/(15504:15516): Se va a hacer el dump
+[INFO] 12:20:21:905 LFS/(15504:15516): Se termino el dump
+[INFO] 12:20:24:905 LFS/(15504:15516): Se va a hacer el dump
+[INFO] 12:20:24:907 LFS/(15504:15516): Se termino el dump
+[INFO] 12:20:27:907 LFS/(15504:15516): Se va a hacer el dump
+[INFO] 12:20:27:908 LFS/(15504:15516): Se termino el dump
+[INFO] 12:20:30:908 LFS/(15504:15516): Se va a hacer el dump
+[INFO] 12:20:30:910 LFS/(15504:15516): Se termino el dump
+[INFO] 12:20:33:391 LFS/(15504:15529): Se intento crear la tabla ya existente: T.
+
+[INFO] 12:20:33:910 LFS/(15504:15516): Se va a hacer el dump
+[INFO] 12:20:33:912 LFS/(15504:15516): Se termino el dump
+[INFO] 12:20:36:912 LFS/(15504:15516): Se va a hacer el dump
+[INFO] 12:20:36:913 LFS/(15504:15516): Se termino el dump
+[INFO] 12:20:39:913 LFS/(15504:15516): Se va a hacer el dump
+[INFO] 12:20:39:914 LFS/(15504:15516): Se termino el dump
+[INFO] 12:20:42:914 LFS/(15504:15516): Se va a hacer el dump
+[INFO] 12:20:42:915 LFS/(15504:15516): Se termino el dump
+[INFO] 12:21:37:39 LFS/(15504:15516): Se va a hacer el dump
+[INFO] 12:35:25:250 LFS/(16346:16346): [Control existencia]: Se encuentra el directorio Bloques
+[INFO] 12:35:25:250 LFS/(16346:16346): [Control existencia]: Se encuentra el directorio Tablas
+[INFO] 12:35:25:250 LFS/(16346:16346): [Control existencia]: Se encuentra el directorio Metadata
+[INFO] 12:35:28:412 LFS/(16346:16360): Se va a hacer el dump
+[INFO] 12:35:28:412 LFS/(16346:16360): Se termino el dump
+[INFO] 12:35:31:413 LFS/(16346:16360): Se va a hacer el dump
+[INFO] 12:35:31:413 LFS/(16346:16360): Se termino el dump
+[INFO] 12:35:34:413 LFS/(16346:16360): Se va a hacer el dump
+[INFO] 12:35:34:413 LFS/(16346:16360): Se termino el dump
+[INFO] 12:35:37:414 LFS/(16346:16360): Se va a hacer el dump
+[INFO] 12:35:37:416 LFS/(16346:16360): Se termino el dump
+[INFO] 12:35:42:413 LFS/(16346:16360): Se va a hacer el dump
+[INFO] 12:35:42:413 LFS/(16346:16360): Se termino el dump
+[INFO] 12:35:45:414 LFS/(16346:16360): Se va a hacer el dump
+[INFO] 12:35:45:414 LFS/(16346:16360): Se termino el dump
+[INFO] 12:35:48:414 LFS/(16346:16360): Se va a hacer el dump
+[INFO] 12:35:48:414 LFS/(16346:16360): Se termino el dump
+[INFO] 12:35:51:415 LFS/(16346:16360): Se va a hacer el dump
+[INFO] 12:35:51:415 LFS/(16346:16360): Se termino el dump
+[INFO] 12:35:54:417 LFS/(16346:16360): Se va a hacer el dump
+[INFO] 12:35:54:417 LFS/(16346:16360): Se termino el dump
+[INFO] 12:35:57:418 LFS/(16346:16360): Se va a hacer el dump
+[INFO] 12:35:57:418 LFS/(16346:16360): Se termino el dump
+[INFO] 12:36:00:419 LFS/(16346:16360): Se va a hacer el dump
+[INFO] 12:36:00:419 LFS/(16346:16360): Se termino el dump
+[INFO] 12:36:03:419 LFS/(16346:16360): Se va a hacer el dump
+[INFO] 12:36:03:420 LFS/(16346:16360): Se termino el dump
+[INFO] 12:36:06:421 LFS/(16346:16360): Se va a hacer el dump
+[INFO] 12:36:06:421 LFS/(16346:16360): Se termino el dump
+[INFO] 12:36:45:393 LFS/(16346:16360): Se va a hacer el dump
+[INFO] 12:40:54:775 LFS/(16472:16472): [Control existencia]: Se encuentra el directorio Bloques
+[INFO] 12:40:54:775 LFS/(16472:16472): [Control existencia]: Se encuentra el directorio Tablas
+[INFO] 12:40:54:775 LFS/(16472:16472): [Control existencia]: Se encuentra el directorio Metadata
+[INFO] 12:40:57:901 LFS/(16472:16495): Se va a hacer el dump
+[INFO] 12:40:57:902 LFS/(16472:16495): Se termino el dump
+[INFO] 12:41:00:902 LFS/(16472:16495): Se va a hacer el dump
+[INFO] 12:41:00:902 LFS/(16472:16495): Se termino el dump
+[INFO] 12:41:03:903 LFS/(16472:16495): Se va a hacer el dump
+[INFO] 12:41:03:903 LFS/(16472:16495): Se termino el dump
+[INFO] 12:41:06:903 LFS/(16472:16495): Se va a hacer el dump
+[INFO] 12:41:06:904 LFS/(16472:16495): Se termino el dump
+[INFO] 12:41:09:905 LFS/(16472:16495): Se va a hacer el dump
+[INFO] 12:41:09:907 LFS/(16472:16495): Se termino el dump
+[INFO] 12:41:12:907 LFS/(16472:16495): Se va a hacer el dump
+[INFO] 12:41:12:908 LFS/(16472:16495): Se termino el dump
+[INFO] 12:41:15:908 LFS/(16472:16495): Se va a hacer el dump
+[INFO] 12:41:15:909 LFS/(16472:16495): Se termino el dump
+[INFO] 12:41:18:909 LFS/(16472:16495): Se va a hacer el dump
+[INFO] 12:41:18:910 LFS/(16472:16495): Se termino el dump
+[INFO] 12:41:21:911 LFS/(16472:16495): Se va a hacer el dump
+[INFO] 12:41:21:911 LFS/(16472:16495): Se termino el dump
+[INFO] 12:41:24:913 LFS/(16472:16495): Se va a hacer el dump
+[INFO] 12:41:24:913 LFS/(16472:16495): Se termino el dump
+[INFO] 12:41:27:914 LFS/(16472:16495): Se va a hacer el dump
+[INFO] 12:41:27:915 LFS/(16472:16495): Se termino el dump
+[INFO] 12:41:30:915 LFS/(16472:16495): Se va a hacer el dump
+[INFO] 12:41:30:916 LFS/(16472:16495): Se termino el dump
+[INFO] 12:41:33:916 LFS/(16472:16495): Se va a hacer el dump
+[INFO] 12:41:33:917 LFS/(16472:16495): Se termino el dump
+[INFO] 12:41:36:917 LFS/(16472:16495): Se va a hacer el dump
+[INFO] 12:41:36:918 LFS/(16472:16495): Se termino el dump
+[INFO] 12:41:39:919 LFS/(16472:16495): Se va a hacer el dump
+[INFO] 12:41:39:920 LFS/(16472:16495): Se termino el dump
+[INFO] 12:41:42:920 LFS/(16472:16495): Se va a hacer el dump
+[INFO] 12:41:42:922 LFS/(16472:16495): Se termino el dump
+[INFO] 12:41:45:922 LFS/(16472:16495): Se va a hacer el dump
+[INFO] 12:41:45:922 LFS/(16472:16495): Se termino el dump
+[INFO] 12:41:48:922 LFS/(16472:16495): Se va a hacer el dump
+[INFO] 12:41:48:923 LFS/(16472:16495): Se termino el dump
+[INFO] 12:41:51:923 LFS/(16472:16495): Se va a hacer el dump
+[INFO] 12:41:51:924 LFS/(16472:16495): Se termino el dump
+[INFO] 12:41:54:925 LFS/(16472:16495): Se va a hacer el dump
+[INFO] 12:41:54:925 LFS/(16472:16495): Se termino el dump
+[INFO] 12:41:57:925 LFS/(16472:16495): Se va a hacer el dump
+[INFO] 12:41:57:925 LFS/(16472:16495): Se termino el dump
+[INFO] 12:42:00:925 LFS/(16472:16495): Se va a hacer el dump
+[INFO] 12:42:00:926 LFS/(16472:16495): Se termino el dump
+[INFO] 12:42:03:926 LFS/(16472:16495): Se va a hacer el dump
+[INFO] 12:42:03:926 LFS/(16472:16495): Se termino el dump
+[INFO] 12:42:06:927 LFS/(16472:16495): Se va a hacer el dump
+[INFO] 12:42:06:927 LFS/(16472:16495): Se termino el dump
+[INFO] 12:42:09:928 LFS/(16472:16495): Se va a hacer el dump
+[INFO] 12:45:23:811 LFS/(16667:16667): [Control existencia]: Se encuentra el directorio Bloques
+[INFO] 12:45:23:811 LFS/(16667:16667): [Control existencia]: Se encuentra el directorio Tablas
+[INFO] 12:45:23:811 LFS/(16667:16667): [Control existencia]: Se encuentra el directorio Metadata
+[INFO] 12:45:26:826 LFS/(16667:16678): Se va a hacer el dump
+[INFO] 12:45:26:826 LFS/(16667:16678): Se termino el dump
+[INFO] 12:45:29:826 LFS/(16667:16678): Se va a hacer el dump
+[INFO] 12:45:29:827 LFS/(16667:16678): Se termino el dump
+[INFO] 12:45:32:827 LFS/(16667:16678): Se va a hacer el dump
+[INFO] 12:45:32:828 LFS/(16667:16678): Se termino el dump
+[INFO] 12:45:35:828 LFS/(16667:16678): Se va a hacer el dump
+[INFO] 12:45:35:829 LFS/(16667:16678): Se termino el dump
+[INFO] 12:45:38:829 LFS/(16667:16678): Se va a hacer el dump
+[INFO] 12:45:38:830 LFS/(16667:16678): Se termino el dump
+[INFO] 12:45:41:831 LFS/(16667:16678): Se va a hacer el dump
+[INFO] 12:45:41:832 LFS/(16667:16678): Se termino el dump
+[INFO] 12:46:07:194 LFS/(16730:16730): [Control existencia]: Se encuentra el directorio Bloques
+[INFO] 12:46:07:194 LFS/(16730:16730): [Control existencia]: Se encuentra el directorio Tablas
+[INFO] 12:46:07:194 LFS/(16730:16730): [Control existencia]: Se encuentra el directorio Metadata
+[INFO] 12:46:10:335 LFS/(16730:16741): Se va a hacer el dump
+[INFO] 12:46:10:337 LFS/(16730:16741): Se termino el dump
+[INFO] 12:46:13:337 LFS/(16730:16741): Se va a hacer el dump
+[INFO] 12:46:13:338 LFS/(16730:16741): Se termino el dump
+[INFO] 12:46:16:339 LFS/(16730:16741): Se va a hacer el dump
+[INFO] 12:46:16:339 LFS/(16730:16741): Se termino el dump
+[INFO] 12:46:19:340 LFS/(16730:16741): Se va a hacer el dump
+[INFO] 12:46:19:340 LFS/(16730:16741): Se termino el dump
+[INFO] 12:46:22:340 LFS/(16730:16741): Se va a hacer el dump
+[INFO] 12:46:22:343 LFS/(16730:16741): Se termino el dump
+[INFO] 12:46:25:343 LFS/(16730:16741): Se va a hacer el dump
+[INFO] 12:46:25:343 LFS/(16730:16741): Se termino el dump
+[INFO] 12:46:28:343 LFS/(16730:16741): Se va a hacer el dump
+[INFO] 12:46:28:343 LFS/(16730:16741): Se termino el dump
+[INFO] 12:46:31:344 LFS/(16730:16741): Se va a hacer el dump
+[INFO] 12:46:31:345 LFS/(16730:16741): Se termino el dump
+[INFO] 12:46:34:345 LFS/(16730:16741): Se va a hacer el dump
+[INFO] 12:46:34:347 LFS/(16730:16741): Se termino el dump
+[INFO] 12:46:37:349 LFS/(16730:16741): Se va a hacer el dump
+[INFO] 12:46:37:349 LFS/(16730:16741): Se termino el dump
+[INFO] 12:46:40:349 LFS/(16730:16741): Se va a hacer el dump
+[INFO] 12:46:40:350 LFS/(16730:16741): Se termino el dump
+[INFO] 12:46:43:350 LFS/(16730:16741): Se va a hacer el dump
+[INFO] 12:46:43:350 LFS/(16730:16741): Se termino el dump
+[INFO] 12:46:46:350 LFS/(16730:16741): Se va a hacer el dump
+[INFO] 12:46:46:350 LFS/(16730:16741): Se termino el dump
+[INFO] 12:46:49:351 LFS/(16730:16741): Se va a hacer el dump
+[INFO] 12:46:49:351 LFS/(16730:16741): Se termino el dump
+[INFO] 12:46:52:351 LFS/(16730:16741): Se va a hacer el dump
+[INFO] 12:46:52:351 LFS/(16730:16741): Se termino el dump
+[INFO] 12:46:55:352 LFS/(16730:16741): Se va a hacer el dump
+[INFO] 12:46:55:352 LFS/(16730:16741): Se termino el dump
+[INFO] 12:46:58:354 LFS/(16730:16741): Se va a hacer el dump
+[INFO] 12:46:58:354 LFS/(16730:16741): Se termino el dump
+[INFO] 12:47:01:355 LFS/(16730:16741): Se va a hacer el dump
+[INFO] 12:47:01:355 LFS/(16730:16741): Se termino el dump
+[INFO] 12:47:04:355 LFS/(16730:16741): Se va a hacer el dump
+[INFO] 12:47:04:357 LFS/(16730:16741): Se termino el dump
+[INFO] 12:47:07:357 LFS/(16730:16741): Se va a hacer el dump
+[INFO] 12:47:07:358 LFS/(16730:16741): Se termino el dump
+[INFO] 12:47:10:362 LFS/(16730:16741): Se va a hacer el dump
+[INFO] 12:47:10:362 LFS/(16730:16741): Se termino el dump
+[INFO] 12:48:47:111 LFS/(16874:16874): [Control existencia]: Se encuentra el directorio Bloques
+[INFO] 12:48:47:112 LFS/(16874:16874): [Control existencia]: Se encuentra el directorio Tablas
+[INFO] 12:48:47:112 LFS/(16874:16874): [Control existencia]: Se encuentra el directorio Metadata
+[INFO] 12:48:50:126 LFS/(16874:16886): Se va a hacer el dump
+[INFO] 12:48:50:126 LFS/(16874:16886): Se termino el dump
+[INFO] 12:48:53:126 LFS/(16874:16886): Se va a hacer el dump
+[INFO] 12:48:53:127 LFS/(16874:16886): Se termino el dump
+[INFO] 12:48:56:128 LFS/(16874:16886): Se va a hacer el dump
+[INFO] 12:48:56:129 LFS/(16874:16886): Se termino el dump
+[INFO] 12:48:59:129 LFS/(16874:16886): Se va a hacer el dump
+[INFO] 12:48:59:129 LFS/(16874:16886): Se termino el dump
+[INFO] 12:49:02:129 LFS/(16874:16886): Se va a hacer el dump
+[INFO] 12:49:02:130 LFS/(16874:16886): Se termino el dump
+[INFO] 12:49:02:140 LFS/(16874:16890): Se intento crear la tabla ya existente: TABLA1.
+
+[INFO] 12:49:05:133 LFS/(16874:16886): Se va a hacer el dump
+[INFO] 12:49:05:142 LFS/(16874:16886): Se termino el dump
+[INFO] 12:49:08:143 LFS/(16874:16886): Se va a hacer el dump
+[INFO] 12:49:08:144 LFS/(16874:16886): Se termino el dump
+[INFO] 12:49:11:144 LFS/(16874:16886): Se va a hacer el dump
+[INFO] 12:49:11:144 LFS/(16874:16886): Se termino el dump
+[INFO] 12:49:14:145 LFS/(16874:16886): Se va a hacer el dump
+[INFO] 12:49:14:145 LFS/(16874:16886): Se termino el dump
+[INFO] 12:49:17:145 LFS/(16874:16886): Se va a hacer el dump

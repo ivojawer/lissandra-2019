@@ -429,9 +429,9 @@ t_par_valor_timestamp *filtrar_timestamp_mayor(t_list *timestamp_valor, int list
 }
 
 
-registro* buscar_en_todos_lados(char *tabla, uint16_t key, int particion_buscar)
+t_registro* buscar_en_todos_lados(char *tabla, uint16_t key, int particion_buscar)
  {
-	 registro* registroEncontrado = NULL;
+	t_registro* registroEncontrado = NULL;
 
 	t_list *bloques_buscar= list_create();
 	t_list *timestamp_valor = list_create();
@@ -468,7 +468,7 @@ registro* buscar_en_todos_lados(char *tabla, uint16_t key, int particion_buscar)
 
 		if(timestamp_value_max->valor != NULL){
 
-			registroEncontrado = malloc(sizeof(registro));
+			registroEncontrado = malloc(sizeof(t_registro));
 			registroEncontrado->key = key;
 			registroEncontrado->timestamp = timestamp_value_max->timestamp;
 			registroEncontrado->value = string_duplicate(timestamp_value_max->valor);
@@ -503,7 +503,7 @@ void rutina_select(void* parametros)
 
 		modificar_op_control(tabla, 1); //para no cruzarse con Drop
 
-		registro* resultadoBusqueda = buscar_en_todos_lados(tabla, key, particion_buscar);
+		t_registro* resultadoBusqueda = buscar_en_todos_lados(tabla, key, particion_buscar);
 
 		if(resultadoBusqueda != NULL && socket_cliente != -1)
 		{

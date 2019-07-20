@@ -66,7 +66,7 @@ struct param_compactacion {
 };
 
 typedef struct {
-	unsigned long timestamp;
+	unsigned long long timestamp;
 	uint16_t key;
 	char* value;
 }t_registro;
