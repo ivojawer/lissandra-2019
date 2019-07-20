@@ -273,10 +273,10 @@ void escribirEnBloquesParticion(t_list* registrosDeParticion, int numeroParticio
 
 	char* sizeTotal = string_itoa(cantidadBytesTotales);
 
-	config_set_value(archivoParticion,"SIZE", sizeTotal);
+	config_set_value(archivoParticion,"BLOCKS", arrayBloquesFinalizado);
 	config_save(archivoParticion);
 
-	config_set_value(archivoParticion,"BLOCKS", arrayBloquesFinalizado);
+	config_set_value(archivoParticion,"SIZE", sizeTotal);
 	config_save(archivoParticion);
 
 	config_destroy(archivoParticion);
