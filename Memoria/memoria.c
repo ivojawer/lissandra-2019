@@ -65,6 +65,7 @@ int main() {
 	config_destroy(config);
 
 	caracMaxDeValue = primeraConexionLFS();
+
 	log_info(logger,"Caracteres value:%d", caracMaxDeValue);
 	if (caracMaxDeValue != -1) {
 		log_info(logger, "Se conecto el LFS.");

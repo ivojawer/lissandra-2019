@@ -121,7 +121,7 @@ void iniciar_variables(){
 	cola_requests = list_create();
 
 	//asigno variables globales del LFS.config
-	t_config* config = config_create("/home/utnso/workspace/tp-2019-1c-U-TN-Tecno/CONFIG/LFS.config");
+	t_config* config = config_create("/home/ivan/eclipse-workspace/tp-2019-1c-U-TN-Tecno/CONFIG/LFS.config");
 	puntoDeMontaje = string_duplicate(config_get_string_value(config,"PUNTO_MONTAJE"));
 	retardo = config_get_int_value(config,"RETARDO");
 	tamanioValue = config_get_int_value(config,"TAMAÑO_VALUE");

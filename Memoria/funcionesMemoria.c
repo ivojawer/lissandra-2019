@@ -70,6 +70,12 @@ void ejecutarRequests() {
 			break;
 		}
 
+		case STATUS:{
+			log_info(logger, "Ejecutando STATUS");
+			status();
+			break;
+		}
+
 		}
 
 		idScriptKernel = -1;
@@ -716,5 +722,47 @@ void reconexionLFS() {
 		}
 	}
 
+}
+
+
+void status(){
+	char* statusMarcos[cantMarcos];
+	for (int i = 0;i<cantMarcos;i++){
+		statusMarcos[i]="FREE";
+	}
+
+
+
+	void statusPorSegmento(segmento* seg){
+		void statusPagina(pagina* pag){
+				char* status  = string_new();
+				string_append(&status, "PAGINA: M=");
+				string_append(&status,string_itoa(pag->flagModificado));
+				string_append(&status," K=");
+				string_append(&status,string_itoa(getMarcoFromPagina(pag)->key));
+				string_append(&status," TS=");
+				string_append(&status,string_itoa(getMarcoFromPagina(pag)->timestamp));
+				string_append(&status," T=");
+				string_append(&status,seg->nombreDeTabla);
+				string_append(&status," V=");
+				string_append(&status,&getMarcoFromPagina(pag)->value);
+				statusMarcos[pag->nroMarco] = status;
+			}
+		list_iterate(seg->tablaDePaginas,(void*)statusPagina);
+	}
+
+	list_iterate(tablaSegmentos, (void*)statusPorSegmento);
+
+	printf("Listado Marcos (M=modificado,K=key,TS=timestamp,T=tabla,V=value,)\n");
+
+	for(int i = 0;i<cantMarcos;i++){
+		printf("Nro Marco:%d Status:%s\n",i,statusMarcos[i]);
+	}
+
+	for(int i = 0;i<cantMarcos;i++){
+		if(strcmp(statusMarcos[i],"FREE") != 0) {
+			free(statusMarcos[i]);
+		}
+	}
 }
 
