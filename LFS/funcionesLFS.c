@@ -7,6 +7,7 @@ extern t_list* memtable;
 extern int cantidadBloques;
 extern int tamanioBloques;
 
+
 extern char* puntoDeMontaje;
 extern int retardo; //en milisegundos
 extern int tamanioValue;

@@ -5,6 +5,7 @@ extern void liberar_tabla(void *elemento);
 extern bool comparar_nombre(char *tabla, void *tabla_mt);
 extern char* puntoDeMontaje;
 extern t_list *memtable;
+extern sem_t sem_memtable;
 extern bool coincide_tabla(void *elemento, char *tabla);
 
 void iterar_busqueda_de_bloques(void (foo)(char *, int, int, t_list *),
@@ -105,8 +106,10 @@ void rutina_drop(void* parametros) {
 				return comparar_nombre(tabla, tabla_mt);
 			}
 
+			sem_wait(&sem_memtable);
 			list_remove_and_destroy_by_condition(memtable, coincide_nombre,
 					destruir_tabla);
+			sem_post(&sem_memtable);
 
 			if(socket_cliente != -1)
 			{

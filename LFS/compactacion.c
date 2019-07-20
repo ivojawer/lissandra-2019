@@ -187,6 +187,8 @@ void iniciar_compactacion(void *arg)
 	while(1) {
 
 		nanosleep(&tim, &tim_2);
+
+		printf("Se va a hacer la compactacion de la tabla %s",p_comp->tabla);
 		if (!check_drop_on_table(p_comp->tabla)) {
 			modificar_op_control(p_comp->tabla, 5);
 			t_ini_compact = medir_tiempo();

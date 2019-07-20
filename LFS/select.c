@@ -12,6 +12,7 @@ extern int control;
 extern char array_aux[128];
 extern int flag_key_value;
 
+extern sem_t sem_memtable;
 
 
 static void agregar_bloque_busqueda(t_list *lista_agregar, t_bloque *bloque_buscado)
@@ -362,6 +363,7 @@ bool comparar_registro(uint16_t key, void *registro)
 
 t_list *filtrar_tabla_memtable(char *tabla)
 {
+	sem_wait(&sem_memtable);
 	printf("largo memtable: %d\n",list_size(memtable));
 
 	bool coincide_nombre(void *tabla_mt){
@@ -369,6 +371,7 @@ t_list *filtrar_tabla_memtable(char *tabla)
 	}
 
 	tabla_encontrada = list_filter(memtable, coincide_nombre); //Supongo que solo extrae 1 tabla
+	sem_post(&sem_memtable);
 	if(lista_vacia(tabla_encontrada))
 		printf("La tabla <%s> no se encuentra en la memtable\n", tabla);
 

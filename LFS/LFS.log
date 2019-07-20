@@ -68,3 +68,25 @@
 [INFO] 02:13:03:972 LFS/(27296:27296): [Control existencia]: Se encuentra el directorio Bloques
 [INFO] 02:13:03:972 LFS/(27296:27296): [Control existencia]: Se encuentra el directorio Tablas
 [INFO] 02:13:03:972 LFS/(27296:27296): [Control existencia]: Se encuentra el directorio Metadata
+[INFO] 04:21:01:24 LFS/(31368:31368): [Control existencia]: Se encuentra el directorio Bloques
+[INFO] 04:21:01:26 LFS/(31368:31368): [Control existencia]: Se encuentra el directorio Tablas
+[INFO] 04:21:01:26 LFS/(31368:31368): [Control existencia]: Se encuentra el directorio Metadata
+[INFO] 04:21:14:370 LFS/(31416:31416): [Control existencia]: Se encuentra el directorio Bloques
+[INFO] 04:21:14:373 LFS/(31416:31416): [Control existencia]: Se encuentra el directorio Tablas
+[INFO] 04:21:14:373 LFS/(31416:31416): [Control existencia]: Se encuentra el directorio Metadata
+[INFO] 04:21:26:785 LFS/(31416:31428): Se conecto una Memoria
+[INFO] 04:27:40:547 LFS/(31629:31629): [Control existencia]: Se encuentra el directorio Bloques
+[INFO] 04:27:40:547 LFS/(31629:31629): [Control existencia]: Se encuentra el directorio Tablas
+[INFO] 04:27:40:547 LFS/(31629:31629): [Control existencia]: Se encuentra el directorio Metadata
+[INFO] 04:27:48:857 LFS/(31629:31657): Se conecto una Memoria
+[INFO] 04:37:31:629 LFS/(31987:31987): [Control existencia]: Se encuentra el directorio Bloques
+[INFO] 04:37:31:629 LFS/(31987:31987): [Control existencia]: Se encuentra el directorio Tablas
+[INFO] 04:37:31:629 LFS/(31987:31987): [Control existencia]: Se encuentra el directorio Metadata
+[INFO] 04:37:43:241 LFS/(31987:32024): Se conecto una Memoria
+[INFO] 04:54:59:354 LFS/(32711:32711): [Control existencia]: Se encuentra el directorio Bloques
+[INFO] 04:54:59:354 LFS/(32711:32711): [Control existencia]: Se encuentra el directorio Tablas
+[INFO] 04:54:59:354 LFS/(32711:32711): [Control existencia]: Se encuentra el directorio Metadata
+[INFO] 04:55:05:984 LFS/(32711:32726): Se conecto una Memoria
+[INFO] 04:55:13:198 LFS/(32711:32739): Se intento crear la tabla ya existente: POSTRES.
+
+[ERROR] 04:58:43:71 LFS/(32711:32731): Se recibio algo incorrecto de Memoria, se cierra la conexion.
