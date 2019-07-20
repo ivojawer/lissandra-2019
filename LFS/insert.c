@@ -138,7 +138,7 @@ void rutina_insert(void* parametros) {
 		{
 			enviarIntConHeader(socket_cliente, ERROR, RESPUESTA);
 		}
-
+		pthread_mutex_unlock(&dump_semaphore);
 		return;
 	} else {
 		printf("Value: %s\n", value);

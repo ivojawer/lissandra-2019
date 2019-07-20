@@ -336,6 +336,10 @@ void dump() {
 		sem_post(&sem_memtable);
 		pthread_mutex_unlock(&dump_semaphore);
 	}
+	else
+	{
+		pthread_mutex_unlock(&dump_semaphore);
+	}
 }
 
 void ejecutar_dump() {
