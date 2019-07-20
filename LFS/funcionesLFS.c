@@ -118,6 +118,7 @@ void mandarAEjecutarRequest(request* requestAEjecutar, int socket)
 void iniciar_variables(){
 
 	cola_requests = list_create();
+	struct inotify *st_inotify = malloc(sizeof(struct inotify));
 
 	//asigno variables globales del LFS.config
 	t_config* config = config_create("/home/utnso/workspace/tp-2019-1c-U-TN-Tecno/CONFIG/LFS.config");
@@ -125,6 +126,9 @@ void iniciar_variables(){
 	retardo = config_get_int_value(config,"RETARDO");
 	tamanioValue = config_get_int_value(config,"TAMAÑO_VALUE");
 	tiempoDump = config_get_int_value(config,"TIEMPO_DUMP");
+	st_inotify->config_root = strdup("/home/utnso/workspace/tp-2019-1c-U-TN-Tecno/CONFIG/LFS.config");
+
+	pthread_create(&h_inotify, NULL, (void *)control_inotify, st_inotify);
 
 	controlExistenciaLFS();
 
@@ -648,4 +652,12 @@ t_bloque *crear_bloque_buscar(char *bloque)
 void bloque_destroy(t_bloque *self) {
     free(self->name);
     free(self);
+}
+
+void control_inotify(void *param)
+{
+	struct inotify *p = (struct inotify *)param;
+	while(1){
+		esperarModificacionDeArchivo(strdup(p->config_root));
+	}
 }

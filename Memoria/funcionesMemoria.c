@@ -298,6 +298,7 @@ void Select(char* parametros) {
 		if (idScriptKernel) {
 			log_info(logger, "Enviando el resultado al kernel");
 			enviarStringConHeaderEId(socketKernel, dato, DATO, idScriptKernel);
+			free(tabla);
 			return;
 		}
 
@@ -343,6 +344,8 @@ void insert(char* parametros) {
 			enviarRespuestaAlKernel(idScriptKernel, ERROR);
 			log_info(logger, "Enviando ERROR al kernel");
 		}
+		free(tabla);
+		free(value);
 		return;
 
 	}
@@ -365,6 +368,8 @@ void insert(char* parametros) {
 						"Avisando al kernel que la memoria esta llena");
 				enviarRespuestaAlKernel(idScriptKernel, MEM_LLENA);
 			}
+			free(tabla);
+			free(value);
 			return;
 		} else {
 			log_info(logger, "Se pudo hacer el INSERT");
@@ -372,7 +377,8 @@ void insert(char* parametros) {
 				log_info(logger, "Enviando respuesta al kernel");
 				enviarRespuestaAlKernel(idScriptKernel, TODO_BIEN);
 			}
-
+			free(tabla);
+			free(value);
 			return;
 		}
 
