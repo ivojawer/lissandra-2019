@@ -269,17 +269,25 @@ void escribirEnBloquesParticion(t_list* registrosDeParticion, int numeroParticio
 	string_append(&arrayBloquesFinalizado,"]");
 	char* pathParticion = generarNombreCompletoParticion(numeroParticion,tabla);
 
-	t_config* archivoParticion = config_create(pathParticion);
+	FILE* archivoParticion = fopen(pathParticion,"w");
 
 	char* sizeTotal = string_itoa(cantidadBytesTotales);
 
-	config_set_value(archivoParticion,"SIZE", sizeTotal);
-	config_save(archivoParticion);
+	char* size = string_new();
+	string_append(&size,"SIZE=");
+	string_append(&size,sizeTotal);
+	string_append(&size,"\n");
+	fputs(size,archivoParticion);
 
-	config_set_value(archivoParticion,"BLOCKS", arrayBloquesFinalizado);
-	config_save(archivoParticion);
+	char* blocks = string_new();
+	string_append(&blocks,"BLOCKS=");
+	string_append(&blocks,arrayBloquesFinalizado);
+	string_append(&blocks,"\n");
+	fputs(blocks,archivoParticion);
 
-	config_destroy(archivoParticion);
+	fclose(archivoParticion);
+	free(size);
+	free(blocks);
 	free(sizeTotal);
 	free(arrayBloques);
 	free(arrayBloquesFinalizado);
