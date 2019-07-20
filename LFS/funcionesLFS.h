@@ -101,6 +101,7 @@ typedef struct{
 void consola();
 void mandarAEjecutarRequest(request* requestAEjecutar, int socket);
 void iniciar_variables();
+void controlExistenciaLFS();
 void crear_control_op(char *tabla);
 t_list* op_control_list;
 sem_t requests_disponibles;

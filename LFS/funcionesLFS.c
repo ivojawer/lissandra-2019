@@ -126,6 +126,8 @@ void iniciar_variables(){
 	tamanioValue = config_get_int_value(config,"TAMAÑO_VALUE");
 	tiempoDump = config_get_int_value(config,"TIEMPO_DUMP");
 
+	controlExistenciaLFS();
+
 	//asigno variables globales del Metadata.bin
 	char* dirMetadata = string_duplicate(puntoDeMontaje);
 	string_append(&dirMetadata,"Metadata/Metadata.bin");
@@ -156,6 +158,93 @@ void iniciar_variables(){
 	config_destroy(metadataLFS);
 	free(dirMetadata);
 }
+
+void controlExistenciaLFS(){
+
+	char* directorioBloques = string_duplicate(puntoDeMontaje);
+	string_append(&directorioBloques,"/Bloques");
+	DIR* directorio = opendir(directorioBloques);
+	if(directorio == NULL){
+		mkdir(directorioBloques,0700);
+		log_info(logger,"[Control existencia]: Creacion del directorio Bloques");
+	}else{
+		closedir(directorioBloques);
+		log_info(logger,"[Control existencia]: Se encuentra el directorio Bloques");
+	}
+	free(directorioBloques);
+
+
+
+	char* directorioTablas = string_duplicate(puntoDeMontaje);
+	string_append(&directorioTablas,"/Tablas");
+	directorio = opendir(directorioTablas);
+	if(directorio == NULL){
+		mkdir(directorioTablas,0700);
+		log_info(logger,"[Control existencia]: Creacion del directorio Tablas");
+	}else{
+		closedir(directorioTablas);
+		log_info(logger,"[Control existencia]: Se encuentra el directorio Tablas");
+	}
+	free(directorioTablas);
+
+
+
+	char* directorioMetadata = string_duplicate(puntoDeMontaje);
+	string_append(&directorioMetadata,"/Metadata");
+	directorio = opendir(directorioMetadata);
+	if(directorio == NULL){
+		mkdir(directorioMetadata,0700);
+		log_info(logger,"[Control existencia]: Creacion del directorio Metadata");
+
+
+		char* pathBitmap = string_duplicate(directorioMetadata);
+		string_append(&pathBitmap,"/Bitmap.bin");
+		FILE* archivoBitmap = fopen(pathBitmap,"w");
+		log_info(logger,"[Control existencia]: Creacion del archivo Bitmap.bin");
+		fclose(archivoBitmap);
+		free(pathBitmap);
+
+
+		char* pathMetadata = string_duplicate(directorioMetadata);
+		string_append(&pathMetadata,"/Metadata.bin");
+		FILE* archivoMetadata = fopen(pathMetadata,"w");
+		log_info(logger,"[Control existencia]: Creacion del archivo Metadata.bin");
+
+		printf("Insertar cantidad de bloques:\n");
+		char* cantidadBloques = string_new();
+		string_append(&cantidadBloques,"BLOCKS=");
+		string_append(&cantidadBloques,readline("BLOCKS="));
+		string_append(&cantidadBloques,"\n");
+		fputs(cantidadBloques,archivoMetadata);
+		free(cantidadBloques);
+
+		printf("Insertar tamanio de bloques:\n");
+		char* tamanioBloques = string_new();
+		string_append(&tamanioBloques,"BLOCK_SIZE=");
+		string_append(&tamanioBloques,readline("BLOCK_SIZE="));
+		string_append(&tamanioBloques,"\n");
+		fputs(tamanioBloques,archivoMetadata);
+		free(tamanioBloques);
+
+		printf("Insertar magic number:\n");
+		char* magicNumber = string_new();
+		string_append(&magicNumber,"MAGIC_NUMBER=");
+		string_append(&magicNumber,readline("MAGIC_NUMBER="));
+		string_append(&magicNumber,"\n");
+		fputs(magicNumber,archivoMetadata);
+		free(magicNumber);
+
+		fclose(archivoMetadata);
+		free(pathMetadata);
+
+	}else{
+		closedir(directorioMetadata);
+		log_info(logger,"[Control existencia]: Se encuentra el directorio Metadata");
+	}
+	free(directorioMetadata);
+
+}
+
 
 
 char* get_tabla(char* comando)
