@@ -263,6 +263,7 @@ void liberar_lista_bloques(t_list *lista_bloques_tmp) {
 }
 
 void dump() {
+	printf("Dumpy\n");
 	err_flag = 0;
 	if(!lista_vacia(memtable)){
 		int i, j, k;
@@ -331,11 +332,14 @@ void ejecutar_dump()
 //	tim.tv_sec = tiempoDump*0.001;
 //	tim.tv_nsec = 0;
 
-	int sleepDump = tiempoDump/1000;
+	int sleepDump;
 
 	while(1) {
 //		nanosleep(&tim, &tim_2);
+//		sem_wait(&refresh_config); //Con los semaforos no lo reconoce
+		sleepDump = tiempoDump/1000;
 		sleep(sleepDump);
 		dump();
+//		sem_post(&refresh_config);
 	}
 }

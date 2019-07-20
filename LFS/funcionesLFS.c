@@ -126,6 +126,7 @@ void iniciar_variables(){
 	retardo = config_get_int_value(config,"RETARDO");
 	tamanioValue = config_get_int_value(config,"TAMAÑO_VALUE");
 	tiempoDump = config_get_int_value(config,"TIEMPO_DUMP");
+	sem_init(&refresh_config, 0, 1);
 	st_inotify->config_root = strdup("/home/utnso/workspace/tp-2019-1c-U-TN-Tecno/CONFIG/LFS.config");
 
 	pthread_create(&h_inotify, NULL, (void *)control_inotify, st_inotify);
@@ -659,5 +660,17 @@ void control_inotify(void *param)
 	struct inotify *p = (struct inotify *)param;
 	while(1){
 		esperarModificacionDeArchivo(strdup(p->config_root));
+
+		sem_wait(&refresh_config);
+
+		t_config* config = config_create(p->config_root);
+
+		retardo = config_get_int_value(config,"RETARDO");
+		tamanioValue = config_get_int_value(config,"TAMAÑO_VALUE");
+		tiempoDump = config_get_int_value(config,"TIEMPO_DUMP");
+
+		config_destroy(config);
+
+		sem_post(&refresh_config);
 	}
 }
