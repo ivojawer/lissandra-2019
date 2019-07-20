@@ -19,7 +19,6 @@ int control = 0;
 int flag_key_value = 0;
 char array_aux[128] = "";
 
-
 //variables del config Metadata/metadata.bin
 int cantidadBloques;
 int tamanioBloques;
@@ -40,7 +39,7 @@ int main() {
 	pthread_t h_peticiones;
 
 	pthread_create(&h_consola, NULL, (void *) consola, NULL);
-	pthread_create(&h_dump, NULL, (void *)ejecutar_dump, NULL);
+	pthread_create(&h_dump, NULL, (void *) ejecutar_dump, NULL);
 	pthread_create(&h_conexiones, NULL, (void *) aceptar_conexiones, NULL);
 	pthread_create(&h_peticiones, NULL, (void *) ejecutar_peticion, NULL);
 	compactacion_tablas_existentes();
@@ -50,7 +49,6 @@ int main() {
 	pthread_detach(h_dump);
 	pthread_detach(h_inotify);
 	pthread_join(h_consola, NULL);
-
 
 	return 1;
 }

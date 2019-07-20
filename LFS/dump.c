@@ -264,6 +264,7 @@ void liberar_lista_bloques(t_list *lista_bloques_tmp) {
 }
 
 void dump() {
+	pthread_mutex_lock(&dump_semaphore); //influye en todas las tablas
 	err_flag = 0;
 
 	if (!lista_vacia(memtable)) {
@@ -271,7 +272,6 @@ void dump() {
 		int table_change;
 		int siga_siga = 0;
 		lista_bloques_tmp = list_create();
-		pthread_mutex_lock(&dump_semaphore); //influye en todas las tablas
 		log_info(dump_logger, "Se va a hacer el dump");
 		sem_wait(&sem_memtable);
 		for (i = 0; i < list_size(memtable); i++) {
@@ -343,12 +343,15 @@ void ejecutar_dump() {
 //	tim.tv_sec = tiempoDump*0.001;
 //	tim.tv_nsec = 0;
 
-	int sleepDump = tiempoDump / 1000;
+	int sleepDump;
 
 	while (1) {
 //		nanosleep(&tim, &tim_2);
+//		sem_wait(&refresh_config); //Con los semaforos no lo reconoce
+		sleepDump = tiempoDump/1000;
 		sleep(sleepDump);
 
 		dump();
+//		sem_post(&refresh_config);
 	}
 }
