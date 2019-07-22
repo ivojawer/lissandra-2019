@@ -106,10 +106,8 @@ void rutina_drop(void* parametros) {
 				return comparar_nombre(tabla, tabla_mt);
 			}
 
-			sem_wait(&sem_memtable);
 			list_remove_and_destroy_by_condition(memtable, coincide_nombre,
 					destruir_tabla);
-			sem_post(&sem_memtable);
 
 			if(socket_cliente != -1)
 			{

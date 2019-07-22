@@ -591,7 +591,7 @@ void modificar_op_control(char *tabla, int mod_flag)
 			tabla_a_controlar->drop_flag = 1;
 			if (tabla_a_controlar->otros_flag > 0) {
 				pthread_mutex_unlock(&(tabla_a_controlar->mutex));
-				pthread_mutex_unlock(&dump_semaphore); //si no puede ejecutar Drop, libera Dump
+//				pthread_mutex_unlock(&dump_semaphore); //si no puede ejecutar Drop, libera Dump
 				sem_wait(&(tabla_a_controlar->drop_sem));
 			} else {
 				tabla_a_controlar->drop_flag = 1;

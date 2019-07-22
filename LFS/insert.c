@@ -136,6 +136,9 @@ void rutina_insert(void* parametros) {
 	printf("Key: %d\n", key);
 
 	char* value = get_value(comando);
+
+	modificar_op_control(tabla, 1);
+
 	if (strlen(value) > tamanioValue) {
 		printf("El value ingresado supera el tamaño maximo permitido.\n");
 
@@ -158,7 +161,6 @@ void rutina_insert(void* parametros) {
 			int size = obtener_size_particion(tabla, particion_buscar);
 			if (size >= 0) {
 
-				modificar_op_control(tabla, 1);
 				t_list *tabla_encontrada = list_create();
 				tabla_encontrada = filtrar_tabla_memtable(tabla);
 				t_list *lista_particion_encontrada = filtrar_particion_tabla(
@@ -207,6 +209,7 @@ void rutina_insert(void* parametros) {
 		}
 	}
 //	liberar_tabla_encontrada(tabla_encontrada);
+	modificar_op_control(tabla, 2);
 	pthread_mutex_unlock(&dump_semaphore);
 }
 

@@ -57,7 +57,7 @@ void grabar_registro(char *root, char *registro_completo, int length_registro,
 		espacio_libre = tamanioBloques;
 
 		if (table_change == 0) {
-			fp_dump = fopen(root, "ab");
+			fp_dump = fopen(root, "r+b");
 			size = 0;
 			suma_size = 0;
 			j = 0;
@@ -116,9 +116,9 @@ void grabar_registro(char *root, char *registro_completo, int length_registro,
 				string_append(&otroRoot, ".bin");
 				grabar_registro(otroRoot, registro_completo, length_registro, 1,
 						j, 0, bloques_tmp, 0);
-			}
+			}//si se queda sin espacio
 		}
-	}
+	}// si se mantiene en fp_dump
 }
 
 void guardar_registros_en_bloques(t_registro *registro_recv, int table_change,
@@ -144,7 +144,7 @@ void guardar_registros_en_bloques(t_registro *registro_recv, int table_change,
 		bloque_dump = elegir_bloque_libre(cantidadBloques);
 		if(bloque_dump != -1){
 			agregar_bloque_lista_tmp(bloques_tmp_tabla->bloques, bloque_dump); //Para crear el archivo temporal
-			sprintf(root, "%s/Bloques/bloque%d.bin", puntoDeMontaje, bloque_dump);
+			sprintf(root, "%sBloques/bloque%d.bin", puntoDeMontaje, bloque_dump);
 		}else{
 			err_flag = 1;
 			return;
@@ -289,7 +289,7 @@ void dump() {
 						registro = list_get(particion->lista_registros, k);
 //						if(strlen(registro->value) > 0){
 						if(registro->value != NULL && strlen(registro->value)>0){
-							if (table_change == 0 && k == 1)
+							if (table_change == 0 && k == 1 && fp_dump != NULL)
 								table_change = 1;
 							guardar_registros_en_bloques(registro, table_change,
 													 bloques_tmp_tabla);//Control de error aca
@@ -329,8 +329,8 @@ void dump() {
 			guardar_bloques_metadata(lista_bloques_tmp);
 			liberar_lista_bloques(lista_bloques_tmp);
 		}
-	pthread_mutex_unlock(&dump_semaphore);
 	}
+	pthread_mutex_unlock(&dump_semaphore);
 }
 
 void ejecutar_dump()

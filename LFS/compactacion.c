@@ -189,14 +189,13 @@ void iniciar_compactacion(void *arg)
 		tim.tv_nsec = 0;
 		nanosleep(&tim, &tim_2);
 
-		printf("Se va a hacer la compactacion de la tabla %s",p_comp->tabla);
+//		printf("Se va a hacer la compactacion de la tabla %s",p_comp->tabla);
 		if (!check_drop_on_table(p_comp->tabla)) {
 			modificar_op_control(p_comp->tabla, 5);
 			t_ini_compact = medir_tiempo();
 			compactar(p_comp->tabla);
 			t_fin_compact = medir_tiempo();
 			secs = (double)(t_fin_compact - t_ini_compact) / CLOCKS_PER_SEC;
-			// printf("Tiempo Compactacion: %.16g milisegundos\n", secs * 1000.0);
 			log_info(compact_logger, "Compactacion finalizada. Tiempo Bloqueo: %.16g milisegundos", secs * 1000.0);
 			modificar_op_control(p_comp->tabla, 6);
 		}else{ //abortar compactacion
