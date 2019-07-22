@@ -135,11 +135,9 @@ char* leerLinea(char* direccion, int lineaALeer) {
 
 	if (archivo == NULL) {
 
-		char* error = string_new();
-
 		string_append(&resultado, "fin");
 
-		return error;
+		return resultado;
 	}
 
 	for (int i = 0; i <= lineaALeer; i++) {
@@ -162,16 +160,18 @@ char* leerLinea(char* direccion, int lineaALeer) {
 
 			string_append(&resultado, resultadoDeLeer);
 
-			resultadoDeLeer = fgets(buffer, MAXBUFFER, archivo);
+			char* resultadoInverso = string_reverse(resultado);
 
-			if (resultadoDeLeer == NULL) {
-				string_append(&resultado, "\0");
-			} else {
+			if (resultadoInverso[0] == '\n') { //Si tiene un \n al final
+
 				char* resultadoAux = resultado;
 				resultado = string_substring_until(resultado,
-						strlen(resultado) - 1);
+						strlen(resultado) - 1); //Se saca el \n
 				free(resultadoAux);
 			}
+
+			free(resultadoInverso);
+
 		}
 
 	}
@@ -619,8 +619,6 @@ int seedYaExiste(seed* unaSeed) { //Sincro por afuera
 	return 0;
 }
 
-
-
 void agregarUnaMetadata(metadataTablaLFS* unaMetadata) {
 	if (criterioDeTabla(unaMetadata->nombre) == -1) //Si no existe ya
 			{
@@ -655,9 +653,8 @@ void actualizarMetadatas(t_list* metadatas) {
 	sem_post(&sem_actualizacionMetadatas);
 }
 
-void agregarUnaMetadataEnString(char* metadataEnString)
-{
-	char** parametrosMetadata = string_split(metadataEnString," ");
+void agregarUnaMetadataEnString(char* metadataEnString) {
+	char** parametrosMetadata = string_split(metadataEnString, " ");
 
 	char* nombreTabla = string_duplicate(parametrosMetadata[0]);
 	int laConsistencia = queConsistenciaEs(parametrosMetadata[1]);
@@ -666,7 +663,7 @@ void agregarUnaMetadataEnString(char* metadataEnString)
 
 	metadataTablaLFS* unaMetadata = malloc(sizeof(metadataTablaLFS));
 
-	unaMetadata->nombre= nombreTabla;
+	unaMetadata->nombre = nombreTabla;
 	unaMetadata->consistencia = laConsistencia;
 	unaMetadata->compactTime = elCompactTime;
 	unaMetadata->particiones = lasParticiones;
@@ -674,7 +671,6 @@ void agregarUnaMetadataEnString(char* metadataEnString)
 	agregarUnaMetadata(unaMetadata);
 
 	liberarArrayDeStrings(parametrosMetadata);
-
 
 }
 
@@ -710,8 +706,8 @@ int manejarRespuestaDeMemoria(script* elScript, request* laRequest, int memoria)
 	}
 
 	else if (respuesta == MEM_LLENA) {
-		log_info(logger,
-				"La memoria %i esta llena, se va a enviar un JOURNAL.",memoria);
+		log_info(logger, "La memoria %i esta llena, se va a enviar un JOURNAL.",
+				memoria);
 
 		journal();
 
@@ -811,11 +807,11 @@ int manejarRespuestaDeMemoria(script* elScript, request* laRequest, int memoria)
 
 		default: {
 
-			if (laRequest->requestEnInt == CREATE)
-			{
+			if (laRequest->requestEnInt == CREATE) {
 				agregarUnaMetadataEnString(laRequest->parametros);
 
-				log_info(logger,"Se agrego la metadata %s",laRequest->parametros);
+				log_info(logger, "Se agrego la metadata %s",
+						laRequest->parametros);
 			}
 
 			if (laRequest->requestEnInt == INSERT) {
@@ -834,7 +830,6 @@ int manejarRespuestaDeMemoria(script* elScript, request* laRequest, int memoria)
 
 				sem_post(&sem_borradoMemoria);
 
-
 			}
 
 			log_info(logger, "%s: Se pudo realizar. (Enviado a %i)",
@@ -844,17 +839,13 @@ int manejarRespuestaDeMemoria(script* elScript, request* laRequest, int memoria)
 		}
 	}
 
-	if (elScript->resultadoDeEnvio != NULL)
-	{
+	if (elScript->resultadoDeEnvio != NULL) {
 		free(elScript->resultadoDeEnvio);
 	}
 
-
-	if(respuesta == ERROR)
-	{
+	if (respuesta == ERROR) {
 		return ERROR;
-	}
-	else{
+	} else {
 		return TODO_BIEN;
 	}
 
@@ -905,22 +896,22 @@ int memoriaEstaSiendoCreada(seed* unaSeed) {
 	return 0;
 }
 
-void sacarSeedDeMemoriasEnCreacion(seed* unaSeed){
+void sacarSeedDeMemoriasEnCreacion(seed* unaSeed) {
 	sem_wait(&sem_seedSiendoCreada);
 	for (int i = 0; i < list_size(seedsSiendoCreadas); i++) {
 
-			seed* otraSeed = list_get(seedsSiendoCreadas, i);
+		seed* otraSeed = list_get(seedsSiendoCreadas, i);
 
-			if ((!strcmp(otraSeed->ip, unaSeed->ip))
-					&& unaSeed->puerto == otraSeed->puerto) {
+		if ((!strcmp(otraSeed->ip, unaSeed->ip))
+				&& unaSeed->puerto == otraSeed->puerto) {
 
-				list_remove(seedsSiendoCreadas,i);
+			list_remove(seedsSiendoCreadas, i);
 
-				sem_post(&sem_seedSiendoCreada);
-				return;
-			}
-
+			sem_post(&sem_seedSiendoCreada);
+			return;
 		}
-		sem_post(&sem_seedSiendoCreada);
+
+	}
+	sem_post(&sem_seedSiendoCreada);
 
 }
