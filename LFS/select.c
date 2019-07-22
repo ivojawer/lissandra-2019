@@ -135,7 +135,7 @@ int contar_comas(char *temp)
 		 char temp[32]= "";
 		 char **tokens_registro;
 		 char **tokens_registro_2;
-		 char *string_aux_2;
+//		 char *string_aux_2;
 
 		 while(!feof(f) && bloque_size < size_bloque){
 			 fgets(temp, 32, f);
@@ -143,7 +143,7 @@ int contar_comas(char *temp)
 			 bloque_size += strlen(temp)*sizeof(char);
 			 int nr_comas = contar_comas(temp);
 			 tokens_registro = string_split(temp, ";");
-			 if(flag_key_value != 0){
+			 if(flag_key_value != 0) {
 				if(control == 1 && nr_comas == 2){
 
 					tokens_registro_2 = string_split(array_aux, ";");
@@ -153,14 +153,15 @@ int contar_comas(char *temp)
 					flag_key_value = 0;
 					control = 0;
 					memset(array_aux, 0X0, sizeof(array_aux));
-				}else{
-					string_aux_2 = malloc(strlen(temp)*sizeof(char));
-					strcpy(string_aux_2, temp);
-				 	strcat(array_aux, string_aux_2);
+				}else {
+//					string_aux_2 = malloc(strlen(temp)*sizeof(char));
+//					strcpy(string_aux_2, temp);
+//				 	strcat(array_aux, string_aux_2);
+					strcat(array_aux, temp);
 				 	tokens_registro = string_split(array_aux, ";");
 				 	comparar_key_y_agregar_valor(atol(tokens_registro[1]), key, strdup(tokens_registro[2]), atoi(tokens_registro[0]), timestamp_valor);
 				 	memset(array_aux, 0x0, sizeof(array_aux));
-				 	free(string_aux_2);
+//				 	free(string_aux_2);
 				 	flag_key_value = 0;
 				 	control = 0;
 				 	}
@@ -448,7 +449,7 @@ t_registro* buscar_en_todos_lados(char *tabla, uint16_t key, int particion_busca
 	if(cant_registros!=0){
 		for(i = 0; i < cant_registros; i++){
 			t_registro *registro_extraido = malloc(sizeof(t_registro));
-			registro_extraido = (t_registro *)list_get(registros_encontrados,i);
+			registro_extraido = list_get(registros_encontrados,i);
 			char *valor = strdup(registro_extraido->value);
 			agregar_valor_timestamp(timestamp_valor, crear_valor_timestamp_buscar(registro_extraido->timestamp, valor));
 		}
