@@ -456,15 +456,16 @@ t_registro* buscar_en_todos_lados(char *tabla, uint16_t key, int particion_busca
 	}else{
 		printf("No se encontro la key %d de la tabla %s en la memtable.\n", key, tabla);
 	}
-//	printf("Largo lista *timestamp_valor* %d\n", list_size(timestamp_valor));
 	if(lista_vacia(timestamp_valor)){
 //		printf("*timestamp_valor* VACIO\n");
 //		enviarIntConHeader(socket_cliente, ERROR, RESPUESTA);//no testeado
 	}else{
 		t_par_valor_timestamp *timestamp_value_max = filtrar_timestamp_mayor(timestamp_valor, list_size(timestamp_valor));
-		printf("El valor de la key ingresada es: %s\n", timestamp_value_max->valor);
+//		printf("El valor de la key ingresada es: %s\n", timestamp_value_max->valor);
 
 		if(timestamp_value_max->valor != NULL){
+
+			printf("El valor de la key ingresada es: %s\n", timestamp_value_max->valor);
 
 			registroEncontrado = malloc(sizeof(t_registro));
 			registroEncontrado->key = key;
@@ -475,7 +476,7 @@ t_registro* buscar_en_todos_lados(char *tabla, uint16_t key, int particion_busca
 
 	}
 	liberar_bloques_buscar(bloques_buscar);
-	liberar_timestamp_valor(timestamp_valor);
+	liberar_timestamp_valor(timestamp_valor); //ROMPE??
 
 	return registroEncontrado;
 }
@@ -504,24 +505,24 @@ void rutina_select(void* parametros)
 		t_registro* resultadoBusqueda = malloc(sizeof(t_registro));
 		resultadoBusqueda = buscar_en_todos_lados(tabla, key, particion_buscar);
 
-		if(resultadoBusqueda != NULL && socket_cliente != -1)
-		{
+		if(resultadoBusqueda != NULL  && socket_cliente != -1) {
 //			log_info(logger,"Enviando resultado a la memoria");
 			registro *registro_a_enviar = malloc(sizeof(registro));
 			registro_a_enviar->key = resultadoBusqueda->key;
 			registro_a_enviar->timestamp = resultadoBusqueda->timestamp;
 			registro_a_enviar->value = strdup(resultadoBusqueda->value);
 			enviarRegistroConHeader(socket_cliente, registro_a_enviar, REGISTRO);
+		}else if( resultadoBusqueda == NULL && socket_cliente != -1){
+			printf("La tabla se encuentra en el sistema pero la key no.\n");
+				enviarIntConHeader(socket_cliente, ERROR, RESPUESTA);
 		}
-
 		modificar_op_control(tabla, 2);
 	}else{
-		printf("No se ha podido realizar la operacion\n");
+		printf("La tabla no se encuentra en el sistema\n");
 		if(socket_cliente != -1)
 		{
 //			log_info(logger,"Enviando ERROR a la memoria");
 			enviarIntConHeader(socket_cliente, ERROR, RESPUESTA);
 		}
-
 	}
 }
