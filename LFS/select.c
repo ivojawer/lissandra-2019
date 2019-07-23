@@ -512,8 +512,9 @@ void rutina_select(void* parametros)
 			registro_a_enviar->timestamp = resultadoBusqueda->timestamp;
 			registro_a_enviar->value = strdup(resultadoBusqueda->value);
 			enviarRegistroConHeader(socket_cliente, registro_a_enviar, REGISTRO);
-		}else if( resultadoBusqueda == NULL && socket_cliente != -1){
+		}else if( resultadoBusqueda == NULL) {
 			printf("La tabla se encuentra en el sistema pero la key no.\n");
+			if(socket_cliente != -1)
 				enviarIntConHeader(socket_cliente, ERROR, RESPUESTA);
 		}
 		modificar_op_control(tabla, 2);
