@@ -1,0 +1,21 @@
+[INFO] 19:29:48:518 kernel/(3758:3768): ----METRICS----
+[INFO] 19:29:48:518 kernel/(3758:3768): Read latency: ---
+[INFO] 19:29:48:518 kernel/(3758:3768): Write latency: ---
+[INFO] 19:29:48:518 kernel/(3758:3768): Reads: 0
+[INFO] 19:29:48:518 kernel/(3758:3768): Writes: 0
+[INFO] 19:29:48:518 kernel/(3758:3768): Operaciones totales: 0
+[INFO] 19:29:58:519 kernel/(3758:3851): Se conecto la memoria 1
+[INFO] 19:30:18:519 kernel/(3758:3768): ----METRICS----
+[INFO] 19:30:18:519 kernel/(3758:3768): Read latency: ---
+[INFO] 19:30:18:519 kernel/(3758:3768): Write latency: ---
+[INFO] 19:30:18:519 kernel/(3758:3768): Reads: 0
+[INFO] 19:30:18:519 kernel/(3758:3768): Writes: 0
+[INFO] 19:30:18:519 kernel/(3758:3768): Operaciones totales: 0
+[INFO] 19:30:18:519 kernel/(3758:3768): --Memoria 1-- 
+Inserts Completos: 0 
+Inserts Fallidos: 0 
+Selects Completos: 0 
+Selects Fallidos: 0 
+Operaciones totales: 0
+[INFO] 19:30:18:519 kernel/(3758:3851): Se recibio el gossiping de la memoria
+[ERROR] 19:30:20:596 kernel/(3758:3851): Se desconecto la memoria 1.
