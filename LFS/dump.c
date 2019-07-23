@@ -297,26 +297,21 @@ void dump() {
 								log_info(dump_logger, "Dump finalizado. No se pudo guardar un registro por falta de espacio.");
 								if(full_space == 1)
 									printf("Dump finalizado. No se pudo guardar un registro por falta de espacio\n");
-								pthread_mutex_unlock(&dump_semaphore);
+//								pthread_mutex_unlock(&dump_semaphore);
 								return;
 							}
 							full_space = 0;
 							siga_siga = 1;
 						}else{
-//							free(bloques_tmp_tabla); //Se deberian borrar pero tira Double Free. NO time
+//							free(bloques_tmp_tabla); //Se deberian borrar pero tira Double Free.
 //							free(lista_bloques_tmp);
 							siga_siga = 0;
 						}
-//						void liberar_elementos_particion(void *elemento) {
-//							return registro_destroy((t_registro *) elemento);//cambiaste eso
-//						}
-//						list_remove_and_destroy_element(particion->lista_registros, k, liberar_elementos_particion);
-
 					}
 					void liberar_elementos_particion(void *elemento) {
-						return liberar_registro_dump((t_registro *) elemento);
+						return registro_destroy((t_registro *) elemento);
 					}
-					list_iterate(particion->lista_registros, liberar_elementos_particion);
+					list_clean_and_destroy_elements(particion->lista_registros, liberar_elementos_particion);
 				}
 				grabar_registro("NULL", "NULL", 0, 0, 0, 0, bloques_tmp_tabla, 1); //Close fp_dump
 				if(siga_siga == 1){

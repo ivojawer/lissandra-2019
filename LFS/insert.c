@@ -14,14 +14,6 @@ t_registro *crear_registro(unsigned long timestamp, uint16_t key, char *value) {
 	return new;
 }
 
-void liberar_registro_dump(t_registro * elemento)
-{
-	elemento->key = 0;
-	elemento->timestamp = 0;
-	elemento->value = NULL;
-}
-
-
 
 
 void registro_destroy(t_registro *self) {
@@ -190,7 +182,6 @@ void rutina_insert(void* parametros) {
 					agregar_registro_en_particion_existente(tabla,
 							particion_buscar, registro_nuevo);
 				}
-				modificar_op_control(tabla, 2);
 				printf("Registro agregado a la particion.\n");
 
 				if(socket_cliente != -1)
