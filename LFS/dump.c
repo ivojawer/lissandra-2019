@@ -46,10 +46,11 @@ void agregar_bloque_lista_tmp(t_list *bloques, int bloque_dump) {
 	list_add(bloques, nr_bloque);
 }
 
-void grabar_registro(char *root, char *registro_completo, int length_registro,
+void grabar_registro(char *root, char *registro_completo_2, int length_registro,
 					 int space_full, int index, int table_change,
 					 struct bloques_tmp *bloques_tmp, int flag_close_file)
 {
+	char *registro_completo = strdup(registro_completo_2);
 	if (flag_close_file == 1 && fp_dump != NULL) {
 		fclose(fp_dump);
 		fp_dump = NULL;
@@ -57,7 +58,7 @@ void grabar_registro(char *root, char *registro_completo, int length_registro,
 		espacio_libre = tamanioBloques;
 
 		if (table_change == 0) {
-			fp_dump = fopen(root, "r+b");
+			fp_dump = fopen(root, "a+b");
 			size = 0;
 			suma_size = 0;
 			j = 0;
@@ -286,8 +287,8 @@ void dump() {
 					for (k = 0; k < length_particion; k++) {
 						t_registro *registro = malloc(sizeof(t_registro));
 						registro = list_get(particion->lista_registros, k);
-//						if(strlen(registro->value) > 0){
-						if(registro->value != NULL && strlen(registro->value)>0){
+						if(strlen(registro->value) > 0){
+//						if(registro->value != NULL && strlen(registro->value)>0){
 							if (table_change == 0 && k == 1 && fp_dump != NULL)
 								table_change = 1;
 							guardar_registros_en_bloques(registro, table_change,
