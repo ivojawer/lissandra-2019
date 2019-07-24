@@ -143,15 +143,6 @@ void eliminarRegistro(segmento* seg, pagina* pagEnSeg) {
 		return pag == pagEnSeg;
 	}
 	marcos[pagEnSeg->nroMarco].vacio = true;
-	/*if(pagEnSeg->flagModificado){   //nunca va a estar modificado.
-	 marco* datosPagina = getMarcoFromPagina(pagEnSeg);
-	 registro* reg = malloc(sizeof(registro));
-	 reg ->key=datosPagina->key;
-	 reg ->timestamp = datosPagina->timestamp;
-	 reg->value = malloc(sizeof(char) * string_length(&datosPagina->value));
-	 reg->value = &datosPagina->value;
-	 enviarRegistroComoInsert(reg);
-	 }*/
 	list_remove_by_condition(seg->tablaDePaginas,(void*) encuentroPaginaPorKey);
 	free(pagEnSeg);
 }
@@ -176,10 +167,12 @@ int marcoLRU() {
 
 	int marcoLRU = paginaLRU->nroMarco;
 
-	eliminarRegistro(segmentoLRU, paginaLRU);
 
-	if (encontreLRU)
+
+	if (encontreLRU){
+		eliminarRegistro(segmentoLRU, paginaLRU);
 		return marcoLRU;
+	}
 	else
 		return MEM_LLENA;
 }
@@ -193,8 +186,10 @@ int numeroMarcoDondeAlocar() {
 		}
 	}
 	int marcoAlocar = marcoLRU();
-	if (marcoAlocar != MEM_LLENA)
+	if (marcoAlocar != MEM_LLENA){
+		marcos[marcoAlocar].vacio = false;
 		return marcoAlocar;
+	}
 	else {
 		return MEM_LLENA;
 	}
@@ -323,6 +318,7 @@ unsigned long long tiempoActual(){
 }
 
 void insert(char* parametros) {
+	status();
 	char** parametrosEnVector = string_n_split(parametros, 3, " ");
 
 	char* tabla =string_duplicate( parametrosEnVector[0]);
@@ -356,7 +352,7 @@ void insert(char* parametros) {
 
 	segmento* tablaEncontrada = encuentroTablaPorNombre(tabla);
 	if (tablaEncontrada == NULL) {
-		log_info(logger, "Se va a crear la tabla y el dato");
+		log_info(logger, "Se va a cinsertrear la tabla y el dato");
 		segmento* tablaCreada = nuevaTabla(tablaSegmentos, tabla);
 		pagina* nuevaPagina = nuevoDato(tablaCreada->tablaDePaginas, 1, key,
 				timestamp, value);
@@ -423,7 +419,7 @@ void insert(char* parametros) {
 }
 
 
-//si, esto es literalmente una copia de lo que esta arriba solo que sin las respuestas y con el timestamp por parametro.
+//si, esto es literalmente una copia de lo que esta arriba solo que sin las respuestas, con el timestamp por parametro Y LO AGREGA SIN EL FLAG MODIFICADO.
 void insertInterno(uint16_t key, char* value, char* tabla, unsigned long long timestamp){
 	segmento* tablaEncontrada = encuentroTablaPorNombre(tabla);
 		if (tablaEncontrada == NULL) {
@@ -448,7 +444,7 @@ void insertInterno(uint16_t key, char* value, char* tabla, unsigned long long ti
 				return;
 			} else {
 				log_info(logger, "Se va a crear el dato");
-				pagina* nuevaPagina = nuevoDato(tablaEncontrada->tablaDePaginas, 1,	key, timestamp, value);
+				pagina* nuevaPagina = nuevoDato(tablaEncontrada->tablaDePaginas, 0,	key, timestamp, value);
 				if (nuevaPagina->nroMarco == MEM_LLENA) {
 					log_error(logger, "MEMORIA FULL");
 					free(nuevaPagina);
@@ -587,7 +583,12 @@ request* pasarPaginaAInsert(pagina* paginaAPasar, char* nombreTabla) {
 }
 
 t_list* journalPorSegmento(segmento* seg) {
-
+//
+//	void mostrarPagina(pagina* pag){
+//		printf("nro marco:%d-value:%s\n", pag->nroMarco,&getMarcoFromPagina(pag)->value);
+//	}
+//
+//	list_iterate(seg->tablaDePaginas,(void*)mostrarPagina);
 	bool estaModificada(pagina* pag) {
 		return pag->flagModificado;
 	}
