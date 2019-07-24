@@ -58,7 +58,7 @@ void grabar_registro(char *root, char *registro_completo_2, int length_registro,
 		espacio_libre = tamanioBloques;
 
 		if (table_change == 0) {
-			fp_dump = fopen(root, "a+b");
+			fp_dump = fopen(root, "rb+");
 			size = 0;
 			suma_size = 0;
 			j = 0;
@@ -90,8 +90,8 @@ void grabar_registro(char *root, char *registro_completo_2, int length_registro,
 				j++;
 				bloques_tmp->size_total += size;
 			}
-			if ((j < length_registro) && ((suma_size == espacio_libre)
-			    || (suma_size > espacio_libre))){ //Si se queda sin espacio
+			if ((j < (length_registro-1)) && ((suma_size == espacio_libre)
+			    || (suma_size > espacio_libre))) { //Si se queda sin espacio
 				bloque_dump = elegir_bloque_libre(cantidadBloques); //Si devuelve -1, eliminar lo del otro registro y abortar.
 
 				 if(bloque_dump == -1){
@@ -289,7 +289,7 @@ void dump() {
 						registro = list_get(particion->lista_registros, k);
 						if(strlen(registro->value) > 0){
 //						if(registro->value != NULL && strlen(registro->value)>0){
-							if (table_change == 0 && k == 1 && fp_dump != NULL)
+							if (table_change == 0 && k == 1)
 								table_change = 1;
 							guardar_registros_en_bloques(registro, table_change,
 													 bloques_tmp_tabla);//Control de error aca
