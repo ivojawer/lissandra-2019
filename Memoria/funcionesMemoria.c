@@ -318,7 +318,6 @@ unsigned long long tiempoActual(){
 }
 
 void insert(char* parametros) {
-	status();
 	char** parametrosEnVector = string_n_split(parametros, 3, " ");
 
 	char* tabla =string_duplicate( parametrosEnVector[0]);
