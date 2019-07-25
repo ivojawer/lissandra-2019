@@ -102,6 +102,8 @@ void planificadorEXEC(int idScript) {
 
 		int resultado = ejecutarRequest(requestAEjecutar, scriptEXEC);
 
+		resultado = TODO_BIEN; //TODO: Marca, esto esta temporal
+
 		sem_wait(&sem_operacionesTotales);
 		operacionesTotales++;
 		sem_post(&sem_operacionesTotales);
