@@ -218,6 +218,7 @@ void comunicacionConMemoria(memoriaEnLista* memoria) {
 			}
 			case NO_EXISTE:{
 				respuesta = NO_EXISTE;
+				break;
 			}
 
 			default: {

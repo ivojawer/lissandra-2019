@@ -56,3 +56,36 @@
 [INFO] 21:25:53:795 memoria/(16117:16150): Se termino el gossiping.
 [INFO] 21:26:18:34 memoria/(16117:16150): Se va a empezar a hacer gossiping.
 [INFO] 21:26:18:34 memoria/(16117:16150): Se termino el gossiping.
+[INFO] 15:42:45:599 memoria/(17500:17500): Caracteres value:60
+[INFO] 15:42:45:599 memoria/(17500:17500): Se conecto el LFS.
+[INFO] 15:42:45:601 memoria/(17500:17500): Cree mi memoria tamanio: 320.
+[INFO] 15:42:45:603 memoria/(17500:17500): el tamanio de mi marco es: 70
+[INFO] 15:42:45:606 memoria/(17500:17500): cantidad de marcos: 4
+[INFO] 15:42:45:640 memoria/(17500:17530): Me estoy tratando de conectar a 127.0.0.1:4442
+[INFO] 15:42:45:640 memoria/(17500:17530): Se va a empezar a hacer gossiping.
+[INFO] 15:42:45:641 memoria/(17500:17530): Me estoy tratando de conectar a 127.0.0.1:4442
+[INFO] 15:42:45:641 memoria/(17500:17530): Se termino el gossiping.
+[INFO] 15:42:47:791 memoria/(17500:17526): Se conecto el Kernel.
+[INFO] 15:42:55:641 memoria/(17500:17530): Se va a empezar a hacer gossiping.
+[INFO] 15:42:55:641 memoria/(17500:17530): Me estoy tratando de conectar a 127.0.0.1:4442
+[INFO] 15:42:55:641 memoria/(17500:17530): Se termino el gossiping.
+[INFO] 15:42:57:791 memoria/(17500:17540): Se recibio la peticion de GOSSIPING del kernel.
+[INFO] 15:42:58:910 memoria/(17500:17527): Ejecutando CREATE
+[INFO] 15:42:58:910 memoria/(17500:17527): CREATE TABLA1 SC 2 200000
+[INFO] 15:42:58:910 memoria/(17500:17527): Mandando CREATE al LFS
+[INFO] 15:43:01:704 memoria/(17500:17525): El LFS pudo ejecutar la request
+[INFO] 15:43:01:704 memoria/(17500:17525): Enviando el resultado al kernel
+[INFO] 15:43:02:791 memoria/(17500:17527): Ejecutando DESCRIBE
+[INFO] 15:43:02:791 memoria/(17500:17527): DESCRIBE  
+[INFO] 15:43:02:791 memoria/(17500:17527): Enviando DESCRIBE al LFS
+[INFO] 15:43:02:793 memoria/(17500:17525): Enviando la metadata al kernel
+[INFO] 15:43:05:641 memoria/(17500:17530): Se va a empezar a hacer gossiping.
+[INFO] 15:43:05:642 memoria/(17500:17530): Me estoy tratando de conectar a 127.0.0.1:4442
+[INFO] 15:43:05:642 memoria/(17500:17530): Se termino el gossiping.
+[INFO] 15:43:07:792 memoria/(17500:17540): Se recibio la peticion de GOSSIPING del kernel.
+[INFO] 15:43:08:670 memoria/(17500:17527): Ejecutando SELECT
+[INFO] 15:43:08:671 memoria/(17500:17527): Select de tabla: TABLA1 - key: 2
+[INFO] 15:43:08:671 memoria/(17500:17527): No se encontro el dato, mandando request a LFS
+[INFO] 15:43:17:93 memoria/(17500:17530): Se va a empezar a hacer gossiping.
+[INFO] 15:43:17:93 memoria/(17500:17530): Me estoy tratando de conectar a 127.0.0.1:4442
+[INFO] 15:43:17:93 memoria/(17500:17530): Se termino el gossiping.

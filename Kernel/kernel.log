@@ -33,3 +33,33 @@ Operaciones totales: 0
 [INFO] 22:28:36:990 kernel/(7791:7813): Se agrego la tabla CELULARES a las metadatas
 [INFO] 22:28:36:990 kernel/(7791:7813): Se agrego la metadata CELULARES SHC 4 600000
 [INFO] 22:28:36:990 kernel/(7791:7813): CREATE CELULARES SHC 4 600000: Se pudo realizar. (Enviado a 1)
+[INFO] 15:45:17:633 kernel/(17733:17746): Se conecto la memoria 1
+[INFO] 15:45:27:496 kernel/(17733:17755): 1000: NEW->READY
+[INFO] 15:45:27:496 kernel/(17733:17747): 1000: READY->EXEC
+[ERROR] 15:45:27:499 kernel/(17733:17756): No hay memorias conectadas para ejecutar la request 3.
+[INFO] 15:45:27:502 kernel/(17733:17756): Termino de ejecutar exitosamente el script 1000
+[INFO] 15:45:27:502 kernel/(17733:17756): 1000: EXEC->EXIT
+[INFO] 15:45:27:655 kernel/(17733:17746): Se recibio el gossiping de la memoria
+[INFO] 15:45:31:917 kernel/(17733:17753): Se agrego la memoria 1 al criterio SC
+[INFO] 15:45:32:642 kernel/(17733:17749): Se actualizaron las metadatas.
+[INFO] 15:45:33:252 kernel/(17733:17758): 1001: NEW->READY
+[INFO] 15:45:33:252 kernel/(17733:17747): 1001: READY->EXEC
+[INFO] 15:45:35:455 kernel/(17733:17759): Se actualizaron las metadatas.
+[INFO] 15:45:35:455 kernel/(17733:17759): DESCRIBE: Se pudo realizar. (Enviado a 1)
+[INFO] 15:45:35:455 kernel/(17733:17759): Termino de ejecutar exitosamente el script 1001
+[INFO] 15:45:35:455 kernel/(17733:17759): 1001: EXEC->EXIT
+[INFO] 15:45:37:656 kernel/(17733:17746): Se recibio el gossiping de la memoria
+[INFO] 15:45:44:241 kernel/(17733:17769): 1002: NEW->READY
+[INFO] 15:45:44:242 kernel/(17733:17747): 1002: READY->EXEC
+[ERROR] 15:45:44:255 kernel/(17733:17746): Se desconecto la memoria 1.
+[INFO] 15:46:29:164 kernel/(17810:17819): Se conecto la memoria 1
+[INFO] 15:46:35:531 kernel/(17810:17827): Se agrego la memoria 1 al criterio SC
+[INFO] 15:46:37:706 kernel/(17810:17831): 1000: NEW->READY
+[INFO] 15:46:37:706 kernel/(17810:17821): 1000: READY->EXEC
+[INFO] 15:46:37:719 kernel/(17810:17832): Se actualizaron las metadatas.
+[INFO] 15:46:37:720 kernel/(17810:17832): DESCRIBE: Se pudo realizar. (Enviado a 1)
+[INFO] 15:46:37:720 kernel/(17810:17832): Termino de ejecutar exitosamente el script 1000
+[INFO] 15:46:37:720 kernel/(17810:17832): 1000: EXEC->EXIT
+[INFO] 15:46:39:187 kernel/(17810:17819): Se recibio el gossiping de la memoria
+[INFO] 15:46:43:93 kernel/(17810:17834): 1001: NEW->READY
+[INFO] 15:46:43:93 kernel/(17810:17821): 1001: READY->EXEC
