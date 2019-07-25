@@ -216,6 +216,9 @@ void comunicacionConMemoria(memoriaEnLista* memoria) {
 				respuesta = MEM_LLENA;
 				break;
 			}
+			case NO_EXISTE:{
+				respuesta = NO_EXISTE;
+			}
 
 			default: {
 				manejoErrorMemoria(memoria->nombre);

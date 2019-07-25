@@ -101,5 +101,7 @@ int existeTabla(char* nombreTabla);
 void enviarPeticionesDeGossip();
 int memoriaEstaSiendoCreada(seed* unaSeed);
 void sacarSeedDeMemoriasEnCreacion(seed* unaSeed);
+void agregarUnaMetadataEnString(char* metadataEnString);
+void matarListaScripts(t_list* scripts);
 
 #endif /* FUNCIONESBASEKERNEL_H_ */

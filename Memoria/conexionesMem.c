@@ -78,8 +78,6 @@ void aceptarConexiones() {
 	list_add(listaInts, &nombreModulo);
 	list_add(listaInts, &nombreMemoria);
 
-
-
 	while (1) {
 
 		int socketMisterioso = accept(socketServidor, (void*) NULL, NULL);
@@ -631,7 +629,9 @@ void manejarRespuestaLFS() {
 			}
 			if (respuesta == TODO_BIEN) {
 				log_info(logger, "El LFS pudo ejecutar la request");
-			} else {
+			} else if (respuesta == NO_EXISTE) {
+				log_info(logger, "El LFS no tiene el dato");
+			} else if (respuesta == ERROR) {
 				log_info(logger, "El LFS no pudo ejecutar la request");
 			}
 			if (idScriptKernel) {
@@ -664,7 +664,7 @@ void manejarRespuestaLFS() {
 
 				log_info(logger, "Enviando el resultado al kernel");
 				enviarStringConHeaderEId(socketKernel, registroRecibido->value,
-						DATO, idScriptKernel);
+				DATO, idScriptKernel);
 			}
 
 			insertInterno(registroRecibido->key, registroRecibido->value,
