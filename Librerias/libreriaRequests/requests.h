@@ -32,7 +32,9 @@
 //Respuestas:
 #define ERROR 1
 #define TODO_BIEN 2
+#define NO_EXISTE 3
 #define MEM_LLENA -200
+
 
 //Identificadores de modulo:
 #define KERNEL 300
