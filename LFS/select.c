@@ -515,7 +515,7 @@ void rutina_select(void* parametros)
 		}else if( resultadoBusqueda == NULL) {
 			printf("La tabla se encuentra en el sistema pero la key no.\n");
 			if(socket_cliente != -1)
-				enviarIntConHeader(socket_cliente, ERROR, RESPUESTA);
+				enviarIntConHeader(socket_cliente, NO_EXISTE, RESPUESTA);
 		}
 		modificar_op_control(tabla, 2);
 	}else{
