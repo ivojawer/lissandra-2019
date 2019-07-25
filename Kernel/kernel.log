@@ -19,3 +19,17 @@ Selects Fallidos: 0
 Operaciones totales: 0
 [INFO] 19:30:18:519 kernel/(3758:3851): Se recibio el gossiping de la memoria
 [ERROR] 19:30:20:596 kernel/(3758:3851): Se desconecto la memoria 1.
+[INFO] 22:24:24:124 kernel/(7691:7700): Se conecto la memoria 1
+[INFO] 22:24:30:362 kernel/(7691:7707): Se agrego la memoria 1 al criterio SHC
+[INFO] 22:24:34:904 kernel/(7691:7709): 1000: NEW->READY
+[INFO] 22:24:34:904 kernel/(7691:7701): 1000: READY->EXEC
+[INFO] 22:24:34:915 kernel/(7691:7710): Se agrego la tabla CELULARES a las metadatas
+[INFO] 22:24:34:915 kernel/(7691:7710): Se agrego la metadata CELULARES SHC 4 600000
+[INFO] 22:24:34:915 kernel/(7691:7710): CREATE CELULARES SHC 4 600000: Se pudo realizar. (Enviado a 1)
+[INFO] 22:28:28:891 kernel/(7791:7803): Se conecto la memoria 1
+[INFO] 22:28:32:295 kernel/(7791:7810): Se agrego la memoria 1 al criterio SHC
+[INFO] 22:28:36:975 kernel/(7791:7812): 1000: NEW->READY
+[INFO] 22:28:36:975 kernel/(7791:7804): 1000: READY->EXEC
+[INFO] 22:28:36:990 kernel/(7791:7813): Se agrego la tabla CELULARES a las metadatas
+[INFO] 22:28:36:990 kernel/(7791:7813): Se agrego la metadata CELULARES SHC 4 600000
+[INFO] 22:28:36:990 kernel/(7791:7813): CREATE CELULARES SHC 4 600000: Se pudo realizar. (Enviado a 1)

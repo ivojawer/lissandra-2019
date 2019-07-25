@@ -513,7 +513,9 @@ int memoriaHash(int key) {
 		return -1;
 	}
 
-	return key % cantidadMemoriasSHC;
+	int numeroMemoriaResultante = (key % cantidadMemoriasSHC) + 1; //Las memorias empiezan por la memoria 1, asi que se pone +1
+
+	return numeroMemoriaResultante;
 }
 
 void matarMemoria(int nombreMemoria) {
