@@ -51,7 +51,8 @@ void grabar_registro(char *root, char *registro_completo_2, int length_registro,
 					 struct bloques_tmp *bloques_tmp, int flag_close_file)
 {
 	char *registro_completo = strdup(registro_completo_2);
-	if (flag_close_file == 1 && fp_dump != NULL) {
+
+	if ((flag_close_file == 1) && (fp_dump != NULL)) {
 		fclose(fp_dump);
 		fp_dump = NULL;
 	} else {
@@ -83,6 +84,7 @@ void grabar_registro(char *root, char *registro_completo_2, int length_registro,
 
 		if (space_full == 0){ //Escribo registro
 			j = 0;
+//			fseek(fp_dump, 0L, SEEK_END);
 			while ((j < length_registro) && (suma_size < espacio_libre)) {
 				fputc(registro_completo[j], fp_dump);
 				size = sizeof(registro_completo[j]);
@@ -269,11 +271,13 @@ void dump() {
 		int i, j, k;
 		int table_change;
 		int siga_siga = 0;
+		int cont;
 		lista_bloques_tmp = list_create();
 		for (i = 0; i < list_size(memtable); i++){
 			space_full = 0;
 			fp_dump = NULL;
 			table_change = 0;
+			cont = -1;
 			t_tabla *tabla = malloc(sizeof(t_tabla));
 			tabla = list_get(memtable, i);
 			if(existe_tabla(tabla->name_tabla)){
@@ -287,9 +291,10 @@ void dump() {
 					for (k = 0; k < length_particion; k++) {
 						t_registro *registro = malloc(sizeof(t_registro));
 						registro = list_get(particion->lista_registros, k);
+						cont++;
 						if(strlen(registro->value) > 0){
 //						if(registro->value != NULL && strlen(registro->value)>0){
-							if (table_change == 0 && k == 1)
+							if (table_change == 0 && cont == 1)
 								table_change = 1;
 							guardar_registros_en_bloques(registro, table_change,
 													 bloques_tmp_tabla);//Control de error aca
@@ -298,7 +303,6 @@ void dump() {
 								log_info(dump_logger, "Dump finalizado. No se pudo guardar un registro por falta de espacio.");
 								if(full_space == 1)
 									printf("Dump finalizado. No se pudo guardar un registro por falta de espacio\n");
-//								pthread_mutex_unlock(&dump_semaphore);
 								return;
 							}
 							full_space = 0;

@@ -125,7 +125,8 @@ void convert_to_metadataTablaLFS(t_list *lista_recv) {
 void describe_full(int socket_cliente) {
 	lista_describe = list_create();
 	agregar_tablas_a_describir();
-	mostrar_descripciones_metadata(lista_describe);
+	if(socket_cliente == -1)
+		mostrar_descripciones_metadata(lista_describe);
 	convert_to_metadataTablaLFS(lista_describe);
 	if(socket_cliente != -1)
 	{
