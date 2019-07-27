@@ -40,17 +40,14 @@ int manejarRespuestaDeMemoria(script* elScript, request* laRequest, int memoria)
 
 		}
 
-		if(respuesta == NO_EXISTE)
-		{
-			log_error(logger, "%s: No se pudo encontrar el dato. (Enviado a %i)",
-							requestStructAString(laRequest), memoria);
-		}
-		else
-		{
+		if (respuesta == NO_EXISTE) {
+			log_error(logger,
+					"%s: No se pudo encontrar el dato. (Enviado a %i)",
+					requestStructAString(laRequest), memoria);
+		} else {
 			log_error(logger, "%s: No se pudo realizar. (Enviado a %i)",
-							requestStructAString(laRequest), memoria);
+					requestStructAString(laRequest), memoria);
 		}
-
 
 	}
 
@@ -146,8 +143,9 @@ int manejarRespuestaDeMemoria(script* elScript, request* laRequest, int memoria)
 				describirMetadatas(metadatas);
 			} else {
 				metadataTablaLFS* laMetadata = list_get(metadatas, 0);
-				agregarUnaMetadata(laMetadata);
 				describirUnaMetadata(laMetadata);
+				agregarUnaMetadata(laMetadata);
+
 
 				list_destroy(metadatas);
 			}
@@ -157,10 +155,12 @@ int manejarRespuestaDeMemoria(script* elScript, request* laRequest, int memoria)
 		default: {
 
 			if (laRequest->requestEnInt == CREATE) {
-				agregarUnaMetadataEnString(laRequest->parametros);
 
 				log_info(logger, "Se agrego la metadata %s",
 						laRequest->parametros);
+
+				agregarUnaMetadataEnString(laRequest->parametros);
+
 			}
 
 			if (laRequest->requestEnInt == INSERT) {
@@ -226,7 +226,6 @@ char* devolverTablaDeRequest(request* unaRequest) {
 	return tabla;
 
 }
-
 
 int encontrarPosicionDeMemoria(int memoriaAEncontrar) {
 
@@ -474,7 +473,6 @@ int laMemoriaTieneConsistencias(memoriaEnLista* unaMemoria) {
 	}
 	return 1;
 }
-
 
 int existeTabla(char* nombreTabla) {
 	return criterioDeTabla(nombreTabla) + 1;

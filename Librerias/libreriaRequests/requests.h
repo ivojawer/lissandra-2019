@@ -103,6 +103,20 @@ void esperarModificacionDeArchivo(char* direccionArchivo);
 int esUnNumero(char* string);
 void liberarListaMetadatas(t_list* metadatas);
 
+//Colores:
+void loggearRojo(t_log* logger, char* texto);
+void loggearRojoClaro(t_log* logger, char* texto);
+void loggearVerde(t_log* logger, char* texto);
+void loggearVerdeClaro(t_log* logger, char* texto);
+void loggearMarron(t_log* logger, char* texto);
+void loggearAmarillo(t_log* logger, char* texto);
+void loggearAzul(t_log* logger, char* texto);
+void loggearAzulClaro(t_log* logger, char* texto);
+void loggearMagenta(t_log* logger, char* texto);
+void loggearMagentaClaro(t_log* logger, char* texto);
+void loggearCyan(t_log* logger, char* texto);
+void loggearCyanClaro(t_log* logger, char* texto);
+
 //Comunicacion:
 void enviarInt(int aQuien, int intAEnviar);
 void enviarIntConHeader(int aQuien, int intAEnviar, int header);
