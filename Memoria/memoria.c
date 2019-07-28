@@ -37,8 +37,6 @@ int main() {
 
 	//string_append(&nombreArchivoConfig,".config");
 
-	logger = log_create("memoria.log", "memoria", 1, 0); //3er parametro en 1 para mostrarlos en consola. Sino en 0
-
 	t_config* config = config_create(dirConfig);
 
 	hilosEnEjecucion = list_create();
@@ -50,7 +48,7 @@ int main() {
 	sem_init(&sem_refreshConfig, 0, 1);
 	sem_init(&sem_LFSconectandose, 0, 1);
 	sem_init(&sem_recepcionLFS, 0, 0);
-	sem_init(&conexionMemoria,0,1);
+	sem_init(&conexionMemoria, 0, 1);
 
 	int tamanioMemoria = config_get_int_value(config, "TAM_MEM");
 
@@ -62,11 +60,18 @@ int main() {
 	puertoServidor = config_get_int_value(config, "PUERTO_ESCUCHA");
 	idScriptKernel = -1;
 
+	char* nombreLogger = string_new(); //Por si acaso no hacerle free a este string
+	string_append(&nombreLogger,"memoria");
+	string_append(&nombreLogger,string_itoa(nombreMemoria));
+	string_append(&nombreLogger,".log");
+
+	logger = log_create(nombreLogger, "memoria", 1, 0); //3er parametro en 1 para mostrarlos en consola. Sino en 0
+
 	config_destroy(config);
 
 	caracMaxDeValue = primeraConexionLFS();
 
-	log_info(logger,"Caracteres value:%d", caracMaxDeValue);
+	log_info(logger, "Caracteres value:%d", caracMaxDeValue);
 	if (caracMaxDeValue != -1) {
 		log_info(logger, "Se conecto el LFS.");
 		pthread_t h_respuestaLFS;
@@ -89,7 +94,8 @@ int main() {
 	//printf("comienzo memoria:%p\n", comienzoMemoria);
 	//divido en marcos
 
-	tamanioMarco = caracMaxDeValue * sizeof(char) + sizeof(uint16_t)	+ sizeof(unsigned long long); //value + key + timestamp
+	tamanioMarco = caracMaxDeValue * sizeof(char) + sizeof(uint16_t)
+			+ sizeof(unsigned long long); //value + key + timestamp
 	log_info(logger, "el tamanio de mi marco es: %d", tamanioMarco);
 	cantMarcos = tamanioMemoria / tamanioMarco;
 	log_info(logger, "cantidad de marcos: %d", cantMarcos);
@@ -117,7 +123,8 @@ int main() {
 	pthread_create(&h_refreshConfig, NULL, (void *) refreshConfig, NULL);
 	pthread_create(&h_journalAutomatico, NULL, (void *) journalAutomatico,
 	NULL);
-	pthread_create(&h_refreshGossiping, NULL, (void *) hacerGossipingAutomatico, NULL);
+	pthread_create(&h_refreshGossiping, NULL, (void *) hacerGossipingAutomatico,
+			NULL);
 	pthread_create(&h_consola, NULL, (void *) consola, NULL);
 
 	pthread_detach(h_conexiones);

@@ -11,46 +11,49 @@ extern sem_t sem_actualizacionMetadatas;
 extern sem_t sem_borradoMemoria;
 extern sem_t sem_cambioMemoriaEC;
 extern sem_t sem_seedSiendoCreada;
+extern sem_t sem_operacionesTotales;
 extern int proximaMemoriaEC;
+extern int operacionesTotales;
 
 int manejarRespuestaDeMemoria(script* elScript, request* laRequest, int memoria) {
+
+	void loggearErrorDeEjecucion(int tipoRespuesta) {
+		if (tipoRespuesta == NO_EXISTE) {
+			log_error(logger,
+					"%s: No se pudo encontrar el dato. (Enviado a %i)",
+					requestStructAString(laRequest), memoria);
+		} else if (tipoRespuesta == ERROR) {
+			log_error(logger, "%s: No se pudo realizar. (Enviado a %i)",
+					requestStructAString(laRequest), memoria);
+		} else if (tipoRespuesta == TABLA_NO_EXISTE) {
+			log_error(logger, "%s: La tabla ya no existe. (Enviado a %i)",
+					requestStructAString(laRequest), memoria);
+
+		}
+	}
+
 
 	int respuesta;
 	memcpy(&respuesta, elScript->resultadoDeEnvio, sizeof(int));
 
-	if (respuesta == ERROR || respuesta == NO_EXISTE
-			|| respuesta == TABLA_NO_EXISTE) {
+	switch (respuesta) {
+	case ERROR:
+	case NO_EXISTE:
+	case TABLA_NO_EXISTE: {
 
-		if (laRequest->requestEnInt == SELECT) {
+		agregarOperacionFallidaAMemoria(memoria, laRequest->requestEnInt);
 
-			agregarSelectFallidoAMemoria(memoria);
-		} else if (laRequest->requestEnInt == INSERT) {
-			agregarInsertFallidoAMemoria(memoria);
-		}
+		loggearErrorDeEjecucion(respuesta);
 
-		if (respuesta == NO_EXISTE) {
-			log_error(logger,
-					"%s: No se pudo encontrar el dato. (Enviado a %i)",
-					requestStructAString(laRequest), memoria);
-		} else if (respuesta == ERROR) {
-			log_error(logger, "%s: No se pudo realizar. (Enviado a %i)",
-					requestStructAString(laRequest), memoria);
-		} else if (respuesta == TABLA_NO_EXISTE) {
-			log_error(logger, "%s: La tabla ya no existe. (Enviado a %i)",
-					requestStructAString(laRequest), memoria);
+		if (respuesta == TABLA_NO_EXISTE) {
 
-			char** parametrosDeLaRequest = string_split(laRequest->parametros,
-					" ");
-			char* tabla = parametrosDeLaRequest[0];
-			removerUnaMetadata(tabla);
-
-			liberarArrayDeStrings(parametrosDeLaRequest);
+			removerMetadataDeUnRequest(laRequest);
 
 		}
-
+		break;
 	}
 
-	else if (respuesta == MEM_LLENA) {
+	case MEM_LLENA: {
 		char* textoALoggear = string_new();
 		string_append(&textoALoggear, "La memoria ");
 		string_append(&textoALoggear, string_itoa(memoria));
@@ -74,16 +77,15 @@ int manejarRespuestaDeMemoria(script* elScript, request* laRequest, int memoria)
 		memoriaEnLista* laMemoria = list_get(memorias,
 				encontrarPosicionDeMemoria(memoria));
 
-//		sem_wait(&sem_refreshConfig);   //TODO: Marca, no hay sleep en multiples lineas
-//		int tiempoDeSleep = sleepEjecucion;
-//		sem_wait(&sem_refreshConfig);
-//
-//		sleep(tiempoDeSleep);
-
 		enviarRequestConHeaderEId(laMemoria->socket, laRequest, REQUEST,
 				elScript->idScript);
 
-		laMemoria->estadisticas.operacionesTotalesEnMemoria++; //TODO: Marca, las operaciones intermedias cuentan como operaciones
+		//TODO: Marca, el JOURNAL intermedio cuenta como una operacion mas (Esta suma de operacion es el JOURNAL, no de la request enviada).
+		sem_wait(&sem_operacionesTotales);
+		operacionesTotales++;
+		sem_post(&sem_operacionesTotales);
+
+		laMemoria->estadisticas.operacionesTotalesEnMemoria++;
 
 		list_add(laMemoria->scriptsEsperando, &elScript->idScript);
 
@@ -98,10 +100,9 @@ int manejarRespuestaDeMemoria(script* elScript, request* laRequest, int memoria)
 		respuesta = manejarRespuestaDeMemoria(elScript, laRequest, memoria);
 
 		elScript->resultadoDeEnvio = malloc(1); //Para que no rompa en el free de despues
+		break;
 	}
-
-	else {
-
+	default: {
 		switch (laRequest->requestEnInt) {
 		case SELECT: {
 
@@ -174,6 +175,8 @@ int manejarRespuestaDeMemoria(script* elScript, request* laRequest, int memoria)
 		}
 
 		}
+	}
+
 	}
 
 	if (elScript->resultadoDeEnvio != NULL) {
@@ -500,6 +503,14 @@ void sacarSeedDeMemoriasEnCreacion(seed* unaSeed) {
 	}
 	sem_post(&sem_seedSiendoCreada);
 
+}
+
+void agregarOperacionFallidaAMemoria(int numeroMemoria, int operacion) {
+	if (operacion == INSERT) {
+		agregarInsertFallidoAMemoria(numeroMemoria);
+	} else if (operacion == SELECT) {
+		agregarSelectFallidoAMemoria(numeroMemoria);
+	}
 }
 
 void agregarInsertCompletoAMemoria(int numeroMemoria)

@@ -224,7 +224,7 @@ int esUnParametroValido(int request, char* parametro) {
 
 			int resultado = 1;
 
-			if (parametros[0] == NULL //Hay solo  4 parametros no vacios?
+			if (parametros[0] == NULL //Hay solo 4 parametros no vacios?
 			|| parametros[1] == NULL || parametros[2] == NULL
 					|| parametros[3] == NULL || parametros[4] != NULL) {
 				resultado = 0;
@@ -243,7 +243,7 @@ int esUnParametroValido(int request, char* parametro) {
 				resultado = 0;
 			}
 
-			else if (!queConsistenciaEs(parametros[3]) + 1) //El cuarto parametro una de las consistencias?
+			else if (!(queConsistenciaEs(parametros[3]) + 1)) //El cuarto parametro una de las consistencias?
 					{
 				resultado = 0;
 			}

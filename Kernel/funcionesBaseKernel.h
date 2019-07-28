@@ -109,5 +109,6 @@ void agregarSelectFallidoAMemoria(int numeroMemoria);
 void agregarSelectCompletoAMemoria(int numeroMemoria);
 void journalAUnaMemoria(int numeroMemoria);
 void removerUnaMetadata(char* nombreMetadata);
+void removerMetadataDeUnRequest(request* unaRequest);
 
 #endif /* FUNCIONESBASEKERNEL_H_ */

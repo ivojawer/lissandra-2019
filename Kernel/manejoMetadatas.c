@@ -11,6 +11,15 @@ int metadataExiste(char*nombreMetadata) {
 	}
 }
 
+void removerMetadataDeUnRequest(request* unaRequest) {
+	char** parametrosDeLaRequest = string_split(unaRequest->parametros, " ");
+	char* tabla = parametrosDeLaRequest[0];
+
+	removerUnaMetadata(tabla);
+
+	liberarArrayDeStrings(parametrosDeLaRequest);
+}
+
 void agregarUnaMetadata(metadataTablaLFS* unaMetadata) {
 	if (!metadataExiste(unaMetadata->nombre)) {
 		sem_wait(&sem_actualizacionMetadatas);

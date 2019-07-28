@@ -40,12 +40,6 @@ void consola() {
 		if (!strcmp(requestYParametros[0], "STATUS")) {
 			status();
 
-		} else if (!strcmp(requestYParametros[0], "METRICS")) {
-			metrics(0);
-
-		} else if (!strcmp(requestYParametros[0], "ADD")) {
-			add(requestYParametros[1]);
-
 		} else if (!strcmp(requestYParametros[0], "JOURNAL")) {
 			journal();
 		} else if (!strcmp(requestYParametros[0], "SLEEP")) {
@@ -80,6 +74,14 @@ void consola() {
 		else if (requestEnInt == RUN && !existeArchivo(requestYParametros[1])) {
 			printf("%s%s%s", "El archivo ", requestYParametros[1],
 					" no pudo ser encontrado \n");
+		}
+
+		else if (requestEnInt == ADD) {
+			add(requestYParametros[1]);
+		}
+		else if(requestEnInt == METRICS)
+		{
+			metrics(0);
 		}
 
 		else {
