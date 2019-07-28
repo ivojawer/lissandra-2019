@@ -21,7 +21,11 @@ void planificadorREADYAEXEC() {
 
 		script* scriptAExec = list_get(colaREADY, 0); //El 0 siempre va a ser el mas viejo en la lista
 
-		log_info(logger, "%i%s", scriptAExec->idScript, ": READY->EXEC");
+		char* textoALoggear = string_new();
+		string_append(&textoALoggear, string_itoa(scriptAExec->idScript));
+		string_append(&textoALoggear, ": READY->EXEC");
+		loggearCyanClaro(logger, textoALoggear);
+		free(textoALoggear);
 
 		moverScript(scriptAExec->idScript, colaREADY, listaEXEC);
 
@@ -38,6 +42,14 @@ void planificadorEXEC(int idScript) {
 
 	script* scriptEXEC = encontrarScriptEnLista(idScript, listaEXEC);
 
+	void loggearMovimientoAExit() {
+		char* textoALoggear = string_new();
+		string_append(&textoALoggear, string_itoa(scriptEXEC->idScript));
+		string_append(&textoALoggear, ": EXEC->EXIT");
+		loggearCyanClaro(logger, textoALoggear);
+		free(textoALoggear);
+	}
+
 	sem_wait(&sem_refreshConfig);
 	int elQuantum = quantum;
 	sem_post(&sem_refreshConfig);
@@ -53,7 +65,7 @@ void planificadorEXEC(int idScript) {
 					scriptEXEC->idScript);
 
 			free(linea);
-			log_info(logger, "%i%s", scriptEXEC->idScript, ": EXEC->EXIT");
+			loggearMovimientoAExit();
 			moverScript(scriptEXEC->idScript, listaEXEC, listaEXIT);
 
 			sem_post(&sem_multiprocesamiento);
@@ -80,7 +92,7 @@ void planificadorEXEC(int idScript) {
 			log_error(logger, "Error sintactico en el script %i.", idScript);
 
 			free(linea);
-			log_info(logger, "%i%s", scriptEXEC->idScript, ": EXEC->EXIT");
+			loggearMovimientoAExit();
 			moverScript(scriptEXEC->idScript, listaEXEC, listaEXIT);
 
 			sem_post(&sem_multiprocesamiento);
@@ -115,7 +127,7 @@ void planificadorEXEC(int idScript) {
 			liberarRequest(requestAEjecutar);
 			free(linea);
 
-			log_info(logger, "%i%s", scriptEXEC->idScript, ": EXEC->EXIT");
+			loggearMovimientoAExit();
 			moverScript(scriptEXEC->idScript, listaEXEC, listaEXIT);
 			sem_post(&sem_multiprocesamiento);
 
@@ -141,12 +153,12 @@ void planificadorEXEC(int idScript) {
 		if (!strcmp(proximaLinea, "fin")) {
 			log_info(logger, "%s%i",
 					"Termino de ejecutar exitosamente el script ", idScript);
+			loggearMovimientoAExit();
 
 			free(proximaLinea); //Aca se solia romper ok
 			free(linea);
 			liberarRequest(requestAEjecutar);
 
-			log_info(logger, "%i%s", scriptEXEC->idScript, ": EXEC->EXIT");
 			moverScript(scriptEXEC->idScript, listaEXEC, listaEXIT);
 			sem_post(&sem_multiprocesamiento);
 
@@ -171,7 +183,11 @@ void planificadorEXEC(int idScript) {
 		liberarRequest(requestAEjecutar);
 	}
 
-	log_info(logger, "%i%s", scriptEXEC->idScript, ": EXEC->READY");
+	char* textoALoggear = string_new();
+	string_append(&textoALoggear, string_itoa(scriptEXEC->idScript));
+	string_append(&textoALoggear, ": EXEC->READY");
+	loggearCyanClaro(logger, textoALoggear);
+	free(textoALoggear);
 	moverScript(scriptEXEC->idScript, listaEXEC, colaREADY);
 
 	sem_post(&sem_disponibleColaREADY);

@@ -64,7 +64,11 @@ int crearScript(request* nuevaRequest) {
 
 	list_add(colaNEW, nuevoScript); //Esto es puramente por formalidad del TP
 
-	log_info(logger, "%i%s", nuevoScript->idScript, ": NEW->READY");
+	char* textoALoggear = string_new();
+	string_append(&textoALoggear,string_itoa(nuevoScript->idScript));
+	string_append(&textoALoggear,": NEW->READY");
+	loggearCyanClaro(logger,textoALoggear);
+	free(textoALoggear);
 
 	moverScript(nuevoScript->idScript, colaNEW, colaREADY);
 
@@ -97,7 +101,7 @@ void journal() {
 
 	sem_post(&sem_borradoMemoria);
 
-	log_info(logger,
+	loggearAzulClaro(logger,
 			"Se mando JOURNAL a todas las memorias conocidas.");
 }
 
@@ -143,6 +147,10 @@ int ejecutarRequest(request* requestAEjecutar, script* elScript) {
 			return -1;
 		}
 
+		if (requestAEjecutar->requestEnInt == DROP)
+		{
+			removerUnaMetadata(tabla);
+		}
 		free(tabla);
 
 	}
@@ -511,5 +519,17 @@ void gossipingAutomatico() {
 
 		enviarPeticionesDeGossip();
 	}
+}
+
+void matarListas() {
+
+	list_destroy(tiemposInsert);
+	list_destroy(tiemposSelect);
+
+	matarListaScripts(listaEXIT);
+	matarListaScripts(listaEXEC);
+	matarListaScripts(colaREADY);
+	matarListaScripts(colaNEW);
+
 }
 

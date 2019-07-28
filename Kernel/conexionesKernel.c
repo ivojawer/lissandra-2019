@@ -80,8 +80,11 @@ void conectarseAUnaMemoria(seed* unaSeed) {
 
 	sacarSeedDeMemoriasEnCreacion(unaSeed);
 
-	log_info(logger, "Se conecto la memoria %i", nuevaMemoria->nombre);
-
+	char* textoALoggear = string_new();
+	string_append(&textoALoggear, "Se conecto la memoria ");
+	string_append(&textoALoggear, string_itoa(nuevaMemoria->nombre));
+	loggearAzulClaro(logger, textoALoggear);
+	free(textoALoggear);
 
 	comunicacionConMemoria(nuevaMemoria);
 
@@ -196,40 +199,14 @@ void comunicacionConMemoria(memoriaEnLista* memoria) {
 			script* scriptReceptor = unScript;
 			int tipoDeRespuesta = recibirInt(socketMemoria, logger);
 
-			int respuesta;
-
-			switch (tipoDeRespuesta) { //Juro que esto tiene algun sentido, pero me lo olvide
-
-			case TODO_BIEN: {
-
-				respuesta = TODO_BIEN;
-				break;
-
-			}
-			case ERROR: {
-
-				respuesta = ERROR;
-				break;
-			}
-
-			case MEM_LLENA: {
-				respuesta = MEM_LLENA;
-				break;
-			}
-			case NO_EXISTE:{
-				respuesta = NO_EXISTE;
-				break;
-			}
-
-			default: {
+			if (tipoDeRespuesta == 0 || tipoDeRespuesta == -1) {
 				manejoErrorMemoria(memoria->nombre);
 				return;
 			}
 
-			}
-
 			scriptReceptor->resultadoDeEnvio = malloc(sizeof(int));
-			memcpy(scriptReceptor->resultadoDeEnvio, &respuesta, sizeof(int));
+			memcpy(scriptReceptor->resultadoDeEnvio, &tipoDeRespuesta,
+					sizeof(int));
 
 			sem_post(&scriptReceptor->semaforoDelScript);
 
@@ -282,8 +259,12 @@ void comunicacionConMemoria(memoriaEnLista* memoria) {
 
 		case GOSSIPING: {
 
-			log_info(logger, "Se recibio el gossiping de la memoria",
-					memoria->nombre);
+			char* textoALoggear = string_new();
+			string_append(&textoALoggear,
+					"Se recibio el gossiping de la memoria ");
+			string_append(&textoALoggear, string_itoa(memoria->nombre));
+			loggearAzulClaro(logger, textoALoggear);
+			free(textoALoggear);
 
 			t_list* seeds = recibirSeeds(socketMemoria, logger);
 

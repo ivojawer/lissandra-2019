@@ -103,5 +103,11 @@ int memoriaEstaSiendoCreada(seed* unaSeed);
 void sacarSeedDeMemoriasEnCreacion(seed* unaSeed);
 void agregarUnaMetadataEnString(char* metadataEnString);
 void matarListaScripts(t_list* scripts);
+void agregarInsertCompletoAMemoria(int numeroMemoria);
+void agregarInsertFallidoAMemoria(int numeroMemoria);
+void agregarSelectFallidoAMemoria(int numeroMemoria);
+void agregarSelectCompletoAMemoria(int numeroMemoria);
+void journalAUnaMemoria(int numeroMemoria);
+void removerUnaMetadata(char* nombreMetadata);
 
 #endif /* FUNCIONESBASEKERNEL_H_ */

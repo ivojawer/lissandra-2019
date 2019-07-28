@@ -18,44 +18,48 @@ int manejarRespuestaDeMemoria(script* elScript, request* laRequest, int memoria)
 	int respuesta;
 	memcpy(&respuesta, elScript->resultadoDeEnvio, sizeof(int));
 
-	if (respuesta == ERROR || respuesta == NO_EXISTE) {
+	if (respuesta == ERROR || respuesta == NO_EXISTE
+			|| respuesta == TABLA_NO_EXISTE) {
 
-		if (laRequest->requestEnInt == SELECT
-				|| laRequest->requestEnInt == INSERT) {
-			sem_wait(&sem_borradoMemoria);
-			int index = encontrarPosicionDeMemoria(memoria);
+		if (laRequest->requestEnInt == SELECT) {
 
-			if (index != -1) {
-				memoriaEnLista* laMemoria = list_get(memorias,
-						encontrarPosicionDeMemoria(memoria));
-
-				if (laRequest->requestEnInt == SELECT) {
-					laMemoria->estadisticas.selectsFallidos++;
-				} else if (laRequest->requestEnInt == INSERT) {
-					laMemoria->estadisticas.insertsFallidos++;
-				}
-
-			}
-			sem_post(&sem_borradoMemoria);
-
+			agregarSelectFallidoAMemoria(memoria);
+		} else if (laRequest->requestEnInt == INSERT) {
+			agregarInsertFallidoAMemoria(memoria);
 		}
 
 		if (respuesta == NO_EXISTE) {
 			log_error(logger,
 					"%s: No se pudo encontrar el dato. (Enviado a %i)",
 					requestStructAString(laRequest), memoria);
-		} else {
+		} else if (respuesta == ERROR) {
 			log_error(logger, "%s: No se pudo realizar. (Enviado a %i)",
 					requestStructAString(laRequest), memoria);
+		} else if (respuesta == TABLA_NO_EXISTE) {
+			log_error(logger, "%s: La tabla ya no existe. (Enviado a %i)",
+					requestStructAString(laRequest), memoria);
+
+			char** parametrosDeLaRequest = string_split(laRequest->parametros,
+					" ");
+			char* tabla = parametrosDeLaRequest[0];
+			removerUnaMetadata(tabla);
+
+			liberarArrayDeStrings(parametrosDeLaRequest);
+
 		}
 
 	}
 
 	else if (respuesta == MEM_LLENA) {
-		log_info(logger, "La memoria %i esta llena, se va a enviar un JOURNAL.",
-				memoria);
+		char* textoALoggear = string_new();
+		string_append(&textoALoggear, "La memoria ");
+		string_append(&textoALoggear, string_itoa(memoria));
+		string_append(&textoALoggear,
+				" esta llena, se va a enviar un JOURNAL.");
+		loggearAzulClaro(logger, textoALoggear);
+		free(textoALoggear);
 
-		journal();
+		journalAUnaMemoria(memoria);
 
 		sem_wait(&sem_borradoMemoria);
 
@@ -112,22 +116,17 @@ int manejarRespuestaDeMemoria(script* elScript, request* laRequest, int memoria)
 					elScript->resultadoDeEnvio + sizeof(int) + sizeof(int),
 					tamanioString);
 
-			log_info(logger, "%s: %s (Enviado a %i)",
-					requestStructAString(laRequest), resultadoSelect, memoria);
+			char* textoALoggear = string_new();
+			string_append(&textoALoggear, requestStructAString(laRequest));
+			string_append(&textoALoggear, ": ");
+			string_append(&textoALoggear, resultadoSelect);
+			string_append(&textoALoggear, "(Enviado a ");
+			string_append(&textoALoggear, string_itoa(memoria));
+			string_append(&textoALoggear, ")");
+			loggearVerde(logger, textoALoggear);
+			free(textoALoggear);
 
-			sem_wait(&sem_borradoMemoria);
-
-			int index = encontrarPosicionDeMemoria(memoria);
-
-			if (index != -1) {
-				memoriaEnLista* laMemoria = list_get(memorias,
-						encontrarPosicionDeMemoria(memoria));
-
-				laMemoria->estadisticas.selectsCompletos++;
-
-			}
-
-			sem_post(&sem_borradoMemoria);
+			agregarSelectCompletoAMemoria(memoria);
 			break;
 
 		}
@@ -146,7 +145,6 @@ int manejarRespuestaDeMemoria(script* elScript, request* laRequest, int memoria)
 				describirUnaMetadata(laMetadata);
 				agregarUnaMetadata(laMetadata);
 
-
 				list_destroy(metadatas);
 			}
 		}
@@ -156,33 +154,23 @@ int manejarRespuestaDeMemoria(script* elScript, request* laRequest, int memoria)
 
 			if (laRequest->requestEnInt == CREATE) {
 
-				log_info(logger, "Se agrego la metadata %s",
-						laRequest->parametros);
-
 				agregarUnaMetadataEnString(laRequest->parametros);
 
 			}
 
 			if (laRequest->requestEnInt == INSERT) {
 
-				sem_wait(&sem_borradoMemoria);
-
-				int index = encontrarPosicionDeMemoria(memoria);
-
-				if (index != -1) {
-					memoriaEnLista* laMemoria = list_get(memorias,
-							encontrarPosicionDeMemoria(memoria));
-
-					laMemoria->estadisticas.insertsCompletos++;
-
-				}
-
-				sem_post(&sem_borradoMemoria);
+				agregarInsertCompletoAMemoria(memoria);
 
 			}
 
-			log_info(logger, "%s: Se pudo realizar. (Enviado a %i)",
-					requestStructAString(laRequest), memoria);
+			char* textoALoggear = string_new();
+			string_append(&textoALoggear, requestStructAString(laRequest));
+			string_append(&textoALoggear, ": Se pudo realizar. (Enviado a ");
+			string_append(&textoALoggear, string_itoa(memoria));
+			string_append(&textoALoggear, ")");
+			loggearVerdeClaro(logger, textoALoggear);
+			free(textoALoggear);
 		}
 
 		}
@@ -191,8 +179,7 @@ int manejarRespuestaDeMemoria(script* elScript, request* laRequest, int memoria)
 	if (elScript->resultadoDeEnvio != NULL) {
 		free(elScript->resultadoDeEnvio);
 	}
-
-	if (respuesta == ERROR) {
+	if (respuesta == ERROR) { //TODO: Marca, si se hace una operacion sobre una tabla que ya no existe, no se corta
 		return ERROR;
 	} else {
 		return TODO_BIEN; //Si la respuesta fuese NO_EXISTE, no se corta la ejecucion
@@ -513,4 +500,91 @@ void sacarSeedDeMemoriasEnCreacion(seed* unaSeed) {
 	}
 	sem_post(&sem_seedSiendoCreada);
 
+}
+
+void agregarInsertCompletoAMemoria(int numeroMemoria)
+
+{
+	sem_wait(&sem_borradoMemoria);
+
+	int index = encontrarPosicionDeMemoria(numeroMemoria);
+
+	if (index != -1) {
+		memoriaEnLista* laMemoria = list_get(memorias,
+				encontrarPosicionDeMemoria(numeroMemoria));
+
+		laMemoria->estadisticas.insertsCompletos++;
+
+	}
+
+	sem_post(&sem_borradoMemoria);
+}
+
+void agregarInsertFallidoAMemoria(int numeroMemoria) {
+	sem_wait(&sem_borradoMemoria);
+
+	int index = encontrarPosicionDeMemoria(numeroMemoria);
+
+	if (index != -1) {
+		memoriaEnLista* laMemoria = list_get(memorias,
+				encontrarPosicionDeMemoria(numeroMemoria));
+
+		laMemoria->estadisticas.insertsFallidos++;
+
+	}
+
+	sem_post(&sem_borradoMemoria);
+}
+
+void agregarSelectFallidoAMemoria(int numeroMemoria) {
+	sem_wait(&sem_borradoMemoria);
+
+	int index = encontrarPosicionDeMemoria(numeroMemoria);
+
+	if (index != -1) {
+		memoriaEnLista* laMemoria = list_get(memorias,
+				encontrarPosicionDeMemoria(numeroMemoria));
+
+		laMemoria->estadisticas.selectsFallidos++;
+
+	}
+
+	sem_post(&sem_borradoMemoria);
+}
+
+void agregarSelectCompletoAMemoria(int numeroMemoria) {
+	sem_wait(&sem_borradoMemoria);
+
+	int index = encontrarPosicionDeMemoria(numeroMemoria);
+
+	if (index != -1) {
+		memoriaEnLista* laMemoria = list_get(memorias,
+				encontrarPosicionDeMemoria(numeroMemoria));
+
+		laMemoria->estadisticas.selectsCompletos++;
+
+	}
+
+	sem_post(&sem_borradoMemoria);
+}
+
+void journalAUnaMemoria(int numeroMemoria) {
+	sem_wait(&sem_borradoMemoria);
+
+	for (int i = 0; i < list_size(memorias); i++) {
+		memoriaEnLista* unaMemoria = list_get(memorias, i);
+
+		if (unaMemoria->nombre == numeroMemoria) //TODO: Marca, va a todas
+				{
+
+			if (unaMemoria->estaViva) {
+				unaMemoria->estadisticas.operacionesTotalesEnMemoria++;
+				enviarInt(unaMemoria->socket, OP_JOURNAL);
+			}
+
+		}
+
+	}
+
+	sem_post(&sem_borradoMemoria);
 }

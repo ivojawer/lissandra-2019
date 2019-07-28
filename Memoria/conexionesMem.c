@@ -613,7 +613,7 @@ void manejarRespuestaLFS() {
 		case RESPUESTA: {
 			int respuesta = recibirInt(socketLFS, logger);
 
-			if (respuesta == -1) {
+			if (respuesta == -1 || respuesta == 0) {
 
 				manejoErrorLFS();
 				log_error(logger, "No se pudo ejecutar el request");
@@ -633,6 +633,8 @@ void manejarRespuestaLFS() {
 				log_info(logger, "El LFS no tiene el dato");
 			} else if (respuesta == ERROR) {
 				log_info(logger, "El LFS no pudo ejecutar la request");
+			} else if (respuesta == TABLA_NO_EXISTE) {
+				log_info(logger, "El LFS no tiene la tabla");
 			}
 			if (idScriptKernel) {
 				log_info(logger, "Enviando el resultado al kernel");

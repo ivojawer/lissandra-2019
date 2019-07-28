@@ -33,6 +33,7 @@
 #define ERROR 1
 #define TODO_BIEN 2
 #define NO_EXISTE 3
+#define TABLA_NO_EXISTE 4
 #define MEM_LLENA -200
 
 
