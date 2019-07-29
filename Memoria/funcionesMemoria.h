@@ -94,5 +94,6 @@ void insertInterno(uint16_t key, char* value, char* tabla, unsigned long long ti
 memoriaGossip* structMemoriaDadoElNombre(int nombreMemoria);
 int seedExiste(seed* unaSeed);
 void status();
+void ponerRequestEnColaDeEjecucion(requestConID* laRequest);
 
 #endif /* FUNCIONESMEMORIA_H_ */

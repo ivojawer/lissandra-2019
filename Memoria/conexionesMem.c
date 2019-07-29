@@ -426,8 +426,7 @@ void comunicacionConKernel() {
 			requestParaHilo->laRequest = unaRequest;
 			requestParaHilo->idKernel = id;
 
-			list_add(colaDeRequests, requestParaHilo);
-			sem_post(&requestsDisponibles);
+			ponerRequestEnColaDeEjecucion(requestParaHilo);
 
 			break;
 
@@ -458,8 +457,7 @@ void comunicacionConKernel() {
 			requestParaHilo->laRequest = unaRequest;
 			requestParaHilo->idKernel = 0;
 
-			list_add(colaDeRequests, requestParaHilo);
-			sem_post(&requestsDisponibles);
+			ponerRequestEnColaDeEjecucion(requestParaHilo);
 
 			continue;
 		}
@@ -518,8 +516,7 @@ void enviarRegistroComoInsert(registro* registroAEnviar) {
 	requestAEjecutar->laRequest = insertAEnviar;
 	requestAEjecutar->idKernel = 0;
 
-	list_add(colaDeRequests, requestAEjecutar);
-	sem_post(&requestsDisponibles);
+	ponerRequestEnColaDeEjecucion(requestAEjecutar);
 
 }
 

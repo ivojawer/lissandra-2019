@@ -8,6 +8,7 @@ extern sem_t sem_journal;
 extern sem_t sem_refreshConfig;
 extern sem_t sem_LFSconectandose;
 extern sem_t sem_recepcionLFS;
+extern sem_t agregadoRequests;
 extern int caracMaxDeValue;
 extern int sleepJournal;
 extern int sleepGossiping;
@@ -23,9 +24,13 @@ void ejecutarRequests() {
 
 	while (1) {
 
-		sem_wait(&requestsDisponibles);
+		sem_wait(&requestsDisponibles); //Primero se espera que haya una request disponible
+
+		sem_wait(&agregadoRequests); //Recien despues de eso se espera a que no haya nadie poniendo algo en la lista, porque si no puede entrar en interbloqueo.
 
 		requestConID* requestEID = list_remove(colaDeRequests, 0);
+
+		sem_post(&agregadoRequests);
 
 		request* requestAEjecutar = requestEID->laRequest;
 
@@ -782,5 +787,14 @@ void status(){
 			free(statusMarcos[i]);
 		}
 	}
+}
+
+void ponerRequestEnColaDeEjecucion(requestConID* laRequest)
+{
+	sem_wait(&agregadoRequests);
+	list_add(colaDeRequests, laRequest);
+	sem_post(&agregadoRequests);
+
+	sem_post(&requestsDisponibles);
 }
 

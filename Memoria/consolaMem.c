@@ -93,8 +93,7 @@ void consola() {
 			requestAEjecutar->laRequest = crearStructRequest(lectura);
 			requestAEjecutar->idKernel = 0;
 		}
-		list_add(colaDeRequests,requestAEjecutar);
-		sem_post(&requestsDisponibles);
+		ponerRequestEnColaDeEjecucion(requestAEjecutar);
 
 		liberarArrayDeStrings(requestYParametros);
 		free(lectura);
