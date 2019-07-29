@@ -32,7 +32,7 @@ void gossiping() {
 
 	sem_wait(&sem_gossiping);
 
-	log_info(logger, "Se va a empezar a hacer gossiping.");
+	loggearAzul(logger, "Se va a empezar a hacer gossiping.");
 	tratarDeConectarseASeeds();
 
 	for (int i = 0; i < list_size(tablaGossiping); i++) {
@@ -43,7 +43,7 @@ void gossiping() {
 		}
 
 	}
-	log_info(logger, "Se termino el gossiping.");
+	loggearAzul(logger, "Se termino el gossiping.");
 
 	sem_post(&sem_gossiping);
 }

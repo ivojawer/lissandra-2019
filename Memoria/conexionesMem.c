@@ -100,7 +100,8 @@ void aceptarConexiones() {
 
 		switch (modulo) {
 		case KERNEL: {
-			log_info(logger, "Se conecto el Kernel.");
+
+			loggearAzulClaro(logger, "Se conecto el kernel");
 			socketKernel = socketMisterioso;
 			pthread_t h_conexionKernel;
 			pthread_create(&h_conexionKernel, NULL,
@@ -176,7 +177,11 @@ void aceptarConexiones() {
 
 			list_add(tablaGossiping, nuevaMemoriaConectada);
 
-			log_info(logger, "Se conecto la memoria %i.", nombre);
+			char* textoALoggear = string_new();
+			string_append(&textoALoggear, "Se conecto la memoria ");
+			string_append(&textoALoggear, string_itoa(nombre));
+			loggearAzulClaro(logger, textoALoggear);
+			free(textoALoggear);
 
 			sem_post(&conexionMemoria);
 //			tratarDeConectarseASeeds();
@@ -306,7 +311,11 @@ void conectarseAOtraMemoria(seed* laSeed) { //Esto es secuencial al hilo de goss
 		}
 		list_add(tablaGossiping, nuevaMemoriaConectada);
 
-		log_info(logger, "Se conecto a la memoria %i.", nombre);
+		char* textoALoggear = string_new();
+		string_append(&textoALoggear, "Se conecto la memoria ");
+		string_append(&textoALoggear, string_itoa(nombre));
+		loggearAzulClaro(logger, textoALoggear);
+		free(textoALoggear);
 
 		sem_post(&conexionMemoria);
 //		tratarDeConectarseASeeds();
@@ -328,7 +337,6 @@ void comunicacionConMemoria(memoriaGossip* memoria) {
 	int socketMemoria = memoria->elSocket;
 	while (1) {
 		int operacion = recibirInt(socketMemoria, logger);
-		log_info(logger, "%i", operacion);
 
 		switch (operacion) {
 		case GOSSIPING: {
@@ -431,7 +439,7 @@ void comunicacionConKernel() {
 				return !seedNoEstaConectada(unaSeed);
 			}
 
-			log_info(logger, "Se recibio la peticion de GOSSIPING del kernel.");
+			loggearAzulClaro(logger, "Se recibio la peticion de GOSSIPING del kernel.");
 
 			sem_wait(&sem_gossiping);
 			t_list* seedsConectadas = list_filter(seedsConocidas,
@@ -592,18 +600,22 @@ void manejarRespuestaLFS() {
 				log_error(logger, "No se pudo ejecutar el request");
 				if (idScriptKernel) {
 					enviarRespuestaAlKernel(idScriptKernel, ERROR);
-					log_info(logger, "Enviando ERROR al kernel");
+					loggearAzulClaro(logger, "Enviando ERROR al kernel");
 				}
 
 				free(dato);
 				sem_post(&sem_recepcionLFS);
 				return;
 			}
+			char* textoALoggear = string_new();
+			string_append(&textoALoggear,"Resultado: ");
+			string_append(&textoALoggear,dato);
+			loggearVerdeClaro(logger,textoALoggear);
+			free(textoALoggear);
 
-			log_info(logger, "Resultado: %s", dato);
 			if (idScriptKernel) {
 
-				log_info(logger, "Enviando el resultado al kernel");
+				loggearAzulClaro(logger, "Enviando el resultado al kernel");
 				enviarStringConHeaderEId(socketKernel, dato, DATO,
 						idScriptKernel);
 			}
@@ -619,7 +631,7 @@ void manejarRespuestaLFS() {
 				log_error(logger, "No se pudo ejecutar el request");
 
 				if (idScriptKernel) {
-					log_info(logger, "Enviando ERROR al kernel");
+					loggearAzulClaro(logger, "Enviando ERROR al kernel");
 					enviarRespuestaAlKernel(idScriptKernel, ERROR);
 				}
 
@@ -628,16 +640,16 @@ void manejarRespuestaLFS() {
 				return;
 			}
 			if (respuesta == TODO_BIEN) {
-				log_info(logger, "El LFS pudo ejecutar la request");
+				loggearVerde(logger, "El LFS pudo ejecutar la request");
 			} else if (respuesta == NO_EXISTE) {
-				log_info(logger, "El LFS no tiene el dato");
+				loggearRojoClaro(logger, "El LFS no tiene el dato");
 			} else if (respuesta == ERROR) {
-				log_info(logger, "El LFS no pudo ejecutar la request");
+				loggearRojoClaro(logger, "El LFS no pudo ejecutar la request");
 			} else if (respuesta == TABLA_NO_EXISTE) {
-				log_info(logger, "El LFS no tiene la tabla");
+				loggearRojoClaro(logger, "El LFS no tiene la tabla");
 			}
 			if (idScriptKernel) {
-				log_info(logger, "Enviando el resultado al kernel");
+				loggearAzulClaro(logger, "Enviando el resultado al kernel");
 				enviarRespuestaAlKernel(idScriptKernel, respuesta);
 			}
 			sem_post(&sem_recepcionLFS);
@@ -651,7 +663,7 @@ void manejarRespuestaLFS() {
 				log_error(logger, "No se pudo ejecutar el request");
 
 				if (idScriptKernel) {
-					log_info(logger, "Enviando ERROR al kernel");
+					loggearAzulClaro(logger, "Enviando ERROR al kernel");
 					enviarRespuestaAlKernel(idScriptKernel, ERROR);
 				}
 
@@ -660,11 +672,15 @@ void manejarRespuestaLFS() {
 				return;
 			}
 
-			log_info(logger, "Resultado: %s", registroRecibido->value);
+			char* textoALoggear = string_new();
+			string_append(&textoALoggear,"Resultado: ");
+			string_append(&textoALoggear,registroRecibido->value);
+			loggearVerdeClaro(logger,textoALoggear);
+			free(textoALoggear);
 
 			if (idScriptKernel) {
 
-				log_info(logger, "Enviando el resultado al kernel");
+				loggearAzulClaro(logger, "Enviando el resultado al kernel");
 				enviarStringConHeaderEId(socketKernel, registroRecibido->value,
 				DATO, idScriptKernel);
 			}
@@ -689,7 +705,7 @@ void manejarRespuestaLFS() {
 					log_error(logger, "No se pudo ejecutar el request");
 
 					if (idScriptKernel) {
-						log_info(logger, "Enviando ERROR al kernel");
+						loggearAzulClaro(logger, "Enviando ERROR al kernel");
 						enviarRespuestaAlKernel(idScriptKernel, ERROR);
 					}
 
@@ -704,9 +720,9 @@ void manejarRespuestaLFS() {
 
 				if (list_size(metadatas) == 1) //HAY QUE TENER ESA BUENA COHERENCIA DE SINGULAR/PLURAL
 						{
-					log_info(logger, "Enviando la metadata al kernel");
+					loggearAzulClaro(logger, "Enviando la metadata al kernel");
 				} else {
-					log_info(logger, "Enviando las metadatas al kernel");
+					loggearAzulClaro(logger, "Enviando las metadatas al kernel");
 				}
 
 				enviarMetadatasConHeaderEId(socketKernel, metadatas,
@@ -725,7 +741,7 @@ void manejarRespuestaLFS() {
 
 			if (idScriptKernel != -1) //Si habia un script en ejecucion
 					{
-				log_info(logger, "Enviando ERROR al kernel");
+				loggearAzulClaro(logger, "Enviando ERROR al kernel");
 				enviarRespuestaAlKernel(idScriptKernel, ERROR);
 				sem_post(&sem_recepcionLFS);
 			}

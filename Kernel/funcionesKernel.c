@@ -117,18 +117,20 @@ int ejecutarRequest(request* requestAEjecutar, script* elScript) {
 
 	case JOURNAL: {
 		journal();
-		return 1;
+		return TODO_BIEN;
 	}
 	case RUN: {
-		return crearScript(requestAEjecutar);
+		crearScript(requestAEjecutar);
+		return TODO_BIEN;
 	}
 	case METRICS: {
 		metrics(0);
-		return 1;
+		return TODO_BIEN;
 	}
 
 	case ADD: {
-		return add(requestAEjecutar->parametros);
+		add(requestAEjecutar->parametros);
+		return TODO_BIEN;
 	}
 	}
 
@@ -144,7 +146,7 @@ int ejecutarRequest(request* requestAEjecutar, script* elScript) {
 		if (!existeTabla(tabla)) {
 			log_error(logger, "No se encontro la tabla %s.", tabla);
 			free(tabla);
-			return -1;
+			return ERROR;
 		}
 
 		if (requestAEjecutar->requestEnInt == DROP)
@@ -163,7 +165,7 @@ int ejecutarRequest(request* requestAEjecutar, script* elScript) {
 				"No hay memorias conectadas para ejecutar la request %i.",
 				requestAEjecutar->requestEnInt);
 		sem_post(&sem_borradoMemoria);
-		return -1;
+		return TODO_BIEN; //TODO: Marca, Si no hay memorias conectadas sigue la ejecucion
 	}
 
 	int memoria;
@@ -182,7 +184,7 @@ int ejecutarRequest(request* requestAEjecutar, script* elScript) {
 				"No se conoce una memoria que pueda ejecutar la request %i.",
 				requestAEjecutar->requestEnInt);
 		sem_post(&sem_borradoMemoria);
-		return -1;
+		return TODO_BIEN; //TODO: Marca, Si no hay memorias conectadas sigue la ejecucion
 	}
 
 	memoriaEnLista* laMemoria = list_get(memorias,
@@ -196,7 +198,7 @@ int ejecutarRequest(request* requestAEjecutar, script* elScript) {
 		insertarTiempo(tiempoInicial, tiempoFinal,
 				requestAEjecutar->requestEnInt);
 		sem_post(&sem_borradoMemoria);
-		return -1;
+		return TODO_BIEN; //TODO: Marca, si la memoria muere sigue la ejecucion.
 	}
 
 	enviarRequestConHeaderEId(laMemoria->socket, requestAEjecutar, REQUEST,

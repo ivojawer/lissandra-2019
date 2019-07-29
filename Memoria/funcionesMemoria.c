@@ -36,42 +36,42 @@ void ejecutarRequests() {
 		switch (requestAEjecutar->requestEnInt) {
 		case SELECT: {
 
-			log_info(logger, "Ejecutando SELECT");
+			loggearCyanClaro(logger, "Ejecutando SELECT");
 			Select(requestAEjecutar->parametros);
 			break;
 		}
 
 		case INSERT: {
 
-			log_info(logger, "Ejecutando INSERT");
+			loggearCyanClaro(logger, "Ejecutando INSERT");
 			insert(requestAEjecutar->parametros);
 			break;
 		}
 
 		case DROP: {
-			log_info(logger, "Ejecutando DROP");
+			loggearCyanClaro(logger, "Ejecutando DROP");
 			drop(requestAEjecutar->parametros);
 			break;
 		}
 		case CREATE: {
-			log_info(logger, "Ejecutando CREATE");
+			loggearCyanClaro(logger, "Ejecutando CREATE");
 			create(requestAEjecutar->parametros);
 			break;
 		}
 		case DESCRIBE: {
-			log_info(logger, "Ejecutando DESCRIBE");
+			loggearCyanClaro(logger, "Ejecutando DESCRIBE");
 			describe(requestAEjecutar->parametros);
 			break;
 		}
 		case JOURNAL: {
 
-			log_info(logger, "Ejecutando JOURNAL");
+			loggearCyanClaro(logger, "Ejecutando JOURNAL");
 			journal();
 			break;
 		}
 
 		case STATUS:{
-			log_info(logger, "Ejecutando STATUS");
+//			loggearCyanClaro(logger, "Ejecutando STATUS");
 			status();
 			break;
 		}
@@ -180,7 +180,13 @@ int marcoLRU() {
 int numeroMarcoDondeAlocar() {
 	for (int i = 0; i < cantMarcos; i++) {
 		if (marcos[i].vacio) {
-			log_info(logger, "numero marco libre encontrado:%d", i);
+
+			char* textoALoggear = string_new();
+			string_append(&textoALoggear,"Marco libre encontrado: ");
+			string_append(&textoALoggear,string_itoa(i));
+			loggearAmarillo(logger,textoALoggear);
+			free(textoALoggear);
+
 			marcos[i].vacio = false;
 			return i;
 		}
@@ -288,17 +294,23 @@ void Select(char* parametros) {
 	if (paginaPedida != NULL) {
 		paginaPedida->ultimoUso = tiempoActual();
 		dato = string_duplicate(&getMarcoFromPagina(paginaPedida)->value);
-		log_info(logger, "Resultado: %s\n", dato);
+
+		char* textoALoggear = string_new();
+		string_append(&textoALoggear,"Resultado: ");
+		string_append(&textoALoggear,dato);
+		loggearVerdeClaro(logger,textoALoggear);
+		free(textoALoggear);
+
 
 		if (idScriptKernel) {
-			log_info(logger, "Enviando el resultado al kernel");
+			loggearAzulClaro(logger, "Enviando el resultado al kernel");
 			enviarStringConHeaderEId(socketKernel, dato, DATO, idScriptKernel);
 			free(tabla);
 			return;
 		}
 
 	} else {
-		log_info(logger, "No se encontro el dato, mandando request a LFS");
+		loggearAzulClaro(logger, "No se encontro el dato, mandando request a LFS");
 		tablaSelect = tabla; //tablaSelect es una variable global que se usa en el hilo de recepcion de LFS. Pido disculpas por ser tan hijo de puta y haber hecho esto, pero no hay tiempOOOOO.
 		mandarRequestALFS(SELECT, parametros);
 //		registro* registroPedido= recibirRegistro(socketLFS, logger);
@@ -337,7 +349,7 @@ void insert(char* parametros) {
 		log_error(logger, "Value excede caracteres maximos");
 		if (idScriptKernel) {
 			enviarRespuestaAlKernel(idScriptKernel, ERROR);
-			log_info(logger, "Enviando ERROR al kernel");
+			loggearAzulClaro(logger, "Enviando ERROR al kernel");
 		}
 		free(tabla);
 		free(value);
@@ -351,7 +363,7 @@ void insert(char* parametros) {
 
 	segmento* tablaEncontrada = encuentroTablaPorNombre(tabla);
 	if (tablaEncontrada == NULL) {
-		log_info(logger, "Se va a cinsertrear la tabla y el dato");
+		log_info(logger, "Se va a insertar la tabla y el dato");
 		segmento* tablaCreada = nuevaTabla(tablaSegmentos, tabla);
 		pagina* nuevaPagina = nuevoDato(tablaCreada->tablaDePaginas, 1, key,
 				timestamp, value);
@@ -359,7 +371,7 @@ void insert(char* parametros) {
 			log_error(logger, "MEMORIA FULL");
 			free(nuevaPagina);
 			if (idScriptKernel) {
-				log_info(logger,
+				loggearAzulClaro(logger,
 						"Avisando al kernel que la memoria esta llena");
 				enviarRespuestaAlKernel(idScriptKernel, MEM_LLENA);
 			}
@@ -367,9 +379,9 @@ void insert(char* parametros) {
 			free(value);
 			return;
 		} else {
-			log_info(logger, "Se pudo hacer el INSERT");
+			loggearVerde(logger, "Se pudo hacer el INSERT");
 			if (idScriptKernel) {
-				log_info(logger, "Enviando respuesta al kernel");
+				loggearAzulClaro(logger, "Enviando respuesta al kernel");
 				enviarRespuestaAlKernel(idScriptKernel, TODO_BIEN);
 			}
 			free(tabla);
@@ -382,9 +394,9 @@ void insert(char* parametros) {
 		if (datoEncontrado != NULL) {
 			log_info(logger, "Se va a actualizar el dato ya existente");
 			actualizoDato(datoEncontrado, value, timestamp);
-			log_info(logger, "Se pudo hacer el INSERT");
+			loggearVerde(logger, "Se pudo hacer el INSERT");
 			if (idScriptKernel) {
-				log_info(logger, "Enviando respuesta al kernel");
+				loggearAzulClaro(logger, "Enviando respuesta al kernel");
 				enviarRespuestaAlKernel(idScriptKernel, TODO_BIEN);
 			}
 
@@ -397,15 +409,15 @@ void insert(char* parametros) {
 				log_error(logger, "MEMORIA FULL");
 				free(nuevaPagina);
 				if (idScriptKernel) {
-					log_info(logger,
+					loggearAzulClaro(logger,
 							"Avisando al kernel que la memoria esta llena");
 					enviarRespuestaAlKernel(idScriptKernel, MEM_LLENA);
 				}
 				return;
 			} else {
-				log_info(logger, "Se pudo hacer el INSERT");
+				loggearVerde(logger, "Se pudo hacer el INSERT");
 				if (idScriptKernel) {
-					log_info(logger, "Enviando respuesta al kernel");
+					loggearAzulClaro(logger, "Enviando respuesta al kernel");
 					enviarRespuestaAlKernel(idScriptKernel, TODO_BIEN);
 				}
 
@@ -430,7 +442,7 @@ void insertInterno(uint16_t key, char* value, char* tabla, unsigned long long ti
 				log_error(logger, "MEMORIA FULL");
 				return;
 			} else {
-				log_info(logger, "Se pudo hacer el INSERT");
+				loggearVerde(logger, "Se pudo hacer el INSERT");
 				return;
 			}
 
@@ -439,7 +451,7 @@ void insertInterno(uint16_t key, char* value, char* tabla, unsigned long long ti
 			if (datoEncontrado != NULL) {
 				log_info(logger, "Se va a actualizar el dato ya existente");
 				actualizoDato(datoEncontrado, value, timestamp);
-				log_info(logger, "Se pudo hacer el INSERT");
+				loggearVerde(logger, "Se pudo hacer el INSERT");
 				return;
 			} else {
 				log_info(logger, "Se va a crear el dato");
@@ -449,7 +461,7 @@ void insertInterno(uint16_t key, char* value, char* tabla, unsigned long long ti
 					free(nuevaPagina);
 					return;
 				} else {
-					log_info(logger, "Se pudo hacer el INSERT");
+					loggearVerde(logger, "Se pudo hacer el INSERT");
 					return;
 				}
 
@@ -460,7 +472,7 @@ void insertInterno(uint16_t key, char* value, char* tabla, unsigned long long ti
 
 void drop(char* parametro) {
 	dropInterno(parametro);
-	log_info(logger, "Mandando DROP al LFS");
+	loggearAzulClaro(logger, "Mandando DROP al LFS");
 	mandarRequestALFS(DROP, parametro);
 }
 
@@ -485,10 +497,10 @@ void dropInterno(char* parametro){
 					segmentoAComparar->nombreDeTabla) == 0;
 		}
 		list_remove_by_condition(tablaSegmentos, (void*) comparoNombreTabla);
-		log_info(logger, "Se elimino la tabla de la memoria");
+		loggearVerdeClaro(logger, "Se elimino la tabla de la memoria");
 
 	} else {
-		log_info(logger, "No existe la tabla en la memoria");
+		loggearRojoClaro(logger, "No existe la tabla en la memoria");
 	}
 	free(tablaADropear);
 	free(tabla);
@@ -497,7 +509,7 @@ void dropInterno(char* parametro){
 void create(char* parametros) {
 
 	log_info(logger, "CREATE %s", parametros);
-	log_info(logger, "Mandando CREATE al LFS");
+	loggearAzulClaro(logger, "Mandando CREATE al LFS");
 	mandarRequestALFS(CREATE, parametros);
 
 }
@@ -505,7 +517,7 @@ void create(char* parametros) {
 void describe(char* parametro) {
 
 	log_info(logger, "DESCRIBE %s", parametro);
-	log_info(logger, "Enviando DESCRIBE al LFS");
+	loggearAzulClaro(logger, "Enviando DESCRIBE al LFS");
 	mandarRequestALFS(DESCRIBE, parametro);
 }
 
@@ -686,7 +698,7 @@ void journalAutomatico() {
 		sem_post(&sem_refreshConfig);
 		sleep(sleepMilisegundos);
 		sem_wait(&sem_journal);
-		log_info(logger, "Ejecutando el JOURNAL automatico");
+		loggearCyanClaro(logger, "Ejecutando el JOURNAL automatico");
 		journal();
 		sem_post(&sem_journal);
 	}
@@ -719,7 +731,7 @@ void reconexionLFS() {
 		int respuesta = primeraConexionLFS();
 		sem_post(&sem_LFSconectandose);
 		if (respuesta != -1) {
-			log_info(logger, "Se conecto el LFS.");
+			loggearAzulClaro(logger, "Se conecto el LFS.");
 			pthread_t h_respuestaLFS;
 			pthread_create(&h_respuestaLFS, NULL, (void *) manejarRespuestaLFS,
 			NULL);

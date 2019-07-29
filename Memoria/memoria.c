@@ -73,7 +73,7 @@ int main() {
 
 	log_info(logger, "Caracteres value:%d", caracMaxDeValue);
 	if (caracMaxDeValue != -1) {
-		log_info(logger, "Se conecto el LFS.");
+		loggearAzulClaro(logger, "Se conecto el LFS.");
 		pthread_t h_respuestaLFS;
 		pthread_create(&h_respuestaLFS, NULL, (void *) manejarRespuestaLFS,
 		NULL);
