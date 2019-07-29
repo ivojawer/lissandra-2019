@@ -140,7 +140,9 @@ int manejarRespuestaDeMemoria(script* elScript, request* laRequest, int memoria)
 
 			if (esDescribeGlobal(laRequest)) {
 				actualizarMetadatas(metadatas);
+				sem_wait(&sem_actualizacionMetadatas);
 				describirMetadatas(metadatas);
+				sem_post(&sem_actualizacionMetadatas);
 			} else {
 				metadataTablaLFS* laMetadata = list_get(metadatas, 0);
 				describirUnaMetadata(laMetadata);

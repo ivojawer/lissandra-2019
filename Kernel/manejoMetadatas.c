@@ -69,7 +69,7 @@ void actualizarMetadatas(t_list* metadatas) {
 
 	sem_wait(&sem_actualizacionMetadatas);
 
-	while (list_size(listaTablas) != 0) {
+	while (list_size(listaTablas) != 0) { //Se remueven todos los elementos de la lista
 		metadataTablaLFS* unaMetadata = list_remove(listaTablas, 0);
 
 		free(unaMetadata->nombre);
@@ -78,7 +78,7 @@ void actualizarMetadatas(t_list* metadatas) {
 
 	list_destroy(listaTablas);
 
-	listaTablas = metadatas;
+	listaTablas = metadatas; //Se reemplaza la lista original por la nueva lista
 
 	loggearAmarillo(logger, "Se actualizaron las metadatas.");
 

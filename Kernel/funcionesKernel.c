@@ -53,7 +53,7 @@ int crearScript(request* nuevaRequest) {
 		if ((crearArchivoParaRequest(nuevoScript, nuevaRequest)) == -1) {
 			log_error(logger, "Hubo un error en la creacion del request");
 
-			moverScript(nuevoScript->idScript, colaNEW, listaEXIT);
+//			moverScript(nuevoScript->idScript, colaNEW, listaEXIT);
 			return -1;
 
 		}
@@ -65,9 +65,9 @@ int crearScript(request* nuevaRequest) {
 	list_add(colaNEW, nuevoScript); //Esto es puramente por formalidad del TP
 
 	char* textoALoggear = string_new();
-	string_append(&textoALoggear,string_itoa(nuevoScript->idScript));
-	string_append(&textoALoggear,": NEW->READY");
-	loggearCyanClaro(logger,textoALoggear);
+	string_append(&textoALoggear, string_itoa(nuevoScript->idScript));
+	string_append(&textoALoggear, ": NEW->READY");
+	loggearCyanClaro(logger, textoALoggear);
 	free(textoALoggear);
 
 	moverScript(nuevoScript->idScript, colaNEW, colaREADY);
@@ -96,7 +96,6 @@ void journal() {
 			}
 
 		}
-
 	}
 
 	sem_post(&sem_borradoMemoria);
@@ -149,8 +148,7 @@ int ejecutarRequest(request* requestAEjecutar, script* elScript) {
 			return ERROR;
 		}
 
-		if (requestAEjecutar->requestEnInt == DROP)
-		{
+		if (requestAEjecutar->requestEnInt == DROP) {
 			removerUnaMetadata(tabla);
 		}
 		free(tabla);
@@ -162,8 +160,8 @@ int ejecutarRequest(request* requestAEjecutar, script* elScript) {
 	if (unaMemoriaCualquiera() == -1) //No hay memorias
 			{
 		log_error(logger,
-				"No hay memorias conectadas para ejecutar la request %i.",
-				requestAEjecutar->requestEnInt);
+				"No hay memorias conectadas para ejecutar la request %s.",
+				requestStructAString(requestAEjecutar));
 		sem_post(&sem_borradoMemoria);
 		return TODO_BIEN; //TODO: Marca, Si no hay memorias conectadas sigue la ejecucion
 	}
@@ -181,8 +179,8 @@ int ejecutarRequest(request* requestAEjecutar, script* elScript) {
 
 	if (memoria == -1) {
 		log_error(logger,
-				"No se conoce una memoria que pueda ejecutar la request %i.",
-				requestAEjecutar->requestEnInt);
+				"No se conoce una memoria que pueda ejecutar la request %s.",
+				requestStructAString(requestAEjecutar));
 		sem_post(&sem_borradoMemoria);
 		return TODO_BIEN; //TODO: Marca, Si no hay memorias conectadas sigue la ejecucion
 	}
@@ -239,11 +237,7 @@ void metrics(int loggear) {
 	int promedioSelect = promedioDeTiemposDeOperaciones(tiemposSelectAux);
 	int promedioInsert = promedioDeTiemposDeOperaciones(tiemposInsertAux);
 
-
-
 	if (loggear) {
-
-
 
 		log_info(loggerSigiloso, "----METRICS----");
 		if (promedioSelect == -1) {
@@ -285,7 +279,6 @@ void metrics(int loggear) {
 
 		sem_post(&sem_borradoMemoria);
 
-
 	} else {
 		printf("\n\n----METRICS----");
 		if (promedioSelect == -1) {
@@ -326,8 +319,6 @@ void metrics(int loggear) {
 		printf("\n\n");
 
 	}
-
-
 
 	list_destroy(tiemposSelectAux);
 	list_destroy(tiemposInsertAux);
@@ -387,16 +378,28 @@ int add(char* chocloDeCosas) {
 	if (posicionMemoria == -1) {
 		printf("%s%i%s", "No se pudo encontrar la memoria ", nombreMemoria,
 				"\n");
+		liberarArrayDeStrings(consistenciaYMemoriaEnArray);
 		sem_post(&sem_borradoMemoria);
+
 		return -1;
 	}
 	memoriaEnLista* memoria = list_get(memorias, posicionMemoria);
 
 	if (!memoria->estaViva) {
+		liberarArrayDeStrings(consistenciaYMemoriaEnArray);
 		sem_post(&sem_borradoMemoria);
 		return -1;
 	}
 
+	if (memoria->consistencias[consistencia] == consistencia) //Si ya estaba asociada al criterio
+			{
+		log_info(logger, "La memoria %i ya estaba asociada al criterio %s",
+				nombreMemoria, consistenciaYMemoriaEnArray[3]);
+
+		liberarArrayDeStrings(consistenciaYMemoriaEnArray);
+		sem_post(&sem_borradoMemoria);
+		return 1;
+	}
 	memoria->consistencias[consistencia] = consistencia; //La consistencia esta en la misma posicion del numero que lo representa (0,1 o 2);
 
 	if (consistencia == SHC) { //Journal a todas las SHC
@@ -425,6 +428,7 @@ int add(char* chocloDeCosas) {
 
 	liberarArrayDeStrings(consistenciaYMemoriaEnArray);
 
+
 	sem_post(&sem_borradoMemoria);
 
 	return 1;
@@ -450,6 +454,7 @@ void refreshMetadatas() {
 			sem_post(&sem_borradoMemoria);
 			continue;
 		}
+		loggearAmarillo(logger, "Se va a ejecutar el DESCRIBE automatico.");
 
 		memoriaEnLista* laMemoria = list_get(memorias,
 				encontrarPosicionDeMemoria(memoria));
@@ -478,6 +483,7 @@ void refreshMetadatas() {
 
 		actualizarMetadatas(metadatas);
 
+		loggearAmarillo(logger, "Se pudo ejecutar el DESCRIBE automatico.");
 //		log_info(logger,"Se actualizaron automaticamente las metadatas");
 
 	}
@@ -509,8 +515,7 @@ void refreshConfig() {
 }
 
 void gossipingAutomatico() {
-	while(1)
-	{
+	while (1) {
 		sem_wait(&sem_refreshConfig);
 		int retardoGossip = retardoGossiping; //En segundos
 		sem_post(&sem_refreshConfig);

@@ -3,7 +3,7 @@
 extern sem_t sem_movimientoScripts;
 
 
-script* encontrarScriptEnLista(int id, t_list* lista) {
+script* encontrarScriptEnLista(int id, t_list* lista) { //Si no se encuentra, se devuelve idScript = -1
 	sem_wait(&sem_movimientoScripts);
 	for (int i = 0; i < list_size(lista); i++) {
 
@@ -37,7 +37,7 @@ int removerScriptDeLista(int id, t_list* lista) {
 	return -1;
 }
 
-char* scriptConRaiz(char* script) {
+char* scriptConRaiz(char* script) { //No se por que se hace el duplicate y el free aca ¿¿??
 	char * dirScript = string_new();
 	string_append(&dirScript, RAIZSCRIPTS);
 	string_append(&dirScript, script);
@@ -54,7 +54,7 @@ int crearArchivoParaRequest(script* script, request* requestAArchivo) {
 	archivo = fopen(direccion, "w");
 
 	if (archivo == NULL) {
-		fclose(archivo);
+//		fclose(archivo);
 		return -1;
 	}
 
@@ -63,8 +63,11 @@ int crearArchivoParaRequest(script* script, request* requestAArchivo) {
 		return -1;
 	}
 
-	script->direccionScript = malloc(sizeof(direccion));
-	script->direccionScript = direccion;
+//	script->direccionScript = malloc(sizeof(direccion)); Esto se saco para se reemplazado por las 2 lineas de abajo
+//	script->direccionScript = direccion;
+
+	script->direccionScript = string_duplicate(direccion);
+	free(direccion);
 
 	fclose(archivo);
 
@@ -123,7 +126,7 @@ int moverScript(int scriptID, t_list* listaOrigen, t_list* listaDestino) {
 
 	script* unScript = encontrarScriptEnLista(scriptID, listaOrigen);
 
-	if (unScript->idScript == -1) {
+	if (unScript->idScript == -1) { //Es un script fallido, se puede hacerle free
 		free(unScript);
 		return -1;
 	}

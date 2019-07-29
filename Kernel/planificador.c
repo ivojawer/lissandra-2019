@@ -14,7 +14,7 @@ void planificadorREADYAEXEC() {
 
 	while (1) {
 
-		//Si no puede pasar de READY a EXIT entonces esto va bien
+		//Si no puede pasar de READY a EXIT entonces el orden de estos 2 semaforos va bien
 
 		sem_wait(&sem_disponibleColaREADY);
 		sem_wait(&sem_multiprocesamiento);
@@ -75,7 +75,7 @@ void planificadorEXEC(int idScript) {
 				char* laRequestEnString = leerLinea(scriptEXEC->direccionScript,
 						0);
 
-				remove(scriptEXEC->direccionScript);
+				remove(scriptEXEC->direccionScript); //Se borra el archivo del request de consola
 
 				free(scriptEXEC->direccionScript);
 

@@ -3,6 +3,7 @@ extern int sleepEjecucion;
 extern int intervaloDeRefreshMetadata;
 extern int quantum;
 extern sem_t sem_refreshConfig;
+extern sem_t sem_actualizacionMetadatas;
 extern t_list* listaTablas;
 
 void consola() {
@@ -28,7 +29,9 @@ void consola() {
 			return;
 		}
 		if (!strcmp(lectura, "METADATAS")) {
+			sem_wait(&sem_actualizacionMetadatas);
 			describirMetadatas(listaTablas);
+			sem_post(&sem_actualizacionMetadatas);
 			free(lectura);
 			continue;
 		}
