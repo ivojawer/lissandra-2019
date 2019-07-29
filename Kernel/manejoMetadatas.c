@@ -46,10 +46,6 @@ void removerUnaMetadata(char* nombreMetadata) {
 		metadataTablaLFS* unaMetadata = list_get(listaTablas, i);
 
 		if (!strcmp(unaMetadata->nombre, nombreMetadata)) {
-			list_remove(listaTablas, i);
-			free(unaMetadata->nombre);
-			free(unaMetadata);
-			sem_post(&sem_actualizacionMetadatas);
 
 			char* textoALoggear = string_new();
 			string_append(&textoALoggear, "Se removio la tabla ");
@@ -57,6 +53,11 @@ void removerUnaMetadata(char* nombreMetadata) {
 			string_append(&textoALoggear, " de la lista interna");
 			loggearAmarillo(logger, textoALoggear);
 			free(textoALoggear);
+
+			list_remove(listaTablas, i);
+			free(unaMetadata->nombre);
+			free(unaMetadata);
+			sem_post(&sem_actualizacionMetadatas);
 
 			return;
 		}
