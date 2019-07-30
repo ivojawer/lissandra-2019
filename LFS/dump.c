@@ -340,9 +340,10 @@ void ejecutar_dump()
 		sleepDump = tiempoDump/1000;
 		sleep(sleepDump);
 		log_info(dump_logger, "Inicio Dump");
-
+		sem_wait(&compactar_semaphore);
 		sem_wait(&dump_semaphore);
 		dump();
+		sem_post(&compactar_semaphore);
 		sem_post(&dump_semaphore);
 
 		log_info(dump_logger, "Fin Dump");
