@@ -161,6 +161,12 @@ t_bloque *crear_bloque_buscar(char *bloque);
 void bloque_destroy(t_bloque *self);
 void compactacion_tablas_existentes();
 
+void cargar_metadata_tablas();
+void agregar_metadata_tabla(char *tabla, char *consistencia, int particiones, int compactacion);
+int obtener_particiones_metadata(char* tabla);
+int buscar_particiones_metadata_en_disco(char *tabla);
+bool buscar_metadata_tabla(struct describe *elemento, char *tabla);
+t_list *lista_metadatas;
 
 //para ejecutar requests
 void ejecutar_peticion();

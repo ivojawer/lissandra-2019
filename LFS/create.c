@@ -66,6 +66,7 @@ void crear_particiones(char *dir, int particiones) {
 		int free_block = elegir_bloque_libre(cantidadBloques);
 		if (free_block == -1) {
 			printf("No hay bloques libres\n");
+			fclose(fp);
 		} else {
 			fputs(size_text, fp);
 			fprintf(fp, "%s", "BLOCKS=[");
@@ -110,6 +111,8 @@ int crear_tabla_FS(char *tabla, int particiones, char *consistencia,
 
 	crear_particiones(tabla_dir, particiones);
 
+	agregar_metadata_tabla(tabla, consistencia, particiones, compact_time);
+
 	FILE *fp;
 	fp = fopen(dir_metadata, "w+");
 	if (fp == NULL) {
@@ -118,8 +121,8 @@ int crear_tabla_FS(char *tabla, int particiones, char *consistencia,
 		fputs(consistencia_tabla, fp);
 		fputs(particiones_tabla, fp);
 		fputs(compactacion_tabla, fp);
+		fclose(fp);
 	}
-	fclose(fp);
 	free(tabla_dir);
 	free(consistencia_tabla);
 	free(dir_metadata);

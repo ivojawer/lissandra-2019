@@ -164,6 +164,7 @@ void iniciar_variables(){
 
 	tot = 0;
 	cola_requests = list_create();
+	lista_metadatas = list_create();
 	struct inotify *st_inotify = malloc(sizeof(struct inotify));
 
 	sem_init(&dump_semaphore, 1, 1);
@@ -202,6 +203,7 @@ void iniciar_variables(){
 	op_control_list = list_create();
 	lista_tabla_compact = list_create();
 //	cargar_op_control_tablas();
+	cargar_metadata_tablas();
 
 	sem_init(&requests_disponibles,0,0);
 	sem_init(&bloques_bitmap,1,1);
@@ -359,9 +361,7 @@ int get_tiempo_compactacion(char *comando)
 	return atoi(tokens_comando[3]);
 }
 
-
-
-int obtener_particiones_metadata(char* tabla)
+int buscar_particiones_metadata_en_disco(char *tabla)
 {
 	char* archivoMetadata = string_new();
 	char* unaTabla = string_duplicate(tabla);
@@ -382,17 +382,58 @@ int obtener_particiones_metadata(char* tabla)
 	free(archivoMetadata);
 	free(unaTabla);
 	return nr_particiones_metadata;
+}
+
+struct describe *crear_metadata_tabla(char *tabla, char *consistencia, int particiones, int compactacion)
+{
+	struct describe *new_metadata = malloc(sizeof(struct describe));
+	new_metadata->name = strdup(tabla);
+	new_metadata->consistency = strdup(consistencia);
+	new_metadata->partitions = particiones;
+	new_metadata->compaction_time = compactacion;
+	return new_metadata;
+}
 
 
+void agregar_metadata_tabla(char *tabla, char *consistencia, int particiones, int compactacion)
+{
+	struct describe *new_metadata = crear_metadata_tabla(tabla, consistencia, particiones, compactacion);
+	list_add(lista_metadatas, new_metadata);
+}
 
 
+bool buscar_metadata_tabla(struct describe *elemento, char *tabla)
+{
+	return(strcmp(elemento->name, tabla) == 0);
+}
 
-
-	if (strcmp(tabla, "ANIMALS") == 0){
-		return 2;
-	}else{
-		return 3;
+int buscar_metadata_en_lista(char *tabla)
+{
+	bool buscar_elemento(void *elemento) {
+		return buscar_metadata_tabla((struct describe *)elemento, tabla);
 	}
+//	struct describe *metadata_buscada = malloc(sizeof(struct describe));
+	struct describe *metadata_buscada = NULL;
+	metadata_buscada = list_find(lista_metadatas, buscar_elemento);
+	if (metadata_buscada != NULL)
+		return metadata_buscada->partitions;
+	else
+		return -1;
+}
+
+
+int obtener_particiones_metadata(char* tabla)
+{
+		int particion_tabla;
+
+		particion_tabla = buscar_metadata_en_lista(tabla);
+
+		if(particion_tabla > 0)
+			return particion_tabla;
+		else{
+			particion_tabla = buscar_particiones_metadata_en_disco(tabla);
+			return particion_tabla;
+		}
 }
 
 
@@ -538,6 +579,26 @@ void crear_control_op(char *tabla)
 }
 
 
+void cargar_metadata_tablas()
+{
+	struct dirent *sd;
+	char* tablas = string_new();
+	string_append(&tablas, puntoDeMontaje);
+	string_append(&tablas, "Tablas/");
+	DIR* dir = opendir(tablas);
+	while ((sd = readdir(dir)) != NULL) {
+		if ((strcmp((sd->d_name), ".") != 0) &&
+			(strcmp((sd->d_name), "..") != 0)){
+			agregar_metadata_tabla(sd->d_name, obtener_consistencia_metadata(sd->d_name),
+					obtener_particiones_metadata(sd->d_name), obtener_tiempo_compactacion_metadata(sd->d_name));
+		}
+	}
+	closedir(dir);
+	free(tablas);
+}
+
+
+
 void cargar_op_control_tablas()
 {
 	struct dirent *sd;
@@ -554,6 +615,8 @@ void cargar_op_control_tablas()
 	closedir(dir);
 	free(tablas);
 }
+
+
 
 
 

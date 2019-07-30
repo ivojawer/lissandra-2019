@@ -108,6 +108,17 @@ void rutina_drop(void* parametros) {
 			list_remove_and_destroy_by_condition(memtable, coincide_nombre,
 					destruir_tabla);
 
+			bool coincide_nombre_metadata(void *elemento) {
+				return buscar_metadata_tabla((struct describe *)elemento, tabla);
+			}
+
+			void destruir_elemento_metadata(void *elemento) {
+				return descripcion_destroy((struct describe *)elemento);
+			}
+
+			list_remove_and_destroy_by_condition(lista_metadatas, coincide_nombre_metadata,
+												 destruir_elemento_metadata);
+
 			if(socket_cliente != -1)
 			{
 				enviarIntConHeader(socket_cliente, TODO_BIEN, RESPUESTA);

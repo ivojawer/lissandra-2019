@@ -321,7 +321,7 @@ void buscar_bloques_particion(char *tabla, int particion_buscar, int type_flag, 
 	string_append(&root,tabla);
 
 	DIR *dir;
-	if(type_flag != 0)
+	if(type_flag == 1 || type_flag == 2)
 		dir = opendir(root);
 	tot++;
 	if(dir == NULL && type_flag != 0){
