@@ -2,6 +2,7 @@
 
 t_log* logger;
 t_log* loggerSigiloso;
+t_log* errores;
 t_list* colaNEW;
 t_list* colaREADY;
 t_list* listaEXEC;
@@ -39,6 +40,7 @@ int main() {
 
 	logger = log_create("kernel.log", "kernel", 1, 0);
 	loggerSigiloso = log_create("kernel.log", "kernel", 0, 0);
+	errores = log_create("errores.log","kernel",0,0);
 	t_config* config = config_create(DIRCONFIG);
 
 	quantum = config_get_int_value(config, "QUANTUM");

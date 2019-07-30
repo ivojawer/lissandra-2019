@@ -1,6 +1,7 @@
 #include "funcionesBaseKernel.h"
 
 extern t_log* logger;
+extern t_log* errores;
 extern t_list* listaTablas;
 extern t_list* listaTablas;
 extern t_list* listaEXEC;
@@ -40,6 +41,8 @@ int manejarRespuestaDeMemoria(script* elScript, request* laRequest, int memoria)
 	case ERROR:
 	case NO_EXISTE:
 	case TABLA_NO_EXISTE: {
+
+		log_error(errores,requestStructAString(laRequest));
 
 		agregarOperacionFallidaAMemoria(memoria, laRequest->requestEnInt);
 

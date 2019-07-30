@@ -1,0 +1,104 @@
+[INFO] 23:01:46:842 memoria/(30763:30763): Caracteres value:58
+[INFO] 23:01:46:842 memoria/(30763:30763): [1;34m   Se conecto el LFS.       [0m
+[INFO] 23:01:46:844 memoria/(30763:30763): Cree mi memoria tamanio: 340.
+[INFO] 23:01:46:845 memoria/(30763:30763): el tamanio de mi marco es: 68
+[INFO] 23:01:46:845 memoria/(30763:30763): cantidad de marcos: 5
+[INFO] 23:01:46:856 memoria/(30763:30781): [0;34m   Se va a empezar a hacer gossiping.       [0m
+[INFO] 23:01:46:856 memoria/(30763:30781): [0;34m   Se termino el gossiping.       [0m
+[INFO] 23:01:52:373 memoria/(30763:30777): [1;34m   Se conecto el kernel       [0m
+[INFO] 23:01:56:857 memoria/(30763:30781): [0;34m   Se va a empezar a hacer gossiping.       [0m
+[INFO] 23:01:56:857 memoria/(30763:30781): [0;34m   Se termino el gossiping.       [0m
+[INFO] 23:02:02:373 memoria/(30763:30793): [1;34m   Se recibio la peticion de GOSSIPING del kernel.       [0m
+[INFO] 23:02:06:857 memoria/(30763:30781): [0;34m   Se va a empezar a hacer gossiping.       [0m
+[INFO] 23:02:06:858 memoria/(30763:30781): [0;34m   Se termino el gossiping.       [0m
+[INFO] 23:02:07:374 memoria/(30763:30778): [1;36m   Ejecutando DESCRIBE       [0m
+[INFO] 23:02:07:374 memoria/(30763:30778): DESCRIBE  
+[INFO] 23:02:07:374 memoria/(30763:30778): [1;34m   Enviando DESCRIBE al LFS       [0m
+[INFO] 23:02:07:376 memoria/(30763:30776): [1;34m   Enviando las metadatas al kernel       [0m
+[INFO] 23:02:12:373 memoria/(30763:30793): [1;34m   Se recibio la peticion de GOSSIPING del kernel.       [0m
+[INFO] 23:02:15:569 memoria/(30763:30778): [1;36m   Ejecutando CREATE       [0m
+[INFO] 23:02:15:570 memoria/(30763:30778): CREATE ANIMALS EC 2 5000
+[INFO] 23:02:15:570 memoria/(30763:30778): [1;34m   Mandando CREATE al LFS       [0m
+[INFO] 23:02:15:581 memoria/(30763:30776): [0;32m   El LFS pudo ejecutar la request       [0m
+[INFO] 23:02:15:581 memoria/(30763:30776): [1;34m   Enviando el resultado al kernel       [0m
+[INFO] 23:02:16:581 memoria/(30763:30778): [1;36m   Ejecutando CREATE       [0m
+[INFO] 23:02:16:581 memoria/(30763:30778): CREATE METALS EC 3 5000
+[INFO] 23:02:16:581 memoria/(30763:30778): [1;34m   Mandando CREATE al LFS       [0m
+[INFO] 23:02:16:583 memoria/(30763:30776): [0;32m   El LFS pudo ejecutar la request       [0m
+[INFO] 23:02:16:583 memoria/(30763:30776): [1;34m   Enviando el resultado al kernel       [0m
+[INFO] 23:02:16:858 memoria/(30763:30781): [0;34m   Se va a empezar a hacer gossiping.       [0m
+[INFO] 23:02:16:858 memoria/(30763:30781): [0;34m   Se termino el gossiping.       [0m
+[INFO] 23:02:17:583 memoria/(30763:30778): [1;36m   Ejecutando INSERT       [0m
+[INFO] 23:02:17:584 memoria/(30763:30778): INSERT: Tabla:ANIMALS - key:65 - timestamp:1084041839 - value:tigers
+
+[INFO] 23:02:17:584 memoria/(30763:30778): Se va a insertar la tabla y el dato
+[INFO] 23:02:17:584 memoria/(30763:30778): [1;33m   Marco libre encontrado: 0       [0m
+[INFO] 23:02:17:584 memoria/(30763:30778): [0;32m   Se pudo hacer el INSERT       [0m
+[INFO] 23:02:17:584 memoria/(30763:30778): [1;34m   Enviando respuesta al kernel       [0m
+[INFO] 23:02:18:586 memoria/(30763:30778): [1;36m   Ejecutando INSERT       [0m
+[INFO] 23:02:18:586 memoria/(30763:30778): INSERT: Tabla:ANIMALS - key:126 - timestamp:1084042842 - value:beasts
+
+[INFO] 23:02:18:586 memoria/(30763:30778): Se va a crear el dato
+[INFO] 23:02:18:587 memoria/(30763:30778): [1;33m   Marco libre encontrado: 1       [0m
+[INFO] 23:02:18:587 memoria/(30763:30778): [0;32m   Se pudo hacer el INSERT       [0m
+[INFO] 23:02:18:588 memoria/(30763:30778): [1;34m   Enviando respuesta al kernel       [0m
+[INFO] 23:02:19:589 memoria/(30763:30778): [1;36m   Ejecutando SELECT       [0m
+[INFO] 23:02:19:589 memoria/(30763:30778): Select de tabla: ANIMALS - key: 126
+[INFO] 23:02:19:590 memoria/(30763:30778): [1;32m   Resultado: beasts       [0m
+[INFO] 23:02:19:590 memoria/(30763:30778): [1;34m   Enviando el resultado al kernel       [0m
+[INFO] 23:02:20:591 memoria/(30763:30778): [1;36m   Ejecutando INSERT       [0m
+[INFO] 23:02:20:591 memoria/(30763:30778): INSERT: Tabla:METALS - key:136 - timestamp:1084044846 - value:aluminiferous
+
+[INFO] 23:02:20:591 memoria/(30763:30778): Se va a insertar la tabla y el dato
+[INFO] 23:02:20:591 memoria/(30763:30778): [1;33m   Marco libre encontrado: 2       [0m
+[INFO] 23:02:20:591 memoria/(30763:30778): [0;32m   Se pudo hacer el INSERT       [0m
+[INFO] 23:02:20:591 memoria/(30763:30778): [1;34m   Enviando respuesta al kernel       [0m
+[INFO] 23:02:21:592 memoria/(30763:30778): [1;36m   Ejecutando SELECT       [0m
+[INFO] 23:02:21:592 memoria/(30763:30778): Select de tabla: ANIMALS - key: 65
+[INFO] 23:02:21:593 memoria/(30763:30778): [1;32m   Resultado: tigers       [0m
+[INFO] 23:02:21:593 memoria/(30763:30778): [1;34m   Enviando el resultado al kernel       [0m
+[INFO] 23:02:22:373 memoria/(30763:30793): [1;34m   Se recibio la peticion de GOSSIPING del kernel.       [0m
+[INFO] 23:02:22:377 memoria/(30763:30778): [1;36m   Ejecutando DESCRIBE       [0m
+[INFO] 23:02:22:377 memoria/(30763:30778): DESCRIBE  
+[INFO] 23:02:22:377 memoria/(30763:30778): [1;34m   Enviando DESCRIBE al LFS       [0m
+[INFO] 23:02:22:379 memoria/(30763:30776): [1;34m   Enviando las metadatas al kernel       [0m
+[INFO] 23:02:22:594 memoria/(30763:30778): [1;36m   Ejecutando SELECT       [0m
+[INFO] 23:02:22:594 memoria/(30763:30778): Select de tabla: METALS - key: 136
+[INFO] 23:02:22:595 memoria/(30763:30778): [1;32m   Resultado: aluminiferous       [0m
+[INFO] 23:02:22:595 memoria/(30763:30778): [1;34m   Enviando el resultado al kernel       [0m
+[INFO] 23:02:23:595 memoria/(30763:30778): [1;36m   Ejecutando INSERT       [0m
+[INFO] 23:02:23:595 memoria/(30763:30778): INSERT: Tabla:ANIMALS - key:105 - timestamp:1084047851 - value:biological
+
+[INFO] 23:02:23:595 memoria/(30763:30778): Se va a crear el dato
+[INFO] 23:02:23:595 memoria/(30763:30778): [1;33m   Marco libre encontrado: 3       [0m
+[INFO] 23:02:23:596 memoria/(30763:30778): [0;32m   Se pudo hacer el INSERT       [0m
+[INFO] 23:02:23:596 memoria/(30763:30778): [1;34m   Enviando respuesta al kernel       [0m
+[INFO] 23:02:24:597 memoria/(30763:30778): [1;36m   Ejecutando INSERT       [0m
+[INFO] 23:02:24:597 memoria/(30763:30778): INSERT: Tabla:METALS - key:66 - timestamp:1084048852 - value:ferro
+
+[INFO] 23:02:24:597 memoria/(30763:30778): Se va a crear el dato
+[INFO] 23:02:24:597 memoria/(30763:30778): [1;33m   Marco libre encontrado: 4       [0m
+[INFO] 23:02:24:598 memoria/(30763:30778): [0;32m   Se pudo hacer el INSERT       [0m
+[INFO] 23:02:24:598 memoria/(30763:30778): [1;34m   Enviando respuesta al kernel       [0m
+[INFO] 23:02:25:598 memoria/(30763:30778): [1;36m   Ejecutando INSERT       [0m
+[INFO] 23:02:25:598 memoria/(30763:30778): INSERT: Tabla:ANIMALS - key:135 - timestamp:1084049854 - value:tortoises
+
+[INFO] 23:02:25:598 memoria/(30763:30778): Se va a crear el dato
+[INFO] 23:02:25:599 memoria/(30763:30778): [0;32m   Se pudo hacer el INSERT       [0m
+[INFO] 23:02:25:599 memoria/(30763:30778): [1;34m   Enviando respuesta al kernel       [0m
+[INFO] 23:02:26:600 memoria/(30763:30778): [1;36m   Ejecutando INSERT       [0m
+[INFO] 23:02:26:600 memoria/(30763:30778): INSERT: Tabla:METALS - key:71 - timestamp:1084050856 - value:ferrous
+
+[INFO] 23:02:26:600 memoria/(30763:30778): Se va a crear el dato
+[ERROR] 23:02:26:600 memoria/(30763:30778): MEMORIA FULL
+[INFO] 23:02:26:600 memoria/(30763:30778): [1;34m   Avisando al kernel que la memoria esta llena       [0m
+[INFO] 23:02:26:601 memoria/(30763:30778): [1;36m   Ejecutando JOURNAL       [0m
+[INFO] 23:02:53:425 memoria/(30763:30793): [1;34m   Se recibio la peticion de GOSSIPING del kernel.       [0m
+[INFO] 23:02:53:426 memoria/(30763:30793): [1;34m   Se recibio la peticion de GOSSIPING del kernel.       [0m
+[INFO] 23:02:53:426 memoria/(30763:30793): [1;34m   Se recibio la peticion de GOSSIPING del kernel.       [0m
+[INFO] 23:02:53:426 memoria/(30763:30781): [0;34m   Se va a empezar a hacer gossiping.       [0m
+[INFO] 23:02:53:426 memoria/(30763:30781): [0;34m   Se termino el gossiping.       [0m
+[INFO] 23:02:58:521 memoria/(30763:30778): DROP de la tabla ANIMALS
+[INFO] 23:02:58:521 memoria/(30763:30778): [1;32m   Se elimino la tabla de la memoria       [0m
+[INFO] 23:02:58:521 memoria/(30763:30778): DROP de la tabla METALS
+[INFO] 23:02:58:521 memoria/(30763:30778): [1;32m   Se elimino la tabla de la memoria       [0m
