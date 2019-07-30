@@ -189,15 +189,20 @@ void iniciar_compactacion(void *arg)
 		tim.tv_nsec = 0;
 		nanosleep(&tim, &tim_2);
 
-//		printf("Se va a hacer la compactacion de la tabla %s",p_comp->tabla);
 		if (!check_drop_on_table(p_comp->tabla)) {
-			modificar_op_control(p_comp->tabla, 5);
+			log_info(compact_logger, "INICIO Comp. Tabla %s", p_comp->tabla);
+//			modificar_op_control(p_comp->tabla, 5);
 			t_ini_compact = medir_tiempo();
+			sem_wait(&compactar_semaphore);
+			sem_wait(&dump_semaphore);
 			compactar(p_comp->tabla);
+			sem_post(&dump_semaphore);
+			sem_post(&compactar_semaphore);
 			t_fin_compact = medir_tiempo();
+			log_info(compact_logger, "FIN Comp. Tabla %s", p_comp->tabla);
 			secs = (double)(t_fin_compact - t_ini_compact) / CLOCKS_PER_SEC;
+//			modificar_op_control(p_comp->tabla, 6);
 			log_info(compact_logger, "Compactacion finalizada. Tiempo Bloqueo: %.16g milisegundos", secs * 1000.0);
-			modificar_op_control(p_comp->tabla, 6);
 		}else{ //abortar compactacion
 			eliminar_tabla_lista_compac(p_comp->tabla);
 			pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
@@ -300,7 +305,10 @@ int renombrarATmpc(char* tabla){
 	char* path = string_duplicate(puntoDeMontaje);
 	string_append(&path, "Tablas/");
 	string_append(&path, tabla);
-	int cantTmp = contar_archivos_con_extension(path,"tmp");
+	char extension[4] = "";
+	memcpy(&extension[0], "tmp", strlen("tmp"));
+//	int cantTmp = contar_archivos_con_extension(path,"tmp");
+	int cantTmp = contar_archivos_con_extension(path, extension);
 	string_append(&path,"/");
 	string_append(&path, tabla);
 
@@ -455,7 +463,10 @@ char** getBloquesTemporal(char* tabla,int nro_temporal){
 	string_append(&temporal,".tmpc");
 
 	t_config* metadataTemporal = config_create(temporal);
-	char** bloques = config_get_array_value(metadataTemporal,"BLOCKS");
+	char extension[7] = "";
+	memcpy(&extension[0], "BLOCKS", strlen("BLOCKS"));
+//	char** bloques = config_get_array_value(metadataTemporal,"BLOCKS");
+	char** bloques = config_get_array_value(metadataTemporal, extension);
 	config_destroy(metadataTemporal);
 
 	return bloques;

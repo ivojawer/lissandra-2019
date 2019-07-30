@@ -292,7 +292,7 @@ void dump() {
 						t_registro *registro = malloc(sizeof(t_registro));
 						registro = list_get(particion->lista_registros, k);
 						cont++;
-						if(strlen(registro->value) > 0){
+						if(registro->value != NULL){
 //						if(registro->value != NULL && strlen(registro->value)>0){
 							if (table_change == 0 && cont == 1)
 								table_change = 1;
@@ -331,22 +331,21 @@ void dump() {
 	}
 }
 
+
 void ejecutar_dump()
 {
-//	struct timespec tim, tim_2;
-//	tim.tv_sec = tiempoDump*0.001;
-//	tim.tv_nsec = 0;
-
 	int sleepDump;
-
 	while(1) {
-//		nanosleep(&tim, &tim_2);
 //		sem_wait(&refresh_config); //Con los semaforos no lo reconoce
 		sleepDump = tiempoDump/1000;
 		sleep(sleepDump);
-		pthread_mutex_lock(&dump_semaphore); //influye en todas las tablas
+		log_info(dump_logger, "Inicio Dump");
+
+		sem_wait(&dump_semaphore);
 		dump();
-		pthread_mutex_unlock(&dump_semaphore);
+		sem_post(&dump_semaphore);
+
+		log_info(dump_logger, "Fin Dump");
 //		sem_post(&refresh_config);
 	}
 }

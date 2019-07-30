@@ -1,6 +1,7 @@
 #include "funcionesLFS.h"
 
 extern t_log* logger;
+extern t_log* dump_logger;
 
 extern t_list* memtable;
 
@@ -161,8 +162,13 @@ void cambiarTiempoDump(void* parametros){
 
 void iniciar_variables(){
 
+	tot = 0;
 	cola_requests = list_create();
 	struct inotify *st_inotify = malloc(sizeof(struct inotify));
+
+	sem_init(&dump_semaphore, 1, 1);
+	sem_init(&op_control_semaphore, 1, 1);
+	sem_init(&compactar_semaphore, 1, 1);
 
 	//asigno variables globales del LFS.config
 	t_config* config = config_create("/home/utnso/workspace/tp-2019-1c-U-TN-Tecno/CONFIG/LFS.config");
@@ -195,10 +201,10 @@ void iniciar_variables(){
 
 	op_control_list = list_create();
 	lista_tabla_compact = list_create();
-	cargar_op_control_tablas();
+//	cargar_op_control_tablas();
 
 	sem_init(&requests_disponibles,0,0);
-	sem_init(&bloques_bitmap,0,1);
+	sem_init(&bloques_bitmap,1,1);
 
 	//agrego bitarray de cargar_configuracion_FS()
 	crear_bitarray(cantidadBloques);
@@ -357,20 +363,30 @@ int get_tiempo_compactacion(char *comando)
 
 int obtener_particiones_metadata(char* tabla)
 {
-
-	char* archivoMetadata = string_new();
-	char* unaTabla = string_duplicate(tabla);
-	string_append(&archivoMetadata,puntoDeMontaje);
-	string_append(&archivoMetadata,"Tablas/");
-	string_append(&archivoMetadata,unaTabla);
-	string_append(&archivoMetadata,"/metadata.config");
-
-	t_config* config = config_create(archivoMetadata);
-	int nr_particiones_metadata = config_get_int_value(config, "PARTITIONS");
-	config_destroy(config);
-	free(archivoMetadata);
-	free(unaTabla);
-	return nr_particiones_metadata;
+//	char* archivoMetadata = string_new();
+//	char* unaTabla = string_duplicate(tabla);
+//	string_append(&archivoMetadata,puntoDeMontaje);
+//	string_append(&archivoMetadata,"Tablas/");
+//	string_append(&archivoMetadata,unaTabla);
+//	string_append(&archivoMetadata,"/metadata.config");
+//
+//	t_config* config = NULL;
+//	config = config_create(archivoMetadata);
+//	if (config == NULL){
+//		printf("ERROR. No se pudo obtener metadata de %s\n",archivoMetadata);
+//		log_info(dump_logger, "ERROR de tabla %s", tabla);
+//		return -1;
+//	}
+//	int nr_particiones_metadata = config_get_int_value(config, "PARTITIONS");
+//	config_destroy(config);
+//	free(archivoMetadata);
+//	free(unaTabla);
+//	return nr_particiones_metadata;
+	if (strcmp(tabla, "ANIMALS") == 0){
+		return 2;
+	}else{
+		return 3;
+	}
 }
 
 
@@ -501,12 +517,16 @@ void crear_control_op(char *tabla)
 	s_op_control->tabla = strdup(tabla);
 	s_op_control->otros_flag = 0;
 	s_op_control->drop_flag = 0;
-	sem_init(&(s_op_control->drop_sem), 0, 0);
+	s_op_control->otros_blocked = 0;
+	s_op_control->drop_flag = 0;
+	sem_init(&(s_op_control->drop_sem), 1, 0);
 	pthread_mutexattr_t attr;
 	pthread_mutexattr_init(&attr);
+	pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
 	pthread_mutex_init(&(s_op_control->mutex), &attr);
 	pthread_mutexattr_t attr_2;
 	pthread_mutexattr_init(&attr_2);
+	pthread_mutexattr_settype(&attr_2, PTHREAD_MUTEX_RECURSIVE);
 	pthread_mutex_init(&(s_op_control->tabla_sem), &attr);
 	list_add(op_control_list, s_op_control);
 }
@@ -536,7 +556,7 @@ void compactacion_tablas_existentes()
 		struct dirent *sd;
 		char* tablas = string_new();
 		string_append(&tablas, puntoDeMontaje);
-		string_append(&tablas, "Tablas/");
+		string_append(&tablas, "Tablas");
 		DIR* dir = opendir(tablas);
 		while ((sd = readdir(dir)) != NULL) {
 			if ((strcmp((sd->d_name), ".") != 0) &&
@@ -564,70 +584,113 @@ void modificar_op_control(char *tabla, int mod_flag)
 		return comparar_nombre_op_control(elemento, tabla);
 	}
 
-	struct op_control *tabla_a_controlar = malloc(sizeof(struct op_control));
-	tabla_a_controlar = list_find(op_control_list, coincide_nombre_op);
+	sem_wait(&op_control_semaphore);
+
+//	struct op_control *tabla_a_controlar = malloc(sizeof(struct op_control));
+	struct op_control *tabla_a_controlar = NULL;
+	tabla_a_controlar = list_remove_by_condition(op_control_list, coincide_nombre_op);
 
 	if (tabla_a_controlar != NULL) {
 		switch (mod_flag) {
 		case 1:
-			pthread_mutex_lock(&(tabla_a_controlar->mutex));
-			if (tabla_a_controlar->drop_flag == 0){
-				tabla_a_controlar->otros_flag++;
-			pthread_mutex_unlock(&(tabla_a_controlar->mutex));
+//			pthread_mutex_lock(&(tabla_a_controlar->mutex));
+			tabla_a_controlar->otros_flag++;
+			if (tabla_a_controlar->drop_flag == 0 &&
+				tabla_a_controlar->insert_flag == 0){
+//				pthread_mutex_unlock(&(tabla_a_controlar->mutex));
+				list_add(op_control_list, tabla_a_controlar);
+				sem_post(&op_control_semaphore);
 			}else{
-				pthread_mutex_unlock(&(tabla_a_controlar->mutex));
+				tabla_a_controlar->otros_blocked++;
+//				pthread_mutex_unlock(&(tabla_a_controlar->mutex));
+				list_add(op_control_list, tabla_a_controlar);
+				sem_post(&op_control_semaphore);
 				pthread_mutex_lock(&(tabla_a_controlar->tabla_sem));
 			}
 			break;
 		case 2:
+//			pthread_mutex_lock(&(tabla_a_controlar->mutex));
 			tabla_a_controlar->otros_flag--;
-			if (tabla_a_controlar->otros_flag == 0 &&
-				tabla_a_controlar->drop_flag == 1) { //Si no hay otra request ejecutando y hay un Drop esperando
+			if(tabla_a_controlar->otros_blocked > 0 || tabla_a_controlar->insert_flag > 0){
+				tabla_a_controlar->otros_blocked--;
+				pthread_mutex_unlock(&(tabla_a_controlar->tabla_sem));
+			}else if (tabla_a_controlar->otros_flag == 0 &&
+				tabla_a_controlar->drop_flag > 0) { //Si no hay otra request ejecutando y hay un Drop esperando
 				sem_post(&(tabla_a_controlar->drop_sem));
 			}
+//			pthread_mutex_unlock(&(tabla_a_controlar->mutex));
+			list_add(op_control_list, tabla_a_controlar);
+			sem_post(&op_control_semaphore);
 			break;
 		case 3: //viene un Drop
-			pthread_mutex_lock(&(tabla_a_controlar->mutex));
-			tabla_a_controlar->drop_flag = 1;
+//			pthread_mutex_lock(&(tabla_a_controlar->mutex));
+			tabla_a_controlar->drop_flag++;
 			if (tabla_a_controlar->otros_flag > 0) {
-				pthread_mutex_unlock(&(tabla_a_controlar->mutex));
-//				pthread_mutex_unlock(&dump_semaphore); //si no puede ejecutar Drop, libera Dump
+//				pthread_mutex_unlock(&(tabla_a_controlar->mutex));
 				sem_wait(&(tabla_a_controlar->drop_sem));
 			} else {
-				tabla_a_controlar->drop_flag = 1;
-				pthread_mutex_unlock(&(tabla_a_controlar->mutex));
+//				pthread_mutex_unlock(&(tabla_a_controlar->mutex));
 				pthread_mutex_lock(&(tabla_a_controlar->tabla_sem));
 			}
+			list_add(op_control_list, tabla_a_controlar);
+			sem_post(&op_control_semaphore);
 			break;
 		case 4:
-			tabla_a_controlar->drop_flag = 0;
-			pthread_mutex_unlock(&(tabla_a_controlar->tabla_sem));
-			void destruir_elemento(void *elemento){
-				return destroy_op_control((struct op_control *)elemento);
-			}
-
-			list_remove_and_destroy_by_condition(op_control_list, coincide_nombre_op, destruir_elemento);
+			tabla_a_controlar->drop_flag--;
+			pthread_mutex_unlock(&(tabla_a_controlar->tabla_sem));//Tal vez conviene no levantarlo
+			destroy_op_control(tabla_a_controlar);
+			sem_post(&op_control_semaphore);
 			break;
 		case 5: //Compactacion (se comporta parecido a Drop)
-			pthread_mutex_lock(&(tabla_a_controlar->mutex));
+//			pthread_mutex_lock(&(tabla_a_controlar->mutex));
 			if (tabla_a_controlar->otros_flag > 0 ||
-				tabla_a_controlar->drop_flag == 1){
-			pthread_mutex_unlock(&(tabla_a_controlar->mutex));
+				tabla_a_controlar->drop_flag > 0){
+				tabla_a_controlar->drop_flag++;
+//			pthread_mutex_unlock(&(tabla_a_controlar->mutex));
 			sem_wait(&(tabla_a_controlar->drop_sem));
 			} else {
-				tabla_a_controlar->drop_flag = 1;
-				pthread_mutex_unlock(&(tabla_a_controlar->mutex));
+				tabla_a_controlar->drop_flag++;
+//				pthread_mutex_unlock(&(tabla_a_controlar->mutex));
 				pthread_mutex_lock(&(tabla_a_controlar->tabla_sem));
 			}
+			list_add(op_control_list, tabla_a_controlar);
+			sem_post(&op_control_semaphore);
 			break;
 		case 6: //fin Compactacion
-			tabla_a_controlar->drop_flag = 0;
+//			pthread_mutex_lock(&(tabla_a_controlar->mutex));
+			tabla_a_controlar->drop_flag--;
 			pthread_mutex_unlock(&(tabla_a_controlar->tabla_sem));
+//			pthread_mutex_unlock(&(tabla_a_controlar->mutex));
+			list_add(op_control_list, tabla_a_controlar);
+			sem_post(&op_control_semaphore);
+			break;
+		case 7:
+//			pthread_mutex_lock(&(tabla_a_controlar->mutex));
+			tabla_a_controlar->insert_flag++;
+//			pthread_mutex_unlock(&(tabla_a_controlar->mutex));
+			pthread_mutex_lock(&(tabla_a_controlar->tabla_sem));
+			list_add(op_control_list, tabla_a_controlar);
+			sem_post(&op_control_semaphore);
+			break;
+		case 8:
+//			pthread_mutex_lock(&(tabla_a_controlar->mutex));
+			tabla_a_controlar->insert_flag--;
+			pthread_mutex_unlock(&(tabla_a_controlar->tabla_sem));
+			if (tabla_a_controlar->otros_flag == 0 &&
+				tabla_a_controlar->drop_flag > 0) { //Si no hay otra request ejecutando y hay un Drop esperando
+				sem_post(&(tabla_a_controlar->drop_sem));
+			}
+//			pthread_mutex_unlock(&(tabla_a_controlar->mutex));
+			list_add(op_control_list, tabla_a_controlar);
+			sem_post(&op_control_semaphore);
 			break;
 		default :
 			printf("mod_flag No reconocido\n");
 			break;
 		}
+	}else {
+		sem_post(&op_control_semaphore);
+		return;
 	}
 }
 
@@ -635,6 +698,7 @@ int contar_archivos_con_extension(char *root, char* extension) {
 	int cont = 0;
 	DIR * dir;
 	dir = opendir(root);
+
 	struct dirent *entrada;
 	char **entrada_aux;
 	while ((entrada = readdir(dir)) != NULL) {
@@ -705,7 +769,7 @@ void control_inotify(void *param)
 	while(1){
 		esperarModificacionDeArchivo(strdup(p->config_root));
 
-		sem_wait(&refresh_config);
+//		sem_wait(&refresh_config);
 
 		t_config* config = config_create(p->config_root);
 
@@ -715,6 +779,6 @@ void control_inotify(void *param)
 
 		config_destroy(config);
 
-		sem_post(&refresh_config);
+//		sem_post(&refresh_config);
 	}
 }

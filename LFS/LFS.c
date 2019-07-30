@@ -42,6 +42,8 @@ int main() {
 	pthread_create(&h_peticiones, NULL, (void *) ejecutar_peticion, NULL);
 	compactacion_tablas_existentes();
 
+	pthread_join(h_compactacion, NULL);
+
 	pthread_detach(h_conexiones);
 	pthread_join(h_peticiones,NULL);
 	pthread_join(h_dump, NULL);

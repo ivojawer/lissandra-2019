@@ -84,6 +84,8 @@ void mostrar_descripciones_metadata(t_list *lista_describe) {
 }
 
 void agregar_tablas_a_describir() {
+	sem_wait(&compactar_semaphore);
+	sem_wait(&dump_semaphore);
 	struct dirent *sd;
 	char* tablas = string_new();
 	string_append(&tablas, puntoDeMontaje);
@@ -93,13 +95,15 @@ void agregar_tablas_a_describir() {
 	while ((sd = readdir(dir)) != NULL) {
 		if ((strcmp((sd->d_name), ".") != 0)
 				&& (strcmp((sd->d_name), "..") != 0)) {
-			modificar_op_control(sd->d_name, 1);
+//			modificar_op_control(sd->d_name, 1);
 			cargar_datos_tabla(sd->d_name);
-			modificar_op_control(sd->d_name, 2);
+//			modificar_op_control(sd->d_name, 2);
 		}
 	}
 	closedir(dir);
 	free(tablas);
+	sem_post(&compactar_semaphore);
+	sem_post(&dump_semaphore);
 }
 
 void transformar_y_agregar(struct describe *metadata,
@@ -139,7 +143,9 @@ void describe_full(int socket_cliente) {
 
 void describe_particular(char *comando, int socket_cliente) {
 	char *tabla = get_tabla(comando);
-	modificar_op_control(tabla, 1);
+//	modificar_op_control(tabla, 1);
+	sem_wait(&compactar_semaphore);
+	sem_wait(&dump_semaphore);
 	if (existe_tabla(tabla)) {
 		metadataTablaLFS *struct_metadata = malloc(sizeof(metadataTablaLFS));
 		struct_metadata->nombre = strdup(tabla);
@@ -171,7 +177,9 @@ void describe_particular(char *comando, int socket_cliente) {
 		}
 
 	}
-	modificar_op_control(tabla, 2);
+	sem_post(&compactar_semaphore);
+	sem_post(&dump_semaphore);
+//	modificar_op_control(tabla, 2);
 }
 
 void rutina_describe(void* parametros) {

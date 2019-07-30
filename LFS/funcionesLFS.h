@@ -49,7 +49,9 @@ struct op_control{
 	pthread_mutex_t mutex;
 	sem_t drop_sem;
 	int drop_flag;
+	int insert_flag;
 	int otros_flag;
+	int otros_blocked;
 	char *tabla;
 };
 
@@ -222,8 +224,10 @@ void eliminar_tabla(char *tabla);
 
 //DUMP
 void ejecutar_dump();
-pthread_mutex_t dump_semaphore;
 
-
+sem_t op_control_semaphore;
+sem_t dump_semaphore;
+sem_t compactar_semaphore;
+int tot;
 
 #endif /* FUNCIONESLFS_H_ */

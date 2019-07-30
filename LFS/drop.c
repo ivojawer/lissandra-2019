@@ -1,11 +1,10 @@
 #include "funcionesLFS.h"
 
-extern int socket_memoria;
+//extern int socket_memoria;
 extern void liberar_tabla(void *elemento);
 extern bool comparar_nombre(char *tabla, void *tabla_mt);
 extern char* puntoDeMontaje;
 extern t_list *memtable;
-extern sem_t sem_memtable;
 extern bool coincide_tabla(void *elemento, char *tabla);
 
 void iterar_busqueda_de_bloques(void (foo)(char *, int, int, t_list *),
@@ -88,7 +87,7 @@ void rutina_drop(void* parametros) {
 
 	printf("Rutina DROP\n");
 	char *tabla = get_tabla(comando);
-	pthread_mutex_lock(&dump_semaphore);
+
 	modificar_op_control(tabla, 3); //para no cruzarse con niguno
 	if (existe_tabla(tabla)) {
 		eliminar_tabla(tabla);
@@ -124,5 +123,4 @@ void rutina_drop(void* parametros) {
 
 	}
 	modificar_op_control(strdup(tabla), 4);
-	pthread_mutex_unlock(&dump_semaphore);
 }

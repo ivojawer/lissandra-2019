@@ -126,8 +126,8 @@ int crear_tabla_FS(char *tabla, int particiones, char *consistencia,
 	free(compactacion_tabla);
 	free(particiones_tabla);
 
-	if (flag_creacion == 0)
-		crear_control_op(tabla);
+//	if (flag_creacion == 0)
+//		crear_control_op(tabla);
 
 	return flag_creacion;
 }
@@ -139,7 +139,6 @@ void crear_hilo_compactacion(char *tabla, int tiempo_compactacion) {
 	p_comp->tiempo_compact = tiempo_compactacion;
 	pthread_create(&h_compactacion, NULL, (void *) iniciar_compactacion,
 			(void *) p_comp); //pasar parametros
-	pthread_join(h_compactacion, NULL);
 }
 
 void rutina_create(void* parametros) {

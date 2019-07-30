@@ -73,12 +73,10 @@ int obtener_size_particion(char *tabla, int particion_buscar)
 	string_append(&archivoParticion,"part");
 	string_append(&archivoParticion,numeroParticion);
 	string_append(&archivoParticion,".bin");
-	//esto quedo feo con append, si queres lo volvemos al viejo pero con el punto de montaje
 
 	t_config* config = config_create(archivoParticion);
 	if(config == NULL){
 		printf("La particion no existe\n");
-		config_destroy(config);
 		free(archivoParticion);
 		free(numeroParticion);
 		free(unaTabla);
@@ -91,7 +89,6 @@ int obtener_size_particion(char *tabla, int particion_buscar)
 		free(unaTabla);
 		return size_particion;
 	}
-	config_destroy(config);
 }
 
 
@@ -114,6 +111,25 @@ int contar_comas(char *temp)
 		i++;
 	}
 	return comas;
+}
+
+int linea_no_vacia(char *temp)
+{
+	int length = strlen(temp);
+	int flag;
+	int i;
+
+	for(i = 0; i < length+1; i++) {
+
+		if(temp[i] == 240 || temp[i] == 32 || temp[i] == 10 || temp[i] == 94){
+			flag = 0;
+		} else{
+			flag = 1;
+			return flag;
+		}
+	}
+
+	return flag;
 }
 
 
@@ -139,41 +155,50 @@ int contar_comas(char *temp)
 
 		 while(!feof(f) && bloque_size < size_bloque){
 			 fgets(temp, 32, f);
-			 if(strcmp(temp, " ") != 0){
+//
+			 if(linea_no_vacia(temp)){
 			 bloque_size += strlen(temp)*sizeof(char);
 			 int nr_comas = contar_comas(temp);
 			 tokens_registro = string_split(temp, ";");
 			 if(flag_key_value != 0) {
 				if(control == 1 && nr_comas == 2){
 
+					tokens_registro_2 = NULL;
 					tokens_registro_2 = string_split(array_aux, ";");
-					comparar_key_y_agregar_valor(atol(tokens_registro_2[1]), key, strdup(tokens_registro_2[2]), atoi(tokens_registro_2[0]), timestamp_valor);
+					if(tokens_registro_2[0] != NULL && tokens_registro_2[1] != NULL && tokens_registro_2[2] != NULL)
+							comparar_key_y_agregar_valor(atol(tokens_registro_2[1]), key, strdup(tokens_registro_2[2]), atoi(tokens_registro_2[0]), timestamp_valor);
+					if(tokens_registro[0] != NULL && tokens_registro[1] != NULL && tokens_registro[2] != NULL)
+						comparar_key_y_agregar_valor(atol(tokens_registro[1]), key, strdup(tokens_registro[2]), atoi(tokens_registro[0]), timestamp_valor);
 
-					comparar_key_y_agregar_valor(atol(tokens_registro[1]), key, strdup(tokens_registro[2]), atoi(tokens_registro[0]), timestamp_valor);
 					flag_key_value = 0;
 					control = 0;
 					memset(array_aux, 0X0, sizeof(array_aux));
+
 				}else {
 //					string_aux_2 = malloc(strlen(temp)*sizeof(char));
 //					strcpy(string_aux_2, temp);
 //				 	strcat(array_aux, string_aux_2);
 					strcat(array_aux, temp);
+				 	tokens_registro = NULL;
 				 	tokens_registro = string_split(array_aux, ";");
-				 	comparar_key_y_agregar_valor(atol(tokens_registro[1]), key, strdup(tokens_registro[2]), atoi(tokens_registro[0]), timestamp_valor);
+				 	if(tokens_registro[0] != NULL && tokens_registro[1] != NULL && tokens_registro[2] != NULL){
+				 		comparar_key_y_agregar_valor(atol(tokens_registro[1]), key, tokens_registro[2], atoi(tokens_registro[0]), timestamp_valor);
 				 	memset(array_aux, 0x0, sizeof(array_aux));
 //				 	free(string_aux_2);
 				 	flag_key_value = 0;
 				 	control = 0;
 				 	}
+				}
 				 }else{ //Si la flag == 0
 					 if((nr_comas == 2) && ((flag_last_bloque == 1) && (bloque_size == size_bloque))){
 						 comparar_key_y_agregar_valor(atol(tokens_registro[1]), key, strdup(tokens_registro[2]), atoi(tokens_registro[0]), timestamp_valor);
 
-					 }else if(nr_comas == 2 && bloque_size < size_bloque){ //En el medio
+					 }else if(nr_comas == 2 && bloque_size < size_bloque &&
+							  (tokens_registro[0] != NULL && tokens_registro[1] != NULL && tokens_registro[2] != NULL)){ //En el medio
 						 comparar_key_y_agregar_valor(atol(tokens_registro[1]), key, strdup(tokens_registro[2]), atoi(tokens_registro[0]), timestamp_valor);
 					 }else{
 						if(nr_comas == 2)
-							 control = 1;
+							control = 1;
 						flag_key_value = 1;
 						strcpy(array_aux, temp);
 					 }
@@ -287,7 +312,7 @@ int cargar_bloques(char *root, t_list *bloques_buscar)
 	}
 }
 
-
+extern t_log* dump_logger;
 void buscar_bloques_particion(char *tabla, int particion_buscar, int type_flag, t_list *bloques_buscar)
 {
 	char* root = string_new();
@@ -296,7 +321,15 @@ void buscar_bloques_particion(char *tabla, int particion_buscar, int type_flag, 
 	string_append(&root,tabla);
 
 	DIR *dir;
-	dir = opendir(root);
+	if(type_flag != 0)
+		dir = opendir(root);
+	tot++;
+	if(dir == NULL && type_flag != 0){
+		printf("No se pudo abrir %s.\n",root);
+		log_info(dump_logger, "ERROR buscar_bloques_particion %d", tot);
+		return;
+	}
+
 	struct dirent *entrada;
 	char **entrada_aux;
 
@@ -438,12 +471,10 @@ t_registro* buscar_en_todos_lados(char *tabla, uint16_t key, int particion_busca
 	buscar_bloques_particion(tabla, particion_buscar, 2, bloques_buscar); //Busca .tmpc
 	cargar_timestamp_value(bloques_buscar, timestamp_valor, key); //Lee en los bloques y carga los pares en lista "timestamp_valor"
 
-	pthread_mutex_lock(&dump_semaphore);
+
 
 	t_list *registros_encontrados = filtrar_registros_particion(filtrar_particion_tabla(filtrar_tabla_memtable(tabla), particion_buscar), key); /*Busca en la Memtable.
-
 																							Devuelve lista de registros que cumplen con la key*/
-	pthread_mutex_unlock(&dump_semaphore);
 	int cant_registros = list_size(registros_encontrados);
 	int i;
 	if(cant_registros!=0){
@@ -476,7 +507,7 @@ t_registro* buscar_en_todos_lados(char *tabla, uint16_t key, int particion_busca
 
 	}
 	liberar_bloques_buscar(bloques_buscar);
-	liberar_timestamp_valor(timestamp_valor); //ROMPE??
+	liberar_timestamp_valor(timestamp_valor);
 
 	return registroEncontrado;
 }
@@ -496,11 +527,15 @@ void rutina_select(void* parametros)
 	uint16_t key = get_key(comando);
 	printf("key: %d\n", get_key(comando));
 
+	printf("SELECT INSIDE\n");
+
+//	modificar_op_control(tabla, 1); //para no cruzarse con Drop o Compactacion
+	sem_wait(&compactar_semaphore);
+	sem_wait(&dump_semaphore);
+
 	if(existe_tabla(tabla)){
 		int nr_particiones_metadata = obtener_particiones_metadata(tabla);
 		int particion_buscar = nr_particion_key(key, nr_particiones_metadata);
-
-		modificar_op_control(tabla, 1); //para no cruzarse con Drop
 
 		t_registro* resultadoBusqueda = malloc(sizeof(t_registro));
 		resultadoBusqueda = buscar_en_todos_lados(tabla, key, particion_buscar);
@@ -517,7 +552,6 @@ void rutina_select(void* parametros)
 			if(socket_cliente != -1)
 				enviarIntConHeader(socket_cliente, NO_EXISTE, RESPUESTA);
 		}
-		modificar_op_control(tabla, 2);
 	}else{
 		printf("La tabla no se encuentra en el sistema\n");
 		if(socket_cliente != -1)
@@ -526,4 +560,8 @@ void rutina_select(void* parametros)
 			enviarIntConHeader(socket_cliente, ERROR, RESPUESTA);
 		}
 	}
+//	modificar_op_control(tabla, 2);
+	sem_post(&compactar_semaphore);
+	sem_post(&dump_semaphore);
+	printf("SELECT OUTSIDE\n");
 }
