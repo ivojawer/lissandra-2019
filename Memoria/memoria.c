@@ -1,7 +1,7 @@
 #include "funcionesMemoria.h"
 
 t_log* logger;
-
+t_log* loggerJournal;
 t_list* tablaSegmentos;
 t_list* hilosEnEjecucion;
 t_list* colaDeRequests;
@@ -68,6 +68,7 @@ int main() {
 	string_append(&nombreLogger,".log");
 
 	logger = log_create(nombreLogger, "memoria", 1, 0); //3er parametro en 1 para mostrarlos en consola. Sino en 0
+	loggerJournal = log_create("journal.log","memoria",0,0);
 
 	config_destroy(config);
 

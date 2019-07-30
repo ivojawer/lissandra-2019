@@ -1,0 +1,16 @@
+[INFO] 15:31:44:898 LFS/(19337:19337): [Control existencia]: Se encuentra el directorio Bloques
+[INFO] 15:31:44:899 LFS/(19337:19337): [Control existencia]: Se encuentra el directorio Tablas
+[INFO] 15:31:44:899 LFS/(19337:19337): [Control existencia]: Se encuentra el directorio Metadata
+[INFO] 15:32:18:35 LFS/(19404:19404): [Control existencia]: Creacion del directorio Bloques
+[INFO] 15:32:18:36 LFS/(19404:19404): [Control existencia]: Creacion del directorio Tablas
+[INFO] 15:32:18:36 LFS/(19404:19404): [Control existencia]: Creacion del directorio Metadata
+[INFO] 15:32:18:36 LFS/(19404:19404): [Control existencia]: Creacion del archivo Bitmap.bin
+[INFO] 15:32:18:36 LFS/(19404:19404): [Control existencia]: Creacion del archivo Metadata.bin
+[INFO] 15:32:43:912 LFS/(19404:19417): Se conecto una Memoria
+[INFO] 16:10:13:333 LFS/(22799:22799): [Control existencia]: Creacion del directorio Bloques
+[INFO] 16:10:13:333 LFS/(22799:22799): [Control existencia]: Creacion del directorio Tablas
+[INFO] 16:10:13:333 LFS/(22799:22799): [Control existencia]: Creacion del directorio Metadata
+[INFO] 16:10:13:333 LFS/(22799:22799): [Control existencia]: Creacion del archivo Bitmap.bin
+[INFO] 16:10:13:333 LFS/(22799:22799): [Control existencia]: Creacion del archivo Metadata.bin
+[INFO] 16:10:25:164 LFS/(22799:22817): Se conecto una Memoria
+[ERROR] 16:33:27:275 LFS/(22799:22819): Se recibio algo incorrecto de Memoria, se cierra la conexion.

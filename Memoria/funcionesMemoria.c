@@ -1,6 +1,7 @@
 #include "funcionesMemoria.h"
 
 extern t_log* logger;
+extern t_log* loggerJournal;
 extern t_list* tablaSegmentos;
 extern t_list* colaDeRequests;
 extern sem_t requestsDisponibles;
@@ -692,8 +693,17 @@ void journal() {
 				sem_post(&sem_refreshConfig);
 				sleep(sleepMilisegundos);
 
+				log_info(loggerJournal,"JOURNAL");
+				for(int i = 0;i<list_size(insertsAMandar);i++)
+				{
+					request* unInsert = list_get(insertsAMandar,i);
+					log_info(loggerJournal,requestStructAString(unInsert));
+				}
+
+
 				enviarListaDeRequestsConHeader(socketLFS, insertsAMandar,
 				JOURNAL);
+				log_info(loggerJournal,"SE ENVIO");
 				printf("le envie el JOURNAL al LFS\n");
 			}
 
