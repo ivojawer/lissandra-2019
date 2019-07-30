@@ -47,7 +47,7 @@ int queConsistenciaEs(char* string)
 
 int esUnParametroValido(int request, char* parametro) {
 
-	if (parametro == NULL && request != JOURNAL && request != DESCRIBE) {
+	if (parametro == NULL && request != JOURNAL && request != DESCRIBE && request != METRICS)  {
 		return 0; //Se aborta la mision porque si no se rompe everything
 	}
 
@@ -289,6 +289,7 @@ int esUnaRequestValida(char* requestEnString) {
 	int requestEnInt = queRequestEs(requestYParametros[0]);
 
 	if (requestEnInt == -1) { //No es una request
+		liberarArrayDeStrings(requestYParametros);
 		return 0;
 	}
 
