@@ -155,11 +155,12 @@ void eliminarRegistro(segmento* seg, pagina* pagEnSeg) {
 int marcoLRU() {
 	bool encontreLRU = false;
 
-	segmento* segmentoLRU = tablaSegmentos->head->data;
-	pagina* paginaLRU = segmentoLRU->tablaDePaginas->head->data;
+	segmento* segmentoLRU = list_get(tablaSegmentos,0);
+	pagina* paginaLRU = list_get(segmentoLRU->tablaDePaginas,0);
 	void menorUltimoUsoPorSegmento(segmento* seg) {
 		void menorUltimoUso(pagina* pag) {
-			if (pag->ultimoUso < paginaLRU->ultimoUso && pag->flagModificado == 0) {
+//			printf("Comparacion LRU: ultimo uso minimo:%d - ultimo uso a comparar:%d - flag modificado:%d\n",paginaLRU->ultimoUso,pag->ultimoUso,pag->flagModificado);
+			if (pag->ultimoUso <= paginaLRU->ultimoUso && pag->flagModificado == 0) {
 				paginaLRU = pag;
 				segmentoLRU = seg;
 				encontreLRU = true;
@@ -198,6 +199,11 @@ int numeroMarcoDondeAlocar() {
 	}
 	int marcoAlocar = marcoLRU();
 	if (marcoAlocar != MEM_LLENA){
+		char* textoALoggear = string_new();
+		string_append(&textoALoggear,"Ejecute LRU Marco encontrado ");
+		string_append(&textoALoggear,string_itoa(marcoAlocar));
+		loggearAmarillo(logger,textoALoggear);
+		free(textoALoggear);
 		marcos[marcoAlocar].vacio = false;
 		return marcoAlocar;
 	}
@@ -269,6 +275,7 @@ void actualizoDato(pagina* pagina, char* nuevoValue, unsigned long long nuevoTim
 	int sleepMilisegundos = retardoAccesoMemoria/ 1000;
 	sem_post(&sem_refreshConfig);
 	sleep(sleepMilisegundos);
+	pagina->flagModificado = 1;
 	pagina->ultimoUso= tiempoActual();
 	strcpy(&getMarcoFromPagina(pagina)->value, nuevoValue);
 	getMarcoFromPagina(pagina)->timestamp = nuevoTimestamp;
@@ -441,7 +448,7 @@ void insertInterno(uint16_t key, char* value, char* tabla, unsigned long long ti
 		if (tablaEncontrada == NULL) {
 			log_info(logger, "Se va a crear la tabla y el dato");
 			segmento* tablaCreada = nuevaTabla(tablaSegmentos, tabla);
-			pagina* nuevaPagina = nuevoDato(tablaCreada->tablaDePaginas, 1, key,
+			pagina* nuevaPagina = nuevoDato(tablaCreada->tablaDePaginas, 0, key,
 					timestamp, value);
 			if (nuevaPagina->nroMarco == MEM_LLENA) {
 				log_error(logger, "MEMORIA FULL");
