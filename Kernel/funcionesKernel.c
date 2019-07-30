@@ -112,6 +112,12 @@ int ejecutarRequest(request* requestAEjecutar, script* elScript) {
 
 	sleep(tiempoDeSleep); //TODO: Marca, el sleep esta al principio de la ejecucion
 
+	char* textoALoggear = string_new();
+	string_append(&textoALoggear,"Se va a ejecutar la request ");
+	string_append(&textoALoggear,requestStructAString(requestAEjecutar));
+	loggearCyanClaro(logger,textoALoggear);
+	free(textoALoggear);
+
 	switch (requestAEjecutar->requestEnInt) {
 
 	case JOURNAL: {
