@@ -358,7 +358,7 @@ t_list* traerRegistrosBloques(char** bloques){
 	string_iterate_lines(bloques, (void*) leerBloque);
 	
 	// Esto aplica si la ultima linea del ultimo bloque no termina en \n
-	if (!string_is_empty(registroActual) && strcmp(registroActual,"\n")){ //TODO: Marca entraba como \n
+	if ((string_is_empty(registroActual) == 0) && (strcmp(registroActual,"\n") == 0)){ //TODO: Marca entraba como \n
 		list_add(registros, stringRegistroAStruct(registroActual));
 		free(registroActual);
 		registroActual = string_new();
