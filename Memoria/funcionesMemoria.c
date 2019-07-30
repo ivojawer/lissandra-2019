@@ -159,7 +159,7 @@ int marcoLRU() {
 	pagina* paginaLRU = segmentoLRU->tablaDePaginas->head->data;
 	void menorUltimoUsoPorSegmento(segmento* seg) {
 		void menorUltimoUso(pagina* pag) {
-			if (pag->ultimoUso < paginaLRU->ultimoUso) {
+			if (pag->ultimoUso < paginaLRU->ultimoUso && pag->flagModificado == 0) {
 				paginaLRU = pag;
 				segmentoLRU = seg;
 				encontreLRU = true;
