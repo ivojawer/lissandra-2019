@@ -155,28 +155,39 @@ void eliminarRegistro(segmento* seg, pagina* pagEnSeg) {
 
 int marcoLRU() {
 	bool encontreLRU = false;
-
-	segmento* segmentoLRU = list_get(tablaSegmentos,0);
-	pagina* paginaLRU = list_get(segmentoLRU->tablaDePaginas,0);
+	segmento* segmentoLRU;
+	pagina* paginaLRU;
 	void menorUltimoUsoPorSegmento(segmento* seg) {
+		bool filtroNoModificados(pagina* pag){
+			return pag->flagModificado == 0;
+		}
+
 		void menorUltimoUso(pagina* pag) {
-//			printf("Comparacion LRU: ultimo uso minimo:%d - ultimo uso a comparar:%d - flag modificado:%d\n",paginaLRU->ultimoUso,pag->ultimoUso,pag->flagModificado);
-			if (pag->ultimoUso <= paginaLRU->ultimoUso && pag->flagModificado == 0) {
-				paginaLRU = pag;
-				segmentoLRU = seg;
+			if(encontreLRU){
+				if (pag->ultimoUso < paginaLRU->ultimoUso) {
+					paginaLRU = pag;
+					segmentoLRU = seg;
+					encontreLRU = true;
+				}
+			}else{
 				encontreLRU = true;
+				segmentoLRU = seg;
+				paginaLRU=pag;
 			}
 		}
-		list_iterate(seg->tablaDePaginas, (void*) menorUltimoUso);
+		t_list* paginasNoModificadas=list_filter(seg->tablaDePaginas,(void*)filtroNoModificados);
+		list_iterate(paginasNoModificadas, (void*) menorUltimoUso);
+		list_destroy(paginasNoModificadas);
 	}
 
 	list_iterate(tablaSegmentos, (void*) menorUltimoUsoPorSegmento);
 
-	int marcoLRU = paginaLRU->nroMarco;
+
 
 
 
 	if (encontreLRU){
+		int marcoLRU=paginaLRU->nroMarco;
 		eliminarRegistro(segmentoLRU, paginaLRU);
 		return marcoLRU;
 	}
@@ -209,6 +220,7 @@ int numeroMarcoDondeAlocar() {
 		return marcoAlocar;
 	}
 	else {
+		status();
 		return MEM_LLENA;
 	}
 
@@ -786,6 +798,8 @@ void status(){
 				string_append(&status,seg->nombreDeTabla);
 				string_append(&status," V=");
 				string_append(&status,&getMarcoFromPagina(pag)->value);
+				string_append(&status," LU=");
+				string_append(&status,string_itoa(pag->ultimoUso));
 				statusMarcos[pag->nroMarco] = status;
 			}
 		list_iterate(seg->tablaDePaginas,(void*)statusPagina);
@@ -793,7 +807,7 @@ void status(){
 
 	list_iterate(tablaSegmentos, (void*)statusPorSegmento);
 
-	printf("Listado Marcos (M=modificado,K=key,TS=timestamp,T=tabla,V=value)\n");
+	printf("Listado Marcos (M=modificado,K=key,TS=timestamp,T=tabla,V=value,LU=last_use)\n");
 
 	for(int i = 0;i<cantMarcos;i++){
 		printf("Nro Marco:%d Status:%s\n",i,statusMarcos[i]);
