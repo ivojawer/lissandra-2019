@@ -310,3 +310,30 @@
 [INFO] 12:49:14:145 LFS/(16874:16886): Se va a hacer el dump
 [INFO] 12:49:14:145 LFS/(16874:16886): Se termino el dump
 [INFO] 12:49:17:145 LFS/(16874:16886): Se va a hacer el dump
+[INFO] 21:56:47:673 LFS/(7655:7655): [Control existencia]: Creacion del directorio Bloques
+[INFO] 21:56:47:675 LFS/(7655:7655): [Control existencia]: Creacion del directorio Tablas
+[INFO] 21:56:47:675 LFS/(7655:7655): [Control existencia]: Creacion del directorio Metadata
+[INFO] 21:56:47:675 LFS/(7655:7655): [Control existencia]: Creacion del archivo Bitmap.bin
+[INFO] 21:56:47:675 LFS/(7655:7655): [Control existencia]: Creacion del archivo Metadata.bin
+[INFO] 21:58:04:945 LFS/(7655:7675): Se conecto una Memoria
+[INFO] 21:58:05:426 LFS/(7655:7675): Se conecto una Memoria
+[INFO] 21:58:05:945 LFS/(7655:7675): Se conecto una Memoria
+[ERROR] 21:58:55:763 LFS/(7655:7718): Se recibio algo incorrecto de Memoria, se cierra la conexion.
+[ERROR] 21:58:57:483 LFS/(7655:7710): Se recibio algo incorrecto de Memoria, se cierra la conexion.
+[INFO] 22:12:05:486 LFS/(10342:10342): [Control existencia]: Creacion del directorio Bloques
+[INFO] 22:12:05:487 LFS/(10342:10342): [Control existencia]: Creacion del directorio Tablas
+[INFO] 22:12:05:487 LFS/(10342:10342): [Control existencia]: Creacion del directorio Metadata
+[INFO] 22:12:05:487 LFS/(10342:10342): [Control existencia]: Creacion del archivo Bitmap.bin
+[INFO] 22:12:05:487 LFS/(10342:10342): [Control existencia]: Creacion del archivo Metadata.bin
+[INFO] 22:12:19:58 LFS/(10383:10383): [Control existencia]: Creacion del directorio Bloques
+[INFO] 22:12:19:59 LFS/(10383:10383): [Control existencia]: Creacion del directorio Tablas
+[INFO] 22:12:19:59 LFS/(10383:10383): [Control existencia]: Creacion del directorio Metadata
+[INFO] 22:12:19:59 LFS/(10383:10383): [Control existencia]: Creacion del archivo Bitmap.bin
+[INFO] 22:12:19:59 LFS/(10383:10383): [Control existencia]: Creacion del archivo Metadata.bin
+[INFO] 22:12:35:84 LFS/(10383:10396): Se conecto una Memoria
+[INFO] 22:18:29:599 LFS/(12068:12068): [Control existencia]: Creacion del directorio Bloques
+[INFO] 22:18:29:599 LFS/(12068:12068): [Control existencia]: Creacion del directorio Tablas
+[INFO] 22:18:29:599 LFS/(12068:12068): [Control existencia]: Creacion del directorio Metadata
+[INFO] 22:18:29:599 LFS/(12068:12068): [Control existencia]: Creacion del archivo Bitmap.bin
+[INFO] 22:18:29:599 LFS/(12068:12068): [Control existencia]: Creacion del archivo Metadata.bin
+[INFO] 22:18:51:617 LFS/(12068:12090): Se conecto una Memoria

@@ -193,8 +193,9 @@ void iniciar_compactacion(void *arg)
 			log_info(compact_logger, "INICIO Comp. Tabla %s", p_comp->tabla);
 //			modificar_op_control(p_comp->tabla, 5);
 			t_ini_compact = medir_tiempo();
-			sem_wait(&compactar_semaphore);
 			sem_wait(&dump_semaphore);
+			sem_wait(&compactar_semaphore);
+
 			compactar(p_comp->tabla);
 			sem_post(&dump_semaphore);
 			sem_post(&compactar_semaphore);

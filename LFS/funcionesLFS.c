@@ -363,25 +363,31 @@ int get_tiempo_compactacion(char *comando)
 
 int obtener_particiones_metadata(char* tabla)
 {
-//	char* archivoMetadata = string_new();
-//	char* unaTabla = string_duplicate(tabla);
-//	string_append(&archivoMetadata,puntoDeMontaje);
-//	string_append(&archivoMetadata,"Tablas/");
-//	string_append(&archivoMetadata,unaTabla);
-//	string_append(&archivoMetadata,"/metadata.config");
-//
-//	t_config* config = NULL;
-//	config = config_create(archivoMetadata);
-//	if (config == NULL){
-//		printf("ERROR. No se pudo obtener metadata de %s\n",archivoMetadata);
-//		log_info(dump_logger, "ERROR de tabla %s", tabla);
-//		return -1;
-//	}
-//	int nr_particiones_metadata = config_get_int_value(config, "PARTITIONS");
-//	config_destroy(config);
-//	free(archivoMetadata);
-//	free(unaTabla);
-//	return nr_particiones_metadata;
+	char* archivoMetadata = string_new();
+	char* unaTabla = string_duplicate(tabla);
+	string_append(&archivoMetadata,puntoDeMontaje);
+	string_append(&archivoMetadata,"Tablas/");
+	string_append(&archivoMetadata,unaTabla);
+	string_append(&archivoMetadata,"/metadata.config");
+
+	t_config* config = NULL;
+	config = config_create(archivoMetadata);
+	if (config == NULL){
+		printf("ERROR. No se pudo obtener metadata de %s\n",archivoMetadata);
+		log_info(dump_logger, "ERROR de tabla %s", tabla);
+		return -1;
+	}
+	int nr_particiones_metadata = config_get_int_value(config, "PARTITIONS");
+	config_destroy(config);
+	free(archivoMetadata);
+	free(unaTabla);
+	return nr_particiones_metadata;
+
+
+
+
+
+
 	if (strcmp(tabla, "ANIMALS") == 0){
 		return 2;
 	}else{

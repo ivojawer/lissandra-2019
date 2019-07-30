@@ -530,8 +530,9 @@ void rutina_select(void* parametros)
 	printf("SELECT INSIDE\n");
 
 //	modificar_op_control(tabla, 1); //para no cruzarse con Drop o Compactacion
-	sem_wait(&compactar_semaphore);
 	sem_wait(&dump_semaphore);
+	sem_wait(&compactar_semaphore);
+
 
 	if(existe_tabla(tabla)){
 		int nr_particiones_metadata = obtener_particiones_metadata(tabla);

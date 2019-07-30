@@ -17,8 +17,6 @@ t_registro *crear_registro(unsigned long timestamp, uint16_t key, char *value) {
 	return new;
 }
 
-
-
 void registro_destroy(t_registro *self) {
 	if (self != NULL) {
 		free(self->value);
@@ -98,7 +96,7 @@ void agregar_registro_en_particion_existente(char *tabla, int particion_buscar,
 						tabla_extraida->lista_particiones, j);
 				if (particion_extraida->num == particion_buscar) {
 					list_add(particion_extraida->lista_registros,
-							 registro_nuevo);
+							registro_nuevo);
 				}
 			}
 		}
@@ -136,10 +134,11 @@ void rutina_insert(void* parametros) {
 	if (strlen(value) > tamanioValue) {
 		printf("El value ingresado supera el tamaño maximo permitido.\n");
 
-		if(socket_cliente != -1)
-		{
+		if (socket_cliente != -1) {
 			enviarIntConHeader(socket_cliente, ERROR, RESPUESTA);
 		}
+		sem_post(&dump_semaphore);
+		sem_post(&compactar_semaphore);
 		return;
 	} else {
 		log_info(dump_logger, "Inicio Insert %s", comando);
@@ -155,7 +154,7 @@ void rutina_insert(void* parametros) {
 			int particion_buscar = nr_particion_key(key,
 					nr_particiones_metadata);
 			int size = obtener_size_particion(tabla, particion_buscar);
-			if( size >= 0) {
+			if (size >= 0) {
 
 				t_list *tabla_encontrada = list_create();
 				tabla_encontrada = filtrar_tabla_memtable(tabla);
@@ -191,11 +190,10 @@ void rutina_insert(void* parametros) {
 //				sem_post(&dump_semaphore);
 //				sem_post(&compactar_semaphore);
 
-				if(socket_cliente != -1)
-				{
+				if (socket_cliente != -1) {
 					enviarIntConHeader(socket_cliente, TODO_BIEN, RESPUESTA);
 				}
-			}else{
+			} else {
 //				sem_post(&dump_semaphore);
 //				sem_post(&compactar_semaphore);
 			}
@@ -205,8 +203,7 @@ void rutina_insert(void* parametros) {
 //			sem_post(&dump_semaphore);
 //			sem_post(&compactar_semaphore);
 
-			if(socket_cliente != -1)
-			{
+			if (socket_cliente != -1) {
 				enviarIntConHeader(socket_cliente, ERROR, RESPUESTA);
 			}
 		}

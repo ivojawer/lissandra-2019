@@ -20,3 +20,55 @@
 [INFO] 12:15:01:22 LFS/(15288:15373): Compactacion finalizada. Tiempo Bloqueo: 0.031 milisegundos
 [INFO] 12:15:22:66 LFS/(15288:15373): Compactacion finalizada. Tiempo Bloqueo: 0.5590000000000001 milisegundos
 [INFO] 12:21:37:39 LFS/(15504:15521): Compactacion finalizada. Tiempo Bloqueo: 0.019 milisegundos
+[INFO] 21:59:19:368 LFS/(7655:7751): INICIO Comp. Tabla ANIMALS
+[INFO] 21:59:19:374 LFS/(7655:7751): FIN Comp. Tabla ANIMALS
+[INFO] 21:59:19:374 LFS/(7655:7751): Compactacion finalizada. Tiempo Bloqueo: 1.599 milisegundos
+[INFO] 21:59:19:389 LFS/(7655:7753): INICIO Comp. Tabla METALS
+[INFO] 21:59:19:391 LFS/(7655:7753): FIN Comp. Tabla METALS
+[INFO] 21:59:19:391 LFS/(7655:7753): Compactacion finalizada. Tiempo Bloqueo: 1.627 milisegundos
+[INFO] 21:59:24:376 LFS/(7655:7751): INICIO Comp. Tabla ANIMALS
+[INFO] 21:59:24:381 LFS/(7655:7751): FIN Comp. Tabla ANIMALS
+[INFO] 21:59:24:381 LFS/(7655:7751): Compactacion finalizada. Tiempo Bloqueo: 5.129 milisegundos
+[INFO] 21:59:24:391 LFS/(7655:7753): INICIO Comp. Tabla METALS
+[INFO] 21:59:24:399 LFS/(7655:7753): FIN Comp. Tabla METALS
+[INFO] 21:59:24:399 LFS/(7655:7753): Compactacion finalizada. Tiempo Bloqueo: 4.889 milisegundos
+[INFO] 21:59:29:389 LFS/(7655:7751): INICIO Comp. Tabla ANIMALS
+[INFO] 21:59:29:402 LFS/(7655:7753): INICIO Comp. Tabla METALS
+[INFO] 21:59:29:428 LFS/(7655:7751): FIN Comp. Tabla ANIMALS
+[INFO] 21:59:29:428 LFS/(7655:7751): Compactacion finalizada. Tiempo Bloqueo: 6.889 milisegundos
+[INFO] 21:59:29:437 LFS/(7655:7753): FIN Comp. Tabla METALS
+[INFO] 21:59:29:437 LFS/(7655:7753): Compactacion finalizada. Tiempo Bloqueo: 9.419 milisegundos
+[INFO] 21:59:34:428 LFS/(7655:7751): INICIO Comp. Tabla ANIMALS
+[INFO] 21:59:34:438 LFS/(7655:7753): INICIO Comp. Tabla METALS
+[INFO] 21:59:34:463 LFS/(7655:7751): FIN Comp. Tabla ANIMALS
+[INFO] 21:59:34:463 LFS/(7655:7751): Compactacion finalizada. Tiempo Bloqueo: 11.463 milisegundos
+[INFO] 21:59:34:475 LFS/(7655:7753): FIN Comp. Tabla METALS
+[INFO] 21:59:34:475 LFS/(7655:7753): Compactacion finalizada. Tiempo Bloqueo: 14.481 milisegundos
+[INFO] 21:59:39:465 LFS/(7655:7751): INICIO Comp. Tabla ANIMALS
+[INFO] 21:59:39:475 LFS/(7655:7753): INICIO Comp. Tabla METALS
+[INFO] 21:59:39:490 LFS/(7655:7751): FIN Comp. Tabla ANIMALS
+[INFO] 21:59:39:490 LFS/(7655:7751): Compactacion finalizada. Tiempo Bloqueo: 0.264 milisegundos
+[INFO] 21:59:44:491 LFS/(7655:7751): INICIO Comp. Tabla ANIMALS
+[INFO] 22:12:53:66 LFS/(10383:10426): INICIO Comp. Tabla ANIMALS
+[INFO] 22:12:53:72 LFS/(10383:10426): FIN Comp. Tabla ANIMALS
+[INFO] 22:12:53:72 LFS/(10383:10426): Compactacion finalizada. Tiempo Bloqueo: 2.104 milisegundos
+[INFO] 22:12:53:73 LFS/(10383:10428): INICIO Comp. Tabla METALS
+[INFO] 22:12:53:75 LFS/(10383:10428): FIN Comp. Tabla METALS
+[INFO] 22:12:53:75 LFS/(10383:10428): Compactacion finalizada. Tiempo Bloqueo: 1.751 milisegundos
+[INFO] 22:12:58:72 LFS/(10383:10426): INICIO Comp. Tabla ANIMALS
+[INFO] 22:12:58:75 LFS/(10383:10428): INICIO Comp. Tabla METALS
+[INFO] 22:12:58:91 LFS/(10383:10426): FIN Comp. Tabla ANIMALS
+[INFO] 22:12:58:91 LFS/(10383:10426): Compactacion finalizada. Tiempo Bloqueo: 6.902 milisegundos
+[INFO] 22:12:58:100 LFS/(10383:10428): FIN Comp. Tabla METALS
+[INFO] 22:12:58:100 LFS/(10383:10428): Compactacion finalizada. Tiempo Bloqueo: 8.935 milisegundos
+[INFO] 22:13:03:91 LFS/(10383:10426): INICIO Comp. Tabla ANIMALS
+[INFO] 22:13:03:100 LFS/(10383:10428): INICIO Comp. Tabla METALS
+[INFO] 22:13:03:121 LFS/(10383:10426): FIN Comp. Tabla ANIMALS
+[INFO] 22:13:03:121 LFS/(10383:10426): Compactacion finalizada. Tiempo Bloqueo: 3.079 milisegundos
+[INFO] 22:13:08:122 LFS/(10383:10426): INICIO Comp. Tabla ANIMALS
+[INFO] 22:19:05:134 LFS/(12068:12119): INICIO Comp. Tabla ANIMALS
+[INFO] 22:19:05:143 LFS/(12068:12121): INICIO Comp. Tabla METALS
+[INFO] 22:19:05:150 LFS/(12068:12121): FIN Comp. Tabla METALS
+[INFO] 22:19:05:150 LFS/(12068:12121): Compactacion finalizada. Tiempo Bloqueo: 3.847 milisegundos
+[INFO] 22:19:05:150 LFS/(12068:12119): FIN Comp. Tabla ANIMALS
+[INFO] 22:19:05:150 LFS/(12068:12119): Compactacion finalizada. Tiempo Bloqueo: 3.955 milisegundos

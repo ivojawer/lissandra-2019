@@ -84,8 +84,8 @@ void mostrar_descripciones_metadata(t_list *lista_describe) {
 }
 
 void agregar_tablas_a_describir() {
-	sem_wait(&compactar_semaphore);
 	sem_wait(&dump_semaphore);
+	sem_wait(&compactar_semaphore);
 	struct dirent *sd;
 	char* tablas = string_new();
 	string_append(&tablas, puntoDeMontaje);
@@ -144,8 +144,8 @@ void describe_full(int socket_cliente) {
 void describe_particular(char *comando, int socket_cliente) {
 	char *tabla = get_tabla(comando);
 //	modificar_op_control(tabla, 1);
-	sem_wait(&compactar_semaphore);
 	sem_wait(&dump_semaphore);
+	sem_wait(&compactar_semaphore);
 	if (existe_tabla(tabla)) {
 		metadataTablaLFS *struct_metadata = malloc(sizeof(metadataTablaLFS));
 		struct_metadata->nombre = strdup(tabla);
