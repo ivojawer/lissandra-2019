@@ -202,6 +202,7 @@ int linea_no_vacia(char *temp)
 				 }
 			 }
 		 }//end while
+	 free(temp);
 	 fclose(f);
 	}
 	 free(root);
