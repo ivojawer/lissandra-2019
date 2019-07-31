@@ -331,7 +331,7 @@ void buscar_bloques_particion(char *tabla, int particion_buscar, int type_flag, 
 	}
 
 	struct dirent *entrada;
-	char **entrada_aux = NULL;
+	char **entrada_aux = (char **)malloc(2*sizeof(char *));
 
 	switch(type_flag){
 	case 0:
@@ -372,6 +372,12 @@ void buscar_bloques_particion(char *tabla, int particion_buscar, int type_flag, 
 		printf("Error en pedido de SELECT\n");
 		break;
 	}
+
+	if(type_flag != 0)
+		free(entrada_aux[0]);
+
+	free(entrada_aux);
+
 	free(root);
 }//fin buscar_bloques_particion
 
