@@ -156,7 +156,7 @@ int linea_no_vacia(char *temp)
 //		 char *string_aux_2;
 
 		 while(!feof(f) && bloque_size < size_bloque){
-			 fgets(temp, 32, f);
+			 fgets(temp, tamanioValue, f);
 //
 			 if(linea_no_vacia(temp)){
 			 bloque_size += strlen(temp)*sizeof(char);
