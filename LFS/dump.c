@@ -289,11 +289,11 @@ void dump() {
 					particion = list_get(tabla->lista_particiones, j);
 					int length_particion = list_size(particion->lista_registros);
 					for (k = 0; k < length_particion; k++) {
-						t_registro *registro = malloc(sizeof(t_registro));
+//						t_registro *registro = malloc(sizeof(t_registro));
+						t_registro *registro = NULL;
 						registro = list_get(particion->lista_registros, k);
 						cont++;
-						if(registro->value != NULL){
-//						if(registro->value != NULL && strlen(registro->value)>0){
+						if(registro != NULL){
 							if (table_change == 0 && cont == 1)
 								table_change = 1;
 							guardar_registros_en_bloques(registro, table_change,
