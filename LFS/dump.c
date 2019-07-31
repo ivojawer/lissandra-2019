@@ -92,7 +92,7 @@ void grabar_registro(char *root, char *registro_completo_2, int length_registro,
 				j++;
 				bloques_tmp->size_total += size;
 			}
-			if ((j < (length_registro-1)) && ((suma_size == espacio_libre)
+			if ((j < (length_registro)) && ((suma_size == espacio_libre)
 			    || (suma_size > espacio_libre))) { //Si se queda sin espacio
 				bloque_dump = elegir_bloque_libre(cantidadBloques); //Si devuelve -1, eliminar lo del otro registro y abortar.
 
@@ -153,7 +153,7 @@ void guardar_registros_en_bloques(t_registro *registro_recv, int table_change,
 			return;
 		}
 	}
-	grabar_registro(root, registro_completo, strlen(registro_completo)+1, 0,
+	grabar_registro(root, registro_completo, strlen(registro_completo), 0,
 					0, table_change, bloques_tmp_tabla, 0);
 }
 

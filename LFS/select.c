@@ -331,7 +331,7 @@ void buscar_bloques_particion(char *tabla, int particion_buscar, int type_flag, 
 	}
 
 	struct dirent *entrada;
-	char **entrada_aux;
+	char **entrada_aux = NULL;
 
 	switch(type_flag){
 	case 0:
@@ -468,7 +468,7 @@ t_registro* buscar_en_todos_lados(char *tabla, uint16_t key, int particion_busca
 	t_list *timestamp_valor = list_create();
 	buscar_bloques_particion(tabla, particion_buscar, 0, bloques_buscar); //Busca particion.bin
 	buscar_bloques_particion(tabla, particion_buscar, 1, bloques_buscar); //Busca .tmp
-	buscar_bloques_particion(tabla, particion_buscar, 2, bloques_buscar); //Busca .tmpc
+//	buscar_bloques_particion(tabla, particion_buscar, 2, bloques_buscar); //Busca .tmpc
 	cargar_timestamp_value(bloques_buscar, timestamp_valor, key); //Lee en los bloques y carga los pares en lista "timestamp_valor"
 
 
