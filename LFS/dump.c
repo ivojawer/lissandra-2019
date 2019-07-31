@@ -153,7 +153,7 @@ void guardar_registros_en_bloques(t_registro *registro_recv, int table_change,
 			return;
 		}
 	}
-	grabar_registro(root, registro_completo, strlen(registro_completo), 0,
+	grabar_registro(root, registro_completo, strlen(registro_completo)+1, 0,
 					0, table_change, bloques_tmp_tabla, 0);
 }
 
