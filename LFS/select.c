@@ -149,15 +149,14 @@ int linea_no_vacia(char *temp)
 	 if(f == NULL){
 		 printf("El bloque %s no se pudo abrir.\n", bloque_nr);
 	 }else{
-//		 char temp[64]= "";
-		 char *temp = malloc(tamanioValue*sizeof(*temp));
+//		 char temp[128]= "";
+		 char *temp = malloc(sizeof(unsigned long long)+sizeof(uint16_t)+tamanioValue);
 		 char **tokens_registro;
 		 char **tokens_registro_2;
-//		 char *string_aux_2;
 
 		 while(!feof(f) && bloque_size < size_bloque){
-			 fgets(temp, tamanioValue, f);
-//
+			 fgets(temp, 128, f);
+
 			 if(linea_no_vacia(temp)){
 			 bloque_size += strlen(temp)*sizeof(char);
 			 int nr_comas = contar_comas(temp);
@@ -177,16 +176,12 @@ int linea_no_vacia(char *temp)
 					memset(array_aux, 0X0, sizeof(array_aux));
 
 				}else {
-//					string_aux_2 = malloc(strlen(temp)*sizeof(char));
-//					strcpy(string_aux_2, temp);
-//				 	strcat(array_aux, string_aux_2);
 					strcat(array_aux, temp);
 				 	tokens_registro = NULL;
 				 	tokens_registro = string_split(array_aux, ";");
 				 	if(tokens_registro[0] != NULL && tokens_registro[1] != NULL && tokens_registro[2] != NULL){
 				 		comparar_key_y_agregar_valor(atol(tokens_registro[1]), key, tokens_registro[2], atoi(tokens_registro[0]), timestamp_valor);
 				 	memset(array_aux, 0x0, sizeof(array_aux));
-//				 	free(string_aux_2);
 				 	flag_key_value = 0;
 				 	control = 0;
 				 	}
