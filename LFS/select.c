@@ -3,6 +3,7 @@
 
 extern t_list* memtable;
 extern char* puntoDeMontaje;
+extern int tamanioValue;
 
 t_list *particion_encontrada;
 t_list *registros_encontrados;
@@ -148,7 +149,8 @@ int linea_no_vacia(char *temp)
 	 if(f == NULL){
 		 printf("El bloque %s no se pudo abrir.\n", bloque_nr);
 	 }else{
-		 char temp[32]= "";
+//		 char temp[64]= "";
+		 char *temp = malloc(tamanioValue*sizeof(*temp));
 		 char **tokens_registro;
 		 char **tokens_registro_2;
 //		 char *string_aux_2;

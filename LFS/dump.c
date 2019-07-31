@@ -107,11 +107,13 @@ void grabar_registro(char *root, char *registro_completo_2, int length_registro,
 						 fputc(empty[0], fp_dump);
 					 }
 					 fclose(fp_dump);
+					 free(registro_completo); //FREE
 					 err_flag = 1;
 					 return;
 				 }
 
 				fclose(fp_dump);
+				free(root);
 				agregar_bloque_lista_tmp(bloques_tmp->bloques, bloque_dump);
 				char* otroRoot = string_duplicate(puntoDeMontaje);
 				string_append(&otroRoot, "Bloques/bloque");
@@ -119,7 +121,9 @@ void grabar_registro(char *root, char *registro_completo_2, int length_registro,
 				string_append(&otroRoot, ".bin");
 				grabar_registro(otroRoot, registro_completo, length_registro, 1,
 						j, 0, bloques_tmp, 0);
-			}//si se queda sin espacio
+			}/*si se queda sin espacio*/else{
+				free(registro_completo);
+			}
 		}
 	}// si se mantiene en fp_dump
 }
