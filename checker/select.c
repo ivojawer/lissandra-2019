@@ -1,5 +1,5 @@
-#include "funcionesLFS.h"
 #include "select.h"
+#include "funcionesChecker.h"
 
 extern t_list* memtable;
 extern char* puntoDeMontaje;
@@ -7,6 +7,7 @@ extern int tamanioValue;
 
 t_list *particion_encontrada;
 t_list *registros_encontrados;
+extern t_log* logger;
 t_list *tabla_encontrada;
 
 extern int control;
@@ -332,7 +333,7 @@ void buscar_bloques_particion(char *tabla, int particion_buscar, int type_flag,
 	}
 
 	struct dirent *entrada;
-	char **entrada_aux = (char **) malloc(2 * sizeof(char *));
+	char **entrada_aux = NULL;
 
 	switch (type_flag) {
 	case 0:
@@ -373,12 +374,6 @@ void buscar_bloques_particion(char *tabla, int particion_buscar, int type_flag,
 		printf("Error en pedido de SELECT\n");
 		break;
 	}
-
-	if (type_flag != 0)
-		free(entrada_aux[0]);
-
-	free(entrada_aux);
-
 	free(root);
 } //fin buscar_bloques_particion
 
@@ -457,7 +452,7 @@ t_par_valor_timestamp *filtrar_timestamp_mayor(t_list *timestamp_valor,
 	return value_aux;
 }
 
-t_registro* buscar_en_todos_lados(char *tabla, uint16_t key,
+resultadoSelect* buscar_en_todos_lados(char *tabla, uint16_t key,
 		int particion_buscar) {
 	t_registro* registroEncontrado = NULL;
 
@@ -509,60 +504,65 @@ t_registro* buscar_en_todos_lados(char *tabla, uint16_t key,
 		}
 
 	}
-	liberar_bloques_buscar(bloques_buscar);
+//	liberar_bloques_buscar(bloques_buscar);
 	liberar_timestamp_valor(timestamp_valor);
 
-	return registroEncontrado;
+	resultadoSelect* cosoResultante;
+
+	if (registroEncontrado == NULL) {
+		cosoResultante = NULL;
+	} else {
+		cosoResultante = malloc(sizeof(resultadoSelect));
+		cosoResultante->value = string_duplicate(registroEncontrado->value);
+		cosoResultante->bloquesInicialesPotenciales = list_duplicate(bloques_buscar);
+
+		free(registroEncontrado->value);
+		free(registroEncontrado);
+	}
+
+	return cosoResultante;
 }
 
-void rutina_select(void* parametros) {
+resultadoSelect* rutina_select(char* comando) {
 	printf("operacion: select\n");
-
-	struct parametros *info = (struct parametros*) parametros;
-	char *comando = strdup(info->comando);
-	int socket_cliente = info->socket_cliente;
-
 	char *tabla = get_tabla(comando);
 	printf("tabla: %s\n", get_tabla(comando));
 
 	uint16_t key = get_key(comando);
 	printf("key: %d\n", get_key(comando));
 
-	printf("SELECT INSIDE\n");
+	resultadoSelect* elResultado = malloc(sizeof(resultadoSelect));
+	elResultado->value = NULL;
 
-//	modificar_op_control(tabla, 1); //para no cruzarse con Drop o Compactacion
-	sem_wait(&dump_semaphore);
-	sem_wait(&compactar_semaphore);
+	log_info(logger, "INICIO SELECT %s %i", tabla, key);
 
 	if (existe_tabla(tabla)) {
+
 		int nr_particiones_metadata = obtener_particiones_metadata(tabla);
 		int particion_buscar = nr_particion_key(key, nr_particiones_metadata);
 
-		t_registro* resultadoBusqueda = malloc(sizeof(t_registro));
-		resultadoBusqueda = buscar_en_todos_lados(tabla, key, particion_buscar);
+		resultadoSelect* resultadoBusqueda = buscar_en_todos_lados(tabla, key,
+				particion_buscar);
 
-		if (resultadoBusqueda != NULL && socket_cliente != -1) {
-//			log_info(logger,"Enviando resultado a la memoria");
-			registro *registro_a_enviar = malloc(sizeof(registro));
-			registro_a_enviar->key = resultadoBusqueda->key;
-			registro_a_enviar->timestamp = resultadoBusqueda->timestamp;
-			registro_a_enviar->value = strdup(resultadoBusqueda->value);
-			enviarRegistroConHeader(socket_cliente, registro_a_enviar,
-					REGISTRO);
+		if (resultadoBusqueda != NULL) {
+
+			elResultado->value = string_duplicate(resultadoBusqueda->value);
+			elResultado->bloquesInicialesPotenciales = list_duplicate(
+					resultadoBusqueda->bloquesInicialesPotenciales);
+
+			free(resultadoBusqueda->value);
+
+			log_info(logger, "SELECT %s %i = %s", tabla, key,
+					elResultado->value);
+
 		} else if (resultadoBusqueda == NULL) {
-			printf("La tabla se encuentra en el sistema pero la key no.\n");
-			if (socket_cliente != -1)
-				enviarIntConHeader(socket_cliente, NO_EXISTE, RESPUESTA);
+			log_error(logger, "FALLO SELECT %s %i %s", tabla, key);
 		}
 	} else {
 		printf("La tabla no se encuentra en el sistema\n");
-		if (socket_cliente != -1) {
-//			log_info(logger,"Enviando ERROR a la memoria");
-			enviarIntConHeader(socket_cliente, ERROR, RESPUESTA);
-		}
 	}
-//	modificar_op_control(tabla, 2);
-	sem_post(&compactar_semaphore);
-	sem_post(&dump_semaphore);
+
+	return elResultado;
+
 	printf("SELECT OUTSIDE\n");
 }
