@@ -6,7 +6,7 @@ extern char* puntoDeMontaje;
 extern void iniciar_compactacion(void *arg);
 
 void agregar_salto_de_linea(char *string) {
-	string_append(&string, "\n");
+	strcat(string, "\n");
 }
 
 void guardar_bitarray(int index) {

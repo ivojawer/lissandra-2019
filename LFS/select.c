@@ -344,7 +344,7 @@ void buscar_bloques_particion(char *tabla, int particion_buscar, int type_flag,
 	case 1:
 		while ((entrada = readdir(dir)) != NULL) {
 			entrada_aux = string_split(entrada->d_name, ".");
-			if (entrada_aux[1] != NULL) {
+			if (entrada_aux[0] != NULL) {
 				if (strcmp(entrada_aux[1], "tmp") == 0) {
 					char root_aux[256] = "";
 					sprintf(root_aux, "%s/%s", root, entrada->d_name);
@@ -358,7 +358,7 @@ void buscar_bloques_particion(char *tabla, int particion_buscar, int type_flag,
 	case 2:
 		while ((entrada = readdir(dir)) != NULL) {
 			entrada_aux = string_split(entrada->d_name, ".");
-			if (entrada_aux[1] != NULL) {
+			if (entrada_aux[0] != NULL) {
 				if (strcmp(entrada_aux[1], "tmpc") == 0) {
 					char root_aux[256] = "";
 					sprintf(root_aux, "%s/%s", root, entrada->d_name);
@@ -374,8 +374,10 @@ void buscar_bloques_particion(char *tabla, int particion_buscar, int type_flag,
 		break;
 	}
 
-	if (type_flag != 0)
+	if (type_flag != 0 && entrada_aux[0] != NULL){
 		free(entrada_aux[0]);
+		free(entrada_aux[1]);
+	}
 
 	free(entrada_aux);
 
