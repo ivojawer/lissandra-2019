@@ -208,7 +208,7 @@ void rutina_insert(void* parametros) {
 //			sem_post(&compactar_semaphore);
 
 			if (socket_cliente != -1) {
-				enviarIntConHeader(socket_cliente, ERROR, RESPUESTA);
+				enviarIntConHeader(socket_cliente, TABLA_NO_EXISTE, RESPUESTA);
 			}
 		}
 	}

@@ -200,9 +200,9 @@ void iniciar_variables(){
 	full_space = 0;
 	memset(array_aux, 0X0, sizeof(array_aux));
 
-	op_control_list = list_create();
-	lista_tabla_compact = list_create();
+//	op_control_list = list_create();
 //	cargar_op_control_tablas();
+	lista_tabla_compact = list_create();
 	cargar_metadata_tablas();
 
 	sem_init(&requests_disponibles,0,0);

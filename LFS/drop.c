@@ -88,7 +88,9 @@ void rutina_drop(void* parametros) {
 	printf("Rutina DROP\n");
 	char *tabla = get_tabla(comando);
 
-	modificar_op_control(tabla, 3); //para no cruzarse con niguno
+//	modificar_op_control(tabla, 3); //para no cruzarse con niguno
+	sem_wait(&dump_semaphore);
+	sem_wait(&compactar_semaphore);
 	if (existe_tabla(tabla)) {
 		eliminar_tabla(tabla);
 		exit_tabla_compact(tabla);
@@ -129,9 +131,11 @@ void rutina_drop(void* parametros) {
 		printf("La tabla no se encuentra en el sistema\n");
 		if(socket_cliente != -1)
 		{
-			enviarIntConHeader(socket_cliente, ERROR, RESPUESTA);
+			enviarIntConHeader(socket_cliente, TABLA_NO_EXISTE, RESPUESTA);
 		}
 
 	}
-	modificar_op_control(strdup(tabla), 4);
+	sem_post(&dump_semaphore);
+	sem_post(&compactar_semaphore);
+//	modificar_op_control(strdup(tabla), 4);
 }

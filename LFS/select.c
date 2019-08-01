@@ -559,7 +559,7 @@ void rutina_select(void* parametros) {
 		printf("La tabla no se encuentra en el sistema\n");
 		if (socket_cliente != -1) {
 //			log_info(logger,"Enviando ERROR a la memoria");
-			enviarIntConHeader(socket_cliente, ERROR, RESPUESTA);
+			enviarIntConHeader(socket_cliente, TABLA_NO_EXISTE, RESPUESTA);
 		}
 	}
 //	modificar_op_control(tabla, 2);

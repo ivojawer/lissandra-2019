@@ -173,7 +173,7 @@ void describe_particular(char *comando, int socket_cliente) {
 		printf("La tabla no se encuentra en el sistema\n");
 		if(socket_cliente != -1)
 		{
-			enviarIntConHeader(socket_cliente, ERROR, RESPUESTA);
+			enviarIntConHeader(socket_cliente, TABLA_NO_EXISTE, RESPUESTA);
 		}
 
 	}
