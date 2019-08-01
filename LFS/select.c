@@ -135,8 +135,7 @@ void buscar_key_bloques(char* bloque_nr, uint16_t key, t_list *timestamp_valor,
 		printf("El bloque %s no se pudo abrir.\n", bloque_nr);
 	} else {
 //		 char temp[128]= "";
-		char *temp = malloc(
-				sizeof(unsigned long long) + sizeof(uint16_t) + tamanioValue);
+		char *temp = malloc(20+5+tamanioValue+5);
 		char **tokens_registro;
 		char **tokens_registro_2;
 
