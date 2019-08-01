@@ -85,8 +85,12 @@ void agregar_particion_en_tabla_existente(char* tabla,
 void agregar_registro_en_particion_existente(char *tabla, int particion_buscar,
 		t_registro *registro_nuevo) {
 	int i, j;
-	t_tabla *tabla_extraida = malloc(sizeof(t_tabla));
-	t_particion *particion_extraida = malloc(sizeof(t_particion));
+
+//	t_tabla *tabla_extraida = malloc(sizeof(t_tabla));
+//	t_particion *particion_extraida = malloc(sizeof(t_particion)); -malloc sacado, estas 2 lineas fueron reemplazadas por las 2 de abajo
+
+	t_tabla *tabla_extraida;
+	t_particion *particion_extraida;
 
 	for (i = 0; i < list_size(memtable); i++) {
 		tabla_extraida = (t_tabla*) list_get(memtable, i);
@@ -160,17 +164,17 @@ void rutina_insert(void* parametros) {
 				tabla_encontrada = filtrar_tabla_memtable(tabla);
 				t_list *lista_particion_encontrada = filtrar_particion_tabla(
 						tabla_encontrada, particion_buscar);
-				t_registro *registro_nuevo = malloc(sizeof(t_registro));
-				registro_nuevo = crear_registro(timestamp, key, value);
+//				t_registro *registro_nuevo = malloc(sizeof(t_registro)); -malloc sacado
+				t_registro *registro_nuevo = crear_registro(timestamp, key, value);
 
 				if (lista_vacia(tabla_encontrada)) {
-					t_particion *nueva_particion = malloc(sizeof(t_particion));
-					nueva_particion = crear_particion_memtable(size,
+//					t_particion *nueva_particion = malloc(sizeof(t_particion)); -malloc sacado
+					t_particion * nueva_particion = crear_particion_memtable(size,
 							particion_buscar);
 					agregar_registro_en_particion_nueva(nueva_particion,
 							registro_nuevo);
-					t_tabla *nueva_tabla = malloc(sizeof(t_tabla));
-					nueva_tabla = crear_tabla_memtable(tabla);
+//					t_tabla *nueva_tabla = malloc(sizeof(t_tabla)); -malloc sacado
+					t_tabla * nueva_tabla = crear_tabla_memtable(tabla);
 					agregar_particion_en_tabla_nueva(nueva_tabla,
 							nueva_particion);
 					agregar_tabla_memtable(memtable, nueva_tabla);

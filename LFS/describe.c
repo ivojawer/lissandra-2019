@@ -71,8 +71,8 @@ void cargar_datos_tabla(char *tabla) {
 }
 
 void mostrar_campos_describe(void *element) {
-	struct describe * recv = malloc(sizeof(struct describe));
-	recv = (struct describe *) element;
+//	struct describe * recv = malloc(sizeof(struct describe)); --malloc sacado
+	struct describe * recv  = (struct describe *) element;
 	printf(
 			"Tabla: %s\nConsistencia: %s\nParticiones: %d\nCompaction Time: %d\n\n",
 			recv->name, recv->consistency, recv->partitions,

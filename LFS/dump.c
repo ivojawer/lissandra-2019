@@ -41,8 +41,8 @@ struct bloque *crear_nr_bloque(int nr_bloque) {
 }
 
 void agregar_bloque_lista_tmp(t_list *bloques, int bloque_dump) {
-	struct bloque *nr_bloque = malloc(sizeof(struct bloque));
-	nr_bloque = crear_nr_bloque(bloque_dump);
+//	struct bloque *nr_bloque = malloc(sizeof(struct bloque)); -malloc sacado
+	struct bloque *nr_bloque = crear_nr_bloque(bloque_dump);
 	list_add(bloques, nr_bloque);
 }
 
@@ -113,7 +113,7 @@ void grabar_registro(char *root, char *registro_completo_2, int length_registro,
 				 }
 
 				fclose(fp_dump);
-				free(root);
+//				free(root);
 				agregar_bloque_lista_tmp(bloques_tmp->bloques, bloque_dump);
 				char* otroRoot = string_duplicate(puntoDeMontaje);
 				string_append(&otroRoot, "Bloques/bloque");
@@ -208,8 +208,8 @@ void agregar_bloque_particion(void *elemento) {
 	fprintf(fp, "SIZE=%d\n", blocks_info->size_total);
 	fprintf(fp, "BLOCKS=[");
 	for (int i = 0; i < cant_bloques; i++) {
-		struct bloque *bloque = malloc(sizeof(struct bloque));
-		bloque = list_get(blocks_info->bloques, i);
+//		struct bloque *bloque = malloc(sizeof(struct bloque)); -malloc sacado
+		struct bloque *bloque = list_get(blocks_info->bloques, i);
 		fprintf(fp, "%d", bloque->nr_block);
 		if (i <= cant_bloques - 2)
 			fputs(",", fp);
@@ -282,15 +282,15 @@ void dump() {
 			fp_dump = NULL;
 			table_change = 0;
 			cont = -1;
-			t_tabla *tabla = malloc(sizeof(t_tabla));
-			tabla = list_get(memtable, i);
+//			t_tabla *tabla = malloc(sizeof(t_tabla)); -malloc sacado
+			t_tabla *tabla = list_get(memtable, i);
 			if(existe_tabla(tabla->name_tabla)){
-				struct bloques_tmp *bloques_tmp_tabla = malloc(sizeof(struct bloques_tmp));
-				bloques_tmp_tabla = crear_bloques_tmp(tabla->name_tabla); //Bloques donde se guardan registros
+//				struct bloques_tmp *bloques_tmp_tabla = malloc(sizeof(struct bloques_tmp)); -malloc sacado
+				struct bloques_tmp *bloques_tmp_tabla = crear_bloques_tmp(tabla->name_tabla); //Bloques donde se guardan registros
 				int length_tabla = list_size(tabla->lista_particiones);
 				for(j = 0; j < length_tabla; j++){
-					t_particion *particion = malloc(sizeof(t_particion));
-					particion = list_get(tabla->lista_particiones, j);
+//					t_particion *particion = malloc(sizeof(t_particion)); malloc sacado
+					t_particion *particion = list_get(tabla->lista_particiones, j);
 					int length_particion = list_size(particion->lista_registros);
 					for (k = 0; k < length_particion; k++) {
 //						t_registro *registro = malloc(sizeof(t_registro));

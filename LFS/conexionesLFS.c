@@ -52,8 +52,8 @@ void comunicacion_con_memoria(int socket_cliente) {
 				request* primerRequest = (request*) list_get(lista_journal, 0);
 				printf("primer request:%s\n", primerRequest->parametros);
 				for (i = 0; i < list_size(lista_journal); i++) {
-					request* request_procesar = malloc(sizeof(request));
-					request_procesar = list_get(lista_journal, i);
+//					request* request_procesar = malloc(sizeof(request)); -malloc sacado
+					request* request_procesar = list_get(lista_journal, i);
 					request* request_para_hilo = malloc(sizeof(request));
 					request_para_hilo->requestEnInt = INSERT;
 					request_para_hilo->parametros =

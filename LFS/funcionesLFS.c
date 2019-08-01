@@ -447,8 +447,12 @@ char *obtener_consistencia_metadata(char* tabla)
 	string_append(&archivoMetadata,"/metadata.config");
 
 	t_config* config = config_create(archivoMetadata);
-	consistency = malloc(strlen(config_get_string_value(config, "CONSISTENCY")));
-	strcpy(consistency, config_get_string_value(config, "CONSISTENCY"));
+
+	consistency = string_duplicate(config_get_string_value(config, "CONSISTENCY"));
+
+//	consistency = malloc(strlen(config_get_string_value(config, "CONSISTENCY"))); -malloc sacado, estas 2 lineas comentadas fueron reemplazadas por el string_duplicate de arriba
+//	strcpy(consistency, config_get_string_value(config, "CONSISTENCY"));
+
 	config_destroy(config);
 	free(archivoMetadata);
 	free(unaTabla);

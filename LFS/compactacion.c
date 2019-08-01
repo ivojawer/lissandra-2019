@@ -30,8 +30,8 @@ int check_drop_on_table(char *tabla)
 		return coincide_tabla(elemento, tabla);
 	}
 
-	struct flag_y_tabla *tabla_buscada = malloc(sizeof(struct flag_y_tabla));
-	tabla_buscada = list_find(lista_tabla_compact, coincide_valor);
+//	struct flag_y_tabla *tabla_buscada = malloc(sizeof(struct flag_y_tabla));  -malloc sacado
+	struct flag_y_tabla * tabla_buscada = list_find(lista_tabla_compact, coincide_valor);
 
 	if (tabla_buscada->exit_flag == 1)
 		exit_value = 1;
@@ -175,8 +175,8 @@ void compactar(char* tabla){
 
 void iniciar_compactacion(void *arg)
 {
-	struct param_compactacion *p_comp = malloc(sizeof(struct param_compactacion));
-	p_comp = (struct param_compactacion *)arg;
+//	struct param_compactacion *p_comp = malloc(sizeof(struct param_compactacion)); malloc sacado
+	struct param_compactacion *p_comp = (struct param_compactacion *)arg;
 
 	crear_tabla_compact(p_comp->tabla);
 
@@ -411,7 +411,7 @@ char** transformarBloquesAPathBloques(char** nro_bloques){
 			string_append(&bloque,"Bloques/bloque");
 			string_append(&bloque, bloq);
 			string_append(&bloque, ".bin");
-			paths_bloques[i] = string_duplicate(bloque);
+			paths_bloques[i] = bloque; //malloc sacado (enrealidad saque un string_duplicate(bloque) )
 			i++;
 		}
 

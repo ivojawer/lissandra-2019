@@ -418,8 +418,8 @@ t_list *filtrar_particion_tabla(t_list *tabla_encontrada, int particion_buscar) 
 		return tabla_encontrada;
 	} else {
 
-		t_tabla *tabla_recbida = malloc(sizeof(t_tabla));
-		tabla_recbida = (t_tabla*) list_get(tabla_encontrada, 0);
+//		t_tabla *tabla_recbida = malloc(sizeof(t_tabla)); -malloc sacado
+		t_tabla *tabla_recbida = (t_tabla*) list_get(tabla_encontrada, 0);
 		particion_encontrada = list_filter(tabla_recbida->lista_particiones,
 				coincide_particion);
 		//free(tabla_recbida);
@@ -476,8 +476,8 @@ t_registro* buscar_en_todos_lados(char *tabla, uint16_t key,
 	int i;
 	if (cant_registros != 0) {
 		for (i = 0; i < cant_registros; i++) {
-			t_registro *registro_extraido = malloc(sizeof(t_registro));
-			registro_extraido = list_get(registros_encontrados, i);
+//			t_registro *registro_extraido = malloc(sizeof(t_registro)); -malloc sacado
+			t_registro *registro_extraido = list_get(registros_encontrados, i);
 			char *valor = strdup(registro_extraido->value);
 			agregar_valor_timestamp(timestamp_valor,
 					crear_valor_timestamp_buscar(registro_extraido->timestamp,
@@ -538,8 +538,8 @@ void rutina_select(void* parametros) {
 		int nr_particiones_metadata = obtener_particiones_metadata(tabla);
 		int particion_buscar = nr_particion_key(key, nr_particiones_metadata);
 
-		t_registro* resultadoBusqueda = malloc(sizeof(t_registro));
-		resultadoBusqueda = buscar_en_todos_lados(tabla, key, particion_buscar);
+//		t_registro* resultadoBusqueda = malloc(sizeof(t_registro)); -malloc sacado
+		t_registro* resultadoBusqueda = buscar_en_todos_lados(tabla, key, particion_buscar);
 
 		if (resultadoBusqueda != NULL && socket_cliente != -1) {
 //			log_info(logger,"Enviando resultado a la memoria");

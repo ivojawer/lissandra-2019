@@ -72,8 +72,8 @@ void exit_tabla_compact(char *tabla) {
 		return coincide_tabla(elemento, tabla);
 	}
 
-	struct flag_y_tabla *tabla_buscada = malloc(sizeof(struct flag_y_tabla));
-	tabla_buscada = list_find(lista_tabla_compact, coincide_valor);
+//	struct flag_y_tabla *tabla_buscada = malloc(sizeof(struct flag_y_tabla)); -malloc sacado
+	struct flag_y_tabla *tabla_buscada = list_find(lista_tabla_compact, coincide_valor);
 	tabla_buscada->exit_flag = 1;
 	list_remove_by_condition(lista_tabla_compact, coincide_valor);
 	list_add(lista_tabla_compact, tabla_buscada);
