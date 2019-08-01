@@ -167,8 +167,8 @@ void compactar(char* tabla){
 
 	destruirTmpc(tabla,cantidadTemporales);
 
-	//list_destroy_and_destroy_elements(bytes_por_particion,(void*)funcionDestroyerInts);
-	//list_destroy_and_destroy_elements(tablaParticiones,(void*)funcionDestroyerLista); // hay que borrar una lista de listas
+	list_destroy_and_destroy_elements(bytes_por_particion,(void*)funcionDestroyerInts);
+	list_destroy_and_destroy_elements(tablaParticiones,(void*)funcionDestroyerLista); // hay que borrar una lista de listas
 	//list_destroy_and_destroy_elements(tablaTemporales,(void*)funcionDestroyerLista); // hay que borrar una lista de listas
 }//Fin_Compactar
 
@@ -548,3 +548,15 @@ void mostrarBytes(int* bytes){
 //void eliminarListaDeStrings(t_list* list){
 //	list_destroy_and_destroy_elements(list,free);
 //}
+
+
+void funcionDestroyerInts(int *elemento)
+{
+		free(elemento);
+}
+
+
+void funcionDestroyerLista(t_list *elemento)
+{
+	list_destroy_and_destroy_elements(elemento, (void *)registro_destroy);
+}

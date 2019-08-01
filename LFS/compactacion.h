@@ -56,5 +56,7 @@ void mostrarBytes(int* bytes);
 // ---------- funciones para hacer frees --------------
 //-----------------------------------------------------
 //void eliminarListaDeStrings(t_list* list);
+void funcionDestroyerInts(int *elemento);
+void funcionDestroyerLista(t_list *elemento);
 
 #endif /* COMPACTACION_H_ */

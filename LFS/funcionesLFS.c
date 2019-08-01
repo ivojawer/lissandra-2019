@@ -412,7 +412,6 @@ int buscar_metadata_en_lista(char *tabla)
 	bool buscar_elemento(void *elemento) {
 		return buscar_metadata_tabla((struct describe *)elemento, tabla);
 	}
-//	struct describe *metadata_buscada = malloc(sizeof(struct describe));
 	struct describe *metadata_buscada = NULL;
 	metadata_buscada = list_find(lista_metadatas, buscar_elemento);
 	if (metadata_buscada != NULL)
