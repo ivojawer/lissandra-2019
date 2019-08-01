@@ -30,7 +30,7 @@ void bloques_tmp_destroy(void *elemento) {
 	void liberar_nr_bloque(void *elemento) {
 		return destroy_nr_bloque(elemento);
 	}
-	list_clean_and_destroy_elements(self->bloques, liberar_nr_bloque);
+	list_destroy_and_destroy_elements(self->bloques, liberar_nr_bloque);
 	free(self);
 }
 
@@ -266,7 +266,7 @@ void liberar_lista_bloques(t_list *lista_bloques_tmp) {
 	void liberar_bloques_tmp(void *elemento) {
 		return bloques_tmp_destroy(elemento);
 	}
-	list_clean_and_destroy_elements(lista_bloques_tmp, liberar_bloques_tmp);
+	list_destroy_and_destroy_elements(lista_bloques_tmp, liberar_bloques_tmp);
 }
 
 void dump() {
