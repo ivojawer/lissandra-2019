@@ -161,23 +161,24 @@ void rutina_insert(void* parametros) {
 			if (size >= 0) {
 
 				t_list *tabla_encontrada = list_create();
+				t_list *lista_particion_encontrada = list_create();
+
 				tabla_encontrada = filtrar_tabla_memtable(tabla);
-				t_list *lista_particion_encontrada = filtrar_particion_tabla(
-						tabla_encontrada, particion_buscar);
-//				t_registro *registro_nuevo = malloc(sizeof(t_registro)); -malloc sacado
+				lista_particion_encontrada = filtrar_particion_tabla(tabla_encontrada,
+																	 particion_buscar);
+
 				t_registro *registro_nuevo = crear_registro(timestamp, key, value);
 
 				if (lista_vacia(tabla_encontrada)) {
-//					t_particion *nueva_particion = malloc(sizeof(t_particion)); -malloc sacado
 					t_particion * nueva_particion = crear_particion_memtable(size,
 							particion_buscar);
 					agregar_registro_en_particion_nueva(nueva_particion,
 							registro_nuevo);
-//					t_tabla *nueva_tabla = malloc(sizeof(t_tabla)); -malloc sacado
 					t_tabla * nueva_tabla = crear_tabla_memtable(tabla);
 					agregar_particion_en_tabla_nueva(nueva_tabla,
 							nueva_particion);
 					agregar_tabla_memtable(memtable, nueva_tabla);
+
 				} else if (lista_vacia(lista_particion_encontrada)) { //tabla en memtable pero la particion esta vacia
 					t_particion *nueva_particion = crear_particion_memtable(
 							size, particion_buscar);
@@ -190,22 +191,21 @@ void rutina_insert(void* parametros) {
 							particion_buscar, registro_nuevo);
 				}
 				printf("Registro agregado a la particion.\n");
-//				modificar_op_control(tabla, 8);
-//				sem_post(&dump_semaphore);
-//				sem_post(&compactar_semaphore);
+
+				if(!lista_vacia(tabla_encontrada)) {
+					list_destroy(tabla_encontrada);
+				}
+				if(!lista_vacia(lista_particion_encontrada))
+					list_destroy(lista_particion_encontrada);
 
 				if (socket_cliente != -1) {
 					enviarIntConHeader(socket_cliente, TODO_BIEN, RESPUESTA);
 				}
 			} else {
-//				sem_post(&dump_semaphore);
-//				sem_post(&compactar_semaphore);
+				printf("Size de particion incorrecto\n");
 			}
 		} else {
 			printf("No se pudo encontrar la tabla %s.\n", tabla);
-//			modificar_op_control(tabla, 8);
-//			sem_post(&dump_semaphore);
-//			sem_post(&compactar_semaphore);
 
 			if (socket_cliente != -1) {
 				enviarIntConHeader(socket_cliente, TABLA_NO_EXISTE, RESPUESTA);
