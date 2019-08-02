@@ -57,6 +57,6 @@ void mostrarBytes(int* bytes);
 //-----------------------------------------------------
 //void eliminarListaDeStrings(t_list* list);
 void funcionDestroyerInts(int *elemento);
-void funcionDestroyerLista(t_list *elemento);
+void funcionDestroyerLista(t_list *lista);
 
 #endif /* COMPACTACION_H_ */

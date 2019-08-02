@@ -282,7 +282,7 @@ int cargar_bloques(char *root, t_list *bloques_buscar) {
 		return 0;
 	} else {
 		int i = 0, cont = 0;
-		char temp_helper[4];
+		char temp_helper[6] = "";
 		char bloque[8] = "";
 		char size[8] = "";
 		int flag_bloque = 0;
