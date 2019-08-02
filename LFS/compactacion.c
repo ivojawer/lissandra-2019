@@ -98,7 +98,7 @@ void compactar(char* tabla){
 			if(registro->key == reg->key){
 				encontroLaKey = 1;
 				if(reg->timestamp > registro->timestamp){
-					list_replace(list_get(tablaParticiones,particionABuscar),i, reg);  //falta el destroy pero no se hacer la funcion destroyer
+					list_replace_and_destroy_element(list_get(tablaParticiones,particionABuscar),i, reg,(void*)registro_destroy);  //falta el destroy pero no se hacer la funcion destroyer
 				}
 			}
 		}
@@ -167,18 +167,14 @@ void compactar(char* tabla){
 
 	destruirTmpc(tabla,cantidadTemporales);
 
-//	list_destroy(bytes_por_particion);
-//	list_destroy(tablaParticiones);
-//	list_destroy(tablaTemporales);
-
 	void destruir_lista(void *elemento) {
 		return funcionDestroyerLista((t_list *)elemento);
 	}
 
 	list_destroy_and_destroy_elements(bytes_por_particion,(void*)funcionDestroyerInts);
-	list_destroy_and_destroy_elements(tablaParticiones,(void*)funcionDestroyerLista); // hay que borrar una lista de listas
-//	list_destroy_and_destroy_elements(tablaTemporales,(void*)funcionDestroyerLista); // hay que borrar una lista de listas
-
+	list_destroy_and_destroy_elements(tablaParticiones,(void*)funcionDestroyerLista);
+	//list_destroy_and_destroy_elements(tablaTemporales,(void*)funcionDestroyerLista);
+	list_destroy_and_destroy_elements(particionesEnChar,(void*)destroyListaDeChars);
 }//Fin_Compactar
 
 
@@ -553,16 +549,22 @@ void mostrarBytes(int* bytes){
 	printf( "bytes de particion %d\n",*bytes);
 }
 
-//void eliminarListaDeStrings(t_list* list){
-//	list_destroy_and_destroy_elements(list,free);
-//}
-
+//-----------------------------------------------------
+// ---------- funciones para hacer frees --------------
+//-----------------------------------------------------
 
 void funcionDestroyerInts(int *elemento)
 {
 		free(elemento);
 }
 
+void funcionDestroyerChars (char* elemento){
+	free(elemento);
+}
+
+void destroyListaDeChars(t_list* lista){
+	list_destroy_and_destroy_elements(lista,(void*) funcionDestroyerChars);
+}
 
 void funcionDestroyerLista(t_list *lista)
 {
