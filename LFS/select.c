@@ -283,7 +283,7 @@ int cargar_bloques(char *root, t_list *bloques_buscar) {
 		return 0;
 	} else {
 		int i = 0, cont = 0;
-		char temp_helper[4];
+		char temp_helper[6] = "";
 		char bloque[8] = "";
 		char size[8] = "";
 		int flag_bloque = 0;
@@ -419,12 +419,9 @@ t_list *filtrar_particion_tabla(t_list *tabla_encontrada, int particion_buscar) 
 	if (lista_vacia(tabla_encontrada)) {
 		return tabla_encontrada;
 	} else {
-
-//		t_tabla *tabla_recbida = malloc(sizeof(t_tabla)); -malloc sacado
 		t_tabla *tabla_recbida = (t_tabla*) list_get(tabla_encontrada, 0);
 		particion_encontrada = list_filter(tabla_recbida->lista_particiones,
 				coincide_particion);
-		//free(tabla_recbida);
 		return particion_encontrada;
 	}
 }

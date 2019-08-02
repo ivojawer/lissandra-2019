@@ -131,11 +131,10 @@ void rutina_drop(void* parametros) {
 			list_remove_and_destroy_by_condition(lista_metadatas, coincide_nombre_metadata,
 												 destruir_elemento_metadata);
 
-			if(socket_cliente != -1)
-			{
-				enviarIntConHeader(socket_cliente, TODO_BIEN, RESPUESTA);
-			}
-
+		}
+		if(socket_cliente != -1)
+		{
+			enviarIntConHeader(socket_cliente, TODO_BIEN, RESPUESTA);
 		}
 		textoALoggear = string_new();
 		string_append(&textoALoggear,dropEnString);

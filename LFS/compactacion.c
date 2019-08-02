@@ -169,9 +169,18 @@ void compactar(char* tabla){
 
 	destruirTmpc(tabla,cantidadTemporales);
 
+//	list_destroy(bytes_por_particion);
+//	list_destroy(tablaParticiones);
+//	list_destroy(tablaTemporales);
+
+	void destruir_lista(void *elemento) {
+		return funcionDestroyerLista((t_list *)elemento);
+	}
+
 	list_destroy_and_destroy_elements(bytes_por_particion,(void*)funcionDestroyerInts);
 	list_destroy_and_destroy_elements(tablaParticiones,(void*)funcionDestroyerLista); // hay que borrar una lista de listas
-	//list_destroy_and_destroy_elements(tablaTemporales,(void*)funcionDestroyerLista); // hay que borrar una lista de listas
+//	list_destroy_and_destroy_elements(tablaTemporales,(void*)funcionDestroyerLista); // hay que borrar una lista de listas
+
 }//Fin_Compactar
 
 
@@ -321,7 +330,6 @@ int renombrarATmpc(char* tabla){
 	string_append(&path, tabla);
 	char extension[4] = "";
 	memcpy(&extension[0], "tmp", strlen("tmp"));
-//	int cantTmp = contar_archivos_con_extension(path,"tmp");
 	int cantTmp = contar_archivos_con_extension(path, extension);
 	string_append(&path,"/");
 	string_append(&path, tabla);
@@ -569,7 +577,8 @@ void funcionDestroyerInts(int *elemento)
 }
 
 
-void funcionDestroyerLista(t_list *elemento)
+void funcionDestroyerLista(t_list *lista)
 {
-	list_destroy_and_destroy_elements(elemento, (void *)registro_destroy);
+	list_destroy_and_destroy_elements(lista, (void *)registro_destroy);
 }
+

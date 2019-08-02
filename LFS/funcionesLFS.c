@@ -559,7 +559,8 @@ void cargar_metadata_tablas()
 					obtener_particiones_metadata(sd->d_name), obtener_tiempo_compactacion_metadata(sd->d_name));
 		}
 	}
-	closedir(dir);
+	if(dir != NULL)
+		closedir(dir);
 	free(tablas);
 }
 
@@ -578,7 +579,8 @@ void cargar_op_control_tablas()
 			crear_control_op(sd->d_name);
 		}
 	}
-	closedir(dir);
+	if(dir != NULL)
+		closedir(dir);
 	free(tablas);
 }
 
@@ -597,10 +599,11 @@ void compactacion_tablas_existentes()
 			if ((strcmp((sd->d_name), ".") != 0) &&
 				(strcmp((sd->d_name), "..") != 0)){
 				crear_hilo_compactacion(sd->d_name,
-						obtener_tiempo_compactacion_metadata(sd->d_name));
+									obtener_tiempo_compactacion_metadata(sd->d_name));
 			}
 		}
-		closedir(dir);
+		if(dir != NULL)
+			closedir(dir);
 		free(tablas);
 }
 
@@ -732,19 +735,23 @@ void modificar_op_control(char *tabla, int mod_flag)
 int contar_archivos_con_extension(char *root, char* extension) {
 	int cont = 0;
 	DIR * dir;
-	dir = opendir(root);
+	char *root_2 = malloc(strlen(root)*sizeof(char)+1);
+	strcpy(root_2, root);
+	dir = opendir(root_2);
 
 	struct dirent *entrada;
-	char **entrada_aux;
+	char **entrada_aux = NULL;
 	while ((entrada = readdir(dir)) != NULL) {
 		entrada_aux = string_split(entrada->d_name, ".");
-		if (entrada_aux[1] != NULL) {
+		if (entrada_aux[0] != NULL) {
 			if (strcmp(entrada_aux[1], extension) == 0) {
 				cont++;
 			}
 		}
 	}
-	closedir(dir);
+	if(dir != NULL)
+		closedir(dir);
+	free(root_2);
 	return cont;
 }
 

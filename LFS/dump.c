@@ -229,6 +229,7 @@ void liberar_elementos_particiones(void *elemento) {
 void liberar_tabla(void *elemento) {
 	t_tabla *tabla = elemento;
 	if(tabla != NULL){
+
 	void liberar_elementos_tabla(void *elemento) {
 		if(elemento != NULL)
 			return liberar_elementos_particiones(elemento);
