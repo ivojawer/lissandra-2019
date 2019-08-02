@@ -131,7 +131,7 @@ t_list* op_control_list;
 sem_t requests_disponibles;
 sem_t bloques_bitmap;
 sem_t refresh_config;
-pthread_t h_inotify;
+//pthread_t h_inotify;
 
 
 void liberar_registro_dump(t_registro * elemento);

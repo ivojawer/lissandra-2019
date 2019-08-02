@@ -1,6 +1,4 @@
 #include "funcionesMemoria.h"
-extern t_list* colaDeRequests;
-extern sem_t requestsDisponibles;
 extern sem_t sem_refreshConfig;
 extern int sleepJournal;
 extern int sleepGossiping;

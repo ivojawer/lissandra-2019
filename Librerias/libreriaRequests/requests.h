@@ -55,6 +55,7 @@
 #include<readline/history.h>
 #include <sys/inotify.h>
 #include <unistd.h>
+#include <time.h>
 
 typedef struct {
 	int requestEnInt;

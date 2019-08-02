@@ -581,15 +581,15 @@ void mandarRequestALFS(int requestAMandar, char* parametros) {
 	sem_wait(&sem_recepcionLFS);
 }
 
-void mandoPaginaComoInsert(pagina* pag) {
-	registro* pagAMandar = malloc(sizeof(registro));
-	marco* frame = getMarcoFromPagina(pag);
-	pagAMandar->key = frame->key;
-	pagAMandar->timestamp = frame->timestamp;
-	pagAMandar->value = &frame->value;
-	enviarRegistroComoInsert(pagAMandar);
-	free(pagAMandar);
-}
+//void mandoPaginaComoInsert(pagina* pag) {
+//	registro* pagAMandar = malloc(sizeof(registro));
+//	marco* frame = getMarcoFromPagina(pag);
+//	pagAMandar->key = frame->key;
+//	pagAMandar->timestamp = frame->timestamp;
+//	pagAMandar->value = &frame->value;
+//	enviarRegistroComoInsert(pagAMandar);
+//	free(pagAMandar);
+//}
 
 request* pasarPaginaAInsert(pagina* paginaAPasar, char* nombreTabla) {
 

@@ -1,10 +1,9 @@
 #include "funcionesLFS.h"
 
 extern t_log* logger;
-extern t_log* dump_logger;
 
 extern t_list* memtable;
-
+sem_t sem_refreshConfig;
 extern int cantidadBloques;
 extern int tamanioBloques;
 
@@ -52,6 +51,13 @@ void mandarAEjecutarRequest(request* requestAEjecutar, int socket)
 	parametros->socket_cliente = socket;
 	parametros->comando = string_duplicate(requestAEjecutar->parametros); //Esto es para que se pueda hacer un free() en consola.c sin que rompa
 //	char *parametros = string_duplicate(requestAEjecutar->parametros); //Esto es para que se pueda hacer un free() en consola.c sin que rompa
+
+	sem_wait(&sem_refreshConfig);
+	int sleepEjecucion = retardo/1000;
+	sem_post(&sem_refreshConfig);
+
+	sleep(sleepEjecucion);
+
 	switch (requestAEjecutar->requestEnInt) {
 	case SELECT:
 		{
@@ -110,53 +116,10 @@ void mandarAEjecutarRequest(request* requestAEjecutar, int socket)
 			break;
 
 		}
-	case CONFIG_RETARDO:
-		{
-			pthread_t h_configRetardo;
-
-			pthread_create(&h_configRetardo,NULL, (void*) cambiarRetardo, parametros);
-
-			pthread_detach(h_configRetardo);
-
-			break;
-		}
-
-	case CONFIG_DUMP:
-		{
-			pthread_t h_configDump;
-
-			pthread_create(&h_configDump,NULL, (void*) cambiarTiempoDump, parametros);
-
-			pthread_detach(h_configDump);
-
-			break;
-		}
 
 	}
 
 	liberarRequest(requestAEjecutar);
-}
-
-void cambiarRetardo(void* parametros){
-
-	struct parametros* info = (struct parametros*) parametros;
-	char* retardo = info->comando;
-
-	t_config* config = config_create("../../CONFIG/LFS.config");
-	config_set_value(config,"RETARDO",retardo);
-	config_save(config);
-	config_destroy(config);
-}
-
-void cambiarTiempoDump(void* parametros){
-
-	struct parametros* info = (struct parametros*) parametros;
-	char* tiempoDump = info->comando;
-
-	t_config* config = config_create("../../CONFIG/LFS.config");
-	config_set_value(config,"TIEMPO_DUMP",tiempoDump);
-	config_save(config);
-	config_destroy(config);
 }
 
 
@@ -165,11 +128,12 @@ void iniciar_variables(){
 	tot = 0;
 	cola_requests = list_create();
 	lista_metadatas = list_create();
-	struct inotify *st_inotify = malloc(sizeof(struct inotify));
+//	struct inotify *st_inotify = malloc(sizeof(struct inotify));
 
 	sem_init(&dump_semaphore, 1, 1);
 	sem_init(&op_control_semaphore, 1, 1);
 	sem_init(&compactar_semaphore, 1, 1);
+	sem_init(&sem_refreshConfig,0,1);
 
 	//asigno variables globales del LFS.config
 	t_config* config = config_create("/home/utnso/workspace/tp-2019-1c-U-TN-Tecno/CONFIG/LFS.config");
@@ -178,9 +142,9 @@ void iniciar_variables(){
 	tamanioValue = config_get_int_value(config,"TAMAÑO_VALUE");
 	tiempoDump = config_get_int_value(config,"TIEMPO_DUMP");
 	sem_init(&refresh_config, 0, 1);
-	st_inotify->config_root = strdup("/home/utnso/workspace/tp-2019-1c-U-TN-Tecno/CONFIG/LFS.config");
+//	st_inotify->config_root = strdup("/home/utnso/workspace/tp-2019-1c-U-TN-Tecno/CONFIG/LFS.config");
 
-	pthread_create(&h_inotify, NULL, (void *)control_inotify, st_inotify);
+//	pthread_create(&h_inotify, NULL, (void *)control_inotify, st_inotify);
 
 	controlExistenciaLFS();
 
@@ -307,15 +271,21 @@ void controlExistenciaLFS(){
 char* get_tabla(char* comando)
 {
 	char **tokens_comando = string_split(comando, " ");
-	char *tabla = tokens_comando[0];
+
+	char *tabla = string_duplicate(tokens_comando[0]);
+
+	liberarArrayDeStrings(tokens_comando);
 	return tabla;
 }
 
 int get_key(char* comando)
 {
 	char **tokens_comando = string_split(comando, " ");
-	char *key = tokens_comando[1];
-	return atoi(key);
+
+	int key = atoi(tokens_comando[1]);
+
+	liberarArrayDeStrings(tokens_comando);
+	return key;
 }
 
 char *get_value(char* comando)
@@ -343,7 +313,10 @@ double get_timestamp(char* comando) {
 char *get_consistencia(char *comando)
 {
 	char** tokens_comando = string_split(comando, " ");
-	char *consistencia = tokens_comando[1];
+	char *consistencia = string_duplicate(tokens_comando[1]);
+
+
+	liberarArrayDeStrings(tokens_comando);
 	return consistencia;
 }
 
@@ -351,14 +324,23 @@ char *get_consistencia(char *comando)
 int get_particiones(char *comando)
 {
 	char** tokens_comando = string_split(comando, " ");
-	return atoi(tokens_comando[2]);
+
+	int particiones = atoi(tokens_comando[2]);
+
+	liberarArrayDeStrings(tokens_comando);
+
+	return particiones;
 }
 
 
 int get_tiempo_compactacion(char *comando)
 {
 	char** tokens_comando = string_split(comando, " ");
-	return atoi(tokens_comando[3]);
+
+	int tiempoCompactacion = atoi(tokens_comando[3]);
+
+	liberarArrayDeStrings(tokens_comando);
+	return tiempoCompactacion;
 }
 
 int buscar_particiones_metadata_en_disco(char *tabla)
@@ -373,8 +355,7 @@ int buscar_particiones_metadata_en_disco(char *tabla)
 	t_config* config = NULL;
 	config = config_create(archivoMetadata);
 	if (config == NULL){
-		printf("ERROR. No se pudo obtener metadata de %s\n",archivoMetadata);
-		log_info(dump_logger, "ERROR de tabla %s", tabla);
+		log_error(logger,"ERROR. No se pudo obtener metadata de %s\n",archivoMetadata);
 		return -1;
 	}
 	int nr_particiones_metadata = config_get_int_value(config, "PARTITIONS");
@@ -842,22 +823,26 @@ void bloque_destroy(t_bloque *self) {
     free(self);
 }
 
-void control_inotify(void *param)
+void refreshConfig()
 {
-	struct inotify *p = (struct inotify *)param;
-	while(1){
-		esperarModificacionDeArchivo(strdup(p->config_root));
+	char* direccionConfig = string_duplicate("/home/utnso/workspace/tp-2019-1c-U-TN-Tecno/CONFIG/LFS.config");
 
-//		sem_wait(&refresh_config);
+	while (1) {
+		esperarModificacionDeArchivo(direccionConfig);
 
-		t_config* config = config_create(p->config_root);
+		sem_wait(&sem_refreshConfig);
 
-		retardo = config_get_int_value(config,"RETARDO");
-		tamanioValue = config_get_int_value(config,"TAMAÑO_VALUE");
-		tiempoDump = config_get_int_value(config,"TIEMPO_DUMP");
+		t_config* config = config_create(direccionConfig);
+
+		retardo = config_get_int_value(config, "RETARDO");
+		tiempoDump = config_get_int_value(config, "TIEMPO_DUMP");
 
 		config_destroy(config);
 
-//		sem_post(&refresh_config);
+		sem_post(&sem_refreshConfig);
+
+//		log_info(logger, "hice algo");
 	}
+
+
 }

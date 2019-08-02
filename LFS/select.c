@@ -4,6 +4,7 @@
 extern t_list* memtable;
 extern char* puntoDeMontaje;
 extern int tamanioValue;
+extern t_log* logger;
 
 t_list *particion_encontrada;
 t_list *registros_encontrados;
@@ -67,7 +68,7 @@ int obtener_size_particion(char *tabla, int particion_buscar) {
 
 	t_config* config = config_create(archivoParticion);
 	if (config == NULL) {
-		printf("La particion no existe\n");
+//		printf("La particion no existe\n");
 		free(archivoParticion);
 		free(numeroParticion);
 		free(unaTabla);
@@ -132,7 +133,7 @@ void buscar_key_bloques(char* bloque_nr, uint16_t key, t_list *timestamp_valor,
 	FILE *f;
 	f = fopen(root, "rb");
 	if (f == NULL) {
-		printf("El bloque %s no se pudo abrir.\n", bloque_nr);
+//		printf("El bloque %s no se pudo abrir.\n", bloque_nr);
 	} else {
 //		 char temp[128]= "";
 		char *temp = malloc(20+5+tamanioValue+5);
@@ -278,7 +279,7 @@ int cargar_bloques(char *root, t_list *bloques_buscar) {
 	FILE *f;
 	f = fopen(root, "rb");
 	if (f == NULL) {
-		printf("El archivo particion no se ha podido abrir correctamente\n");
+//		printf("El archivo particion no se ha podido abrir correctamente\n");
 		return 0;
 	} else {
 		int i = 0, cont = 0;
@@ -325,7 +326,7 @@ void buscar_bloques_particion(char *tabla, int particion_buscar, int type_flag,
 		dir = opendir(root);
 	tot++;
 	if (dir == NULL && type_flag != 0) {
-		printf("No se pudo abrir %s.\n", root);
+//		printf("No se pudo abrir %s.\n", root);
 		log_info(dump_logger, "ERROR buscar_bloques_particion %d", tot);
 		return;
 	}
@@ -396,7 +397,7 @@ bool comparar_registro(uint16_t key, void *registro) {
 }
 
 t_list *filtrar_tabla_memtable(char *tabla) {
-	printf("largo memtable: %d\n", list_size(memtable));
+//	printf("largo memtable: %d\n", list_size(memtable));
 
 	bool coincide_nombre(void *tabla_mt) {
 		return comparar_nombre(tabla, tabla_mt);
@@ -404,8 +405,8 @@ t_list *filtrar_tabla_memtable(char *tabla) {
 
 	tabla_encontrada = list_filter(memtable, coincide_nombre); //Supongo que solo extrae 1 tabla
 
-	if (lista_vacia(tabla_encontrada))
-		printf("La tabla <%s> no se encuentra en la memtable\n", tabla);
+//	if (lista_vacia(tabla_encontrada))
+////		printf("La tabla <%s> no se encuentra en la memtable\n", tabla);
 
 	return tabla_encontrada;
 }
@@ -418,12 +419,9 @@ t_list *filtrar_particion_tabla(t_list *tabla_encontrada, int particion_buscar) 
 	if (lista_vacia(tabla_encontrada)) {
 		return tabla_encontrada;
 	} else {
-
-//		t_tabla *tabla_recbida = malloc(sizeof(t_tabla)); -malloc sacado
 		t_tabla *tabla_recbida = (t_tabla*) list_get(tabla_encontrada, 0);
 		particion_encontrada = list_filter(tabla_recbida->lista_particiones,
 				coincide_particion);
-		//free(tabla_recbida);
 		return particion_encontrada;
 	}
 }
@@ -485,8 +483,8 @@ t_registro* buscar_en_todos_lados(char *tabla, uint16_t key,
 							valor));
 		}
 	} else {
-		printf("No se encontro la key %d de la tabla %s en la memtable.\n", key,
-				tabla);
+//		printf("No se encontro la key %d de la tabla %s en la memtable.\n", key,
+//				tabla);
 	}
 	if (lista_vacia(timestamp_valor)) {
 //		printf("*timestamp_valor* VACIO\n");
@@ -498,8 +496,8 @@ t_registro* buscar_en_todos_lados(char *tabla, uint16_t key,
 
 		if (timestamp_value_max->valor != NULL) {
 
-			printf("El valor de la key ingresada es: %s\n",
-					timestamp_value_max->valor);
+//			printf("El valor de la key ingresada es: %s\n",
+//					timestamp_value_max->valor);
 
 			registroEncontrado = malloc(sizeof(t_registro));
 			registroEncontrado->key = key;
@@ -517,19 +515,30 @@ t_registro* buscar_en_todos_lados(char *tabla, uint16_t key,
 }
 
 void rutina_select(void* parametros) {
-	printf("operacion: select\n");
 
 	struct parametros *info = (struct parametros*) parametros;
 	char *comando = strdup(info->comando);
 	int socket_cliente = info->socket_cliente;
 
+
 	char *tabla = get_tabla(comando);
-	printf("tabla: %s\n", get_tabla(comando));
-
 	uint16_t key = get_key(comando);
-	printf("key: %d\n", get_key(comando));
 
-	printf("SELECT INSIDE\n");
+	free(info);
+	free(comando);
+
+
+	char* selectEnString = string_new();
+	string_append(&selectEnString,"SELECT ");
+	string_append(&selectEnString,tabla);
+	string_append(&selectEnString," ");
+	string_append(&selectEnString, string_itoa(key));
+
+	char* textoALoggear = string_new();
+	string_append(&textoALoggear,"INICIA ");
+	string_append(&textoALoggear,selectEnString);
+	loggearCyanClaro(logger,textoALoggear);
+	free(textoALoggear);
 
 //	modificar_op_control(tabla, 1); //para no cruzarse con Drop o Compactacion
 	sem_wait(&dump_semaphore);
@@ -542,6 +551,17 @@ void rutina_select(void* parametros) {
 //		t_registro* resultadoBusqueda = malloc(sizeof(t_registro)); -malloc sacado
 		t_registro* resultadoBusqueda = buscar_en_todos_lados(tabla, key, particion_buscar);
 
+		if(resultadoBusqueda != NULL)
+		{
+			textoALoggear = string_new();
+			string_append(&textoALoggear,selectEnString);
+			string_append(&textoALoggear,": ");
+			string_append(&textoALoggear,resultadoBusqueda->value);
+			loggearVerdeClaro(logger,textoALoggear);
+			free(textoALoggear);
+
+		}
+
 		if (resultadoBusqueda != NULL && socket_cliente != -1) {
 //			log_info(logger,"Enviando resultado a la memoria");
 			registro *registro_a_enviar = malloc(sizeof(registro));
@@ -551,12 +571,12 @@ void rutina_select(void* parametros) {
 			enviarRegistroConHeader(socket_cliente, registro_a_enviar,
 					REGISTRO);
 		} else if (resultadoBusqueda == NULL) {
-			printf("La tabla se encuentra en el sistema pero la key no.\n");
+			log_error(logger,"%s: No se encontro la key en la tabla",selectEnString);
 			if (socket_cliente != -1)
 				enviarIntConHeader(socket_cliente, NO_EXISTE, RESPUESTA);
 		}
 	} else {
-		printf("La tabla no se encuentra en el sistema\n");
+		log_error(logger,"%s: La tabla no existe",selectEnString);
 		if (socket_cliente != -1) {
 //			log_info(logger,"Enviando ERROR a la memoria");
 			enviarIntConHeader(socket_cliente, TABLA_NO_EXISTE, RESPUESTA);
@@ -565,5 +585,5 @@ void rutina_select(void* parametros) {
 //	modificar_op_control(tabla, 2);
 	sem_post(&compactar_semaphore);
 	sem_post(&dump_semaphore);
-	printf("SELECT OUTSIDE\n");
+	free(selectEnString);
 }

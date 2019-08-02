@@ -1,12 +1,10 @@
 #include "dump.h"
 
 extern t_list* memtable;
-extern t_log *dump_logger;
-
+extern t_log* logger;
 extern int cantidadBloques;
 extern int tamanioBloques;
-
-extern int retardo; //en milisegundos
+extern sem_t sem_refreshConfig;
 extern int tiempoDump; //en milisegundos
 
 extern char* puntoDeMontaje;
@@ -305,9 +303,9 @@ void dump() {
 													 bloques_tmp_tabla);//Control de error aca
 							if(err_flag == 1){
 								full_space++;
-								log_info(dump_logger, "Dump finalizado. No se pudo guardar un registro por falta de espacio.");
+								log_error(logger, "Dump finalizado. No se pudo guardar un registro por falta de espacio.");
 								if(full_space == 1)
-									printf("Dump finalizado. No se pudo guardar un registro por falta de espacio\n");
+									log_error(logger,"Dump finalizado. No se pudo guardar un registro por falta de espacio");
 								return;
 							}
 							full_space = 0;
@@ -339,12 +337,15 @@ void dump() {
 
 void ejecutar_dump()
 {
-	int sleepDump;
 	while(1) {
 //		sem_wait(&refresh_config); //Con los semaforos no lo reconoce
-		sleepDump = tiempoDump/1000;
+
+		sem_wait(&sem_refreshConfig);
+		int sleepDump = tiempoDump/1000;
+		sem_post(&sem_refreshConfig);
+
 		sleep(sleepDump);
-		log_info(dump_logger, "Inicio Dump");
+		loggearAmarillo(logger, "Inicio Dump");
 
 		sem_wait(&dump_semaphore);
 		sem_wait(&compactar_semaphore);
@@ -352,7 +353,7 @@ void ejecutar_dump()
 		sem_post(&compactar_semaphore);
 		sem_post(&dump_semaphore);
 
-		log_info(dump_logger, "Fin Dump");
+		loggearAmarillo(logger, "Fin Dump");
 //		sem_post(&refresh_config);
 	}
 }
