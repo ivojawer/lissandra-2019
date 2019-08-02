@@ -36,7 +36,7 @@ t_particion *crear_particion_memtable(int size, int particion_buscar) {
 void particion_destroy(t_particion *self) {
 	if (self != NULL) {
 		if (self->lista_registros != NULL)
-			free(self->lista_registros);
+			list_destroy(self->lista_registros);
 		free(self);
 	}
 }
