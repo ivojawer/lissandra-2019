@@ -86,7 +86,11 @@ void rutina_drop(void* parametros) {
 	char *comando = strdup(info->comando);
 	int socket_cliente = info->socket_cliente;
 
+	free(info);
+
 	char *tabla = get_tabla(comando);
+
+	free(comando);
 
 	char* dropEnString = string_new();
 	string_append(&dropEnString,"DROP ");

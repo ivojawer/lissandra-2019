@@ -520,8 +520,13 @@ void rutina_select(void* parametros) {
 	char *comando = strdup(info->comando);
 	int socket_cliente = info->socket_cliente;
 
+
 	char *tabla = get_tabla(comando);
 	uint16_t key = get_key(comando);
+
+	free(info);
+	free(comando);
+
 
 	char* selectEnString = string_new();
 	string_append(&selectEnString,"SELECT ");

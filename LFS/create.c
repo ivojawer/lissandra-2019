@@ -149,6 +149,8 @@ void rutina_create(void* parametros) {
 	char *comando = strdup(info->comando);
 	int socket_cliente = info->socket_cliente;
 
+	free(info);
+
 	char *tabla = strdup(get_tabla(comando));
 
 	char *consistencia = get_consistencia(comando);
@@ -156,6 +158,9 @@ void rutina_create(void* parametros) {
 	int particiones = get_particiones(comando);
 
 	int compactacion = get_tiempo_compactacion(comando);
+
+	free(comando);
+
 	char* createEnString = string_new();
 	string_append(&createEnString,"CREATE ");
 	string_append(&createEnString,tabla);

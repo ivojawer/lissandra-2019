@@ -119,12 +119,14 @@ void agregar_registro_en_particion_existente(char *tabla, int particion_buscar,
 void rutina_insert(void* parametros) {
 
 	struct parametros *info = (struct parametros*) parametros;
-	char *comando = strdup(info->comando);
+	char *comando = strdup(info->comando); //Se libera al final
 	int socket_cliente = info->socket_cliente;
+	free(info);
 
 	char *tabla = get_tabla(comando);
 
 	uint16_t key = get_key(comando);
+
 	sem_wait(&dump_semaphore);
 	sem_wait(&compactar_semaphore);
 
@@ -233,5 +235,7 @@ void rutina_insert(void* parametros) {
 //	liberar_tabla_encontrada(tabla_encontrada);
 	sem_post(&dump_semaphore);
 	sem_post(&compactar_semaphore);
+	free(insertEnString);
+	free(comando);
 }
 

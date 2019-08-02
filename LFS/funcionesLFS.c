@@ -271,15 +271,21 @@ void controlExistenciaLFS(){
 char* get_tabla(char* comando)
 {
 	char **tokens_comando = string_split(comando, " ");
-	char *tabla = tokens_comando[0];
+
+	char *tabla = string_duplicate(tokens_comando[0]);
+
+	liberarArrayDeStrings(tokens_comando);
 	return tabla;
 }
 
 int get_key(char* comando)
 {
 	char **tokens_comando = string_split(comando, " ");
-	char *key = tokens_comando[1];
-	return atoi(key);
+
+	int key = atoi(tokens_comando[1]);
+
+	liberarArrayDeStrings(tokens_comando);
+	return key;
 }
 
 char *get_value(char* comando)
@@ -307,7 +313,10 @@ double get_timestamp(char* comando) {
 char *get_consistencia(char *comando)
 {
 	char** tokens_comando = string_split(comando, " ");
-	char *consistencia = tokens_comando[1];
+	char *consistencia = string_duplicate(tokens_comando[1]);
+
+
+	liberarArrayDeStrings(tokens_comando);
 	return consistencia;
 }
 
@@ -315,14 +324,23 @@ char *get_consistencia(char *comando)
 int get_particiones(char *comando)
 {
 	char** tokens_comando = string_split(comando, " ");
-	return atoi(tokens_comando[2]);
+
+	int particiones = atoi(tokens_comando[2]);
+
+	liberarArrayDeStrings(tokens_comando);
+
+	return particiones;
 }
 
 
 int get_tiempo_compactacion(char *comando)
 {
 	char** tokens_comando = string_split(comando, " ");
-	return atoi(tokens_comando[3]);
+
+	int tiempoCompactacion = atoi(tokens_comando[3]);
+
+	liberarArrayDeStrings(tokens_comando);
+	return tiempoCompactacion;
 }
 
 int buscar_particiones_metadata_en_disco(char *tabla)

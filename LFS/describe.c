@@ -189,6 +189,8 @@ void rutina_describe(void* parametros) {
 	char *comando = strdup(info->comando);
 	int socket_cliente = info->socket_cliente;
 
+	free(info);
+
 	int tipo = tipo_describe(comando);
 
 	char* describeEnString = string_new();
@@ -213,6 +215,8 @@ void rutina_describe(void* parametros) {
 	default:
 		printf("Error en comando DESCRIBE.\n");
 	}
+
+	free(comando);
 
 	free(describeEnString);
 }
