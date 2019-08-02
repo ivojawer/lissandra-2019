@@ -65,7 +65,7 @@ void crear_particiones(char *dir, int particiones) {
 		fp = fopen(root, "w+b");
 		int free_block = elegir_bloque_libre(cantidadBloques);
 		if (free_block == -1) {
-			printf("No hay bloques libres\n");
+			log_error(logger,"No hay bloques libres\n");
 			fclose(fp);
 		} else {
 			fputs(size_text, fp);
@@ -116,7 +116,7 @@ int crear_tabla_FS(char *tabla, int particiones, char *consistencia,
 	FILE *fp;
 	fp = fopen(dir_metadata, "w+");
 	if (fp == NULL) {
-		printf("Fallo Creacion archivo metadata\n");
+		log_error(logger,"Fallo Creacion archivo metadata\n");
 	} else {
 		fputs(consistencia_tabla, fp);
 		fputs(particiones_tabla, fp);
@@ -149,38 +149,53 @@ void rutina_create(void* parametros) {
 	char *comando = strdup(info->comando);
 	int socket_cliente = info->socket_cliente;
 
-	printf("Operacion: CREATE\n");
-
 	char *tabla = strdup(get_tabla(comando));
-	printf("Tabla: %s\n", tabla);
 
 	char *consistencia = get_consistencia(comando);
-	printf("Consistencia: %s\n", consistencia);
 
 	int particiones = get_particiones(comando);
-	printf("Particiones: %d\n", particiones);
 
 	int compactacion = get_tiempo_compactacion(comando);
-	printf("Tiempo de compactacion: %d\n", compactacion);
+	char* createEnString = string_new();
+	string_append(&createEnString,"CREATE ");
+	string_append(&createEnString,tabla);
+	string_append(&createEnString," ");
+	string_append(&createEnString,consistencia);
+	string_append(&createEnString," ");
+	string_append(&createEnString,string_itoa(particiones));
+	string_append(&createEnString," ");
+	string_append(&createEnString,string_itoa(compactacion));
+
+	char*textoALoggear = string_new();
+	string_append(&textoALoggear,"INICIA ");
+	string_append(&textoALoggear,createEnString);
+
+	loggearCyanClaro(logger,textoALoggear);
+	free(textoALoggear);
 
 	if (controlar_bloques_disponibles(particiones) == 0) {
 		if (socket_cliente != -1) {
 			enviarIntConHeader(socket_cliente, ERROR, RESPUESTA);
 		}
 
-		printf("Se excede la cantidad de particiones disponibles\n");
+		log_error(logger,"%s: Se excede la cantidad de particiones disponibles",createEnString);
 		return;
 	}
 
 	if (existe_tabla(tabla)) {
-		log_info(logger, "Se intento crear la tabla ya existente: %s.\n",
-				tabla);
+		log_error(logger, "%s: Se intento crear la tabla ya existente",
+				createEnString);
 		if (socket_cliente != -1) {
 			enviarIntConHeader(socket_cliente, ERROR, RESPUESTA);
 		}
 	} else if (crear_tabla_FS(tabla, particiones, consistencia, compactacion)
 			== 0) {
-		printf("Se creo la tabla [%s].\n", tabla);
+
+		textoALoggear = string_new();
+		string_append(&textoALoggear,createEnString);
+		string_append(&textoALoggear,": Se creo la tabla");
+		loggearVerdeClaro(logger,textoALoggear);
+		free(textoALoggear);
 
 		if (socket_cliente != -1) {
 			enviarIntConHeader(socket_cliente, TODO_BIEN, RESPUESTA);
@@ -189,11 +204,13 @@ void rutina_create(void* parametros) {
 		crear_hilo_compactacion(tabla, compactacion);
 
 	} else {
-		printf("Ocurrio un problema\nNo se pudo crear la Tabla\n");
+		log_error(logger,"%s: No se pudo crear la tabla",createEnString);
 
 		if (socket_cliente != -1) {
 			enviarIntConHeader(socket_cliente, ERROR, RESPUESTA);
 		}
 
 	}
+
+	free(createEnString);
 }

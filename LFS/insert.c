@@ -1,12 +1,10 @@
 #include "funcionesLFS.h"
 
-extern int socket_memoria;
+
 extern t_list* memtable;
+extern t_log* logger;
 
 extern int tamanioValue;
-extern int retardo;
-
-extern t_log *dump_logger;
 
 t_registro *crear_registro(unsigned long timestamp, uint16_t key, char *value) {
 	t_registro *new = malloc(sizeof(t_registro));
@@ -120,23 +118,35 @@ void agregar_registro_en_particion_existente(char *tabla, int particion_buscar,
 
 void rutina_insert(void* parametros) {
 
-	printf("Operacion: INSERT\n");
 	struct parametros *info = (struct parametros*) parametros;
 	char *comando = strdup(info->comando);
 	int socket_cliente = info->socket_cliente;
 
 	char *tabla = get_tabla(comando);
-	printf("Tabla: %s\n", tabla);
 
 	uint16_t key = get_key(comando);
-	printf("Key: %d\n", key);
 	sem_wait(&dump_semaphore);
 	sem_wait(&compactar_semaphore);
 
 	char* value = get_value(comando);
 
+	char* insertEnString = string_new();
+
+	string_append(&insertEnString,"INSERT ");
+	string_append(&insertEnString,tabla);
+	string_append(&insertEnString," ");
+	string_append(&insertEnString,string_itoa(key));
+	string_append(&insertEnString," ");
+	string_append(&insertEnString, value);
+
+	char* textoALoggear = string_new();
+	string_append(&textoALoggear,"INICIA ");
+	string_append(&textoALoggear,insertEnString);
+	loggearCyanClaro(logger,textoALoggear);
+	free(textoALoggear);
+
 	if (strlen(value) > tamanioValue) {
-		printf("El value ingresado supera el tamaño maximo permitido.\n");
+		log_error(logger,"%s: El value supera el tamaño maximo");
 
 		if (socket_cliente != -1) {
 			enviarIntConHeader(socket_cliente, ERROR, RESPUESTA);
@@ -145,13 +155,9 @@ void rutina_insert(void* parametros) {
 		sem_post(&compactar_semaphore);
 		return;
 	} else {
-		log_info(dump_logger, "Inicio Insert %s", comando);
-
-		printf("Value: %s\n", value);
 //		modificar_op_control(tabla, 7);
 
 		unsigned long timestamp = get_timestamp(comando);
-		printf("Timestamp: %lu\n", timestamp);
 
 		if (existe_tabla(tabla)) {
 			int nr_particiones_metadata = obtener_particiones_metadata(tabla);
@@ -189,7 +195,12 @@ void rutina_insert(void* parametros) {
 					agregar_registro_en_particion_existente(tabla,
 							particion_buscar, registro_nuevo);
 				}
-				printf("Registro agregado a la particion.\n");
+
+				textoALoggear = string_new();
+				string_append(&textoALoggear,insertEnString);
+				string_append(&textoALoggear,": Se agrego el registro");
+				loggearVerdeClaro(logger, textoALoggear);
+				free(textoALoggear);
 //				modificar_op_control(tabla, 8);
 //				sem_post(&dump_semaphore);
 //				sem_post(&compactar_semaphore);
@@ -202,7 +213,7 @@ void rutina_insert(void* parametros) {
 //				sem_post(&compactar_semaphore);
 			}
 		} else {
-			printf("No se pudo encontrar la tabla %s.\n", tabla);
+			log_error(logger,"%s: No se encontro la tabla",insertEnString);
 //			modificar_op_control(tabla, 8);
 //			sem_post(&dump_semaphore);
 //			sem_post(&compactar_semaphore);
@@ -213,7 +224,6 @@ void rutina_insert(void* parametros) {
 		}
 	}
 //	liberar_tabla_encontrada(tabla_encontrada);
-	log_info(dump_logger, "Fin Insert %s", comando);
 	sem_post(&dump_semaphore);
 	sem_post(&compactar_semaphore);
 }

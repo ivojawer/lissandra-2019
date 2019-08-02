@@ -110,17 +110,17 @@ typedef struct{
 void consola();
 void mandarAEjecutarRequest(request* requestAEjecutar, int socket);
 int queRequestEsInterno(char* palabra);
-void cambiarRetardo(void* parametros);
 void cambiarTiempoDump(void* parametros);
 void iniciar_variables();
 void controlExistenciaLFS();
 void crear_control_op(char *tabla);
-void control_inotify(void *param);
+//void control_inotify(void *param);
 t_list* op_control_list;
 sem_t requests_disponibles;
 sem_t bloques_bitmap;
 sem_t refresh_config;
-pthread_t h_inotify;
+void refreshConfig();
+//pthread_t h_inotify;
 
 
 void liberar_registro_dump(t_registro * elemento);

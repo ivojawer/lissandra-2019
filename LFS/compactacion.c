@@ -3,6 +3,7 @@
 extern char* puntoDeMontaje;
 extern int tamanioBloques;
 extern int cantidadBloques;
+extern t_log* logger;
 extern t_log *compact_logger;
 clock_t t_ini_compact, t_fin_compact;
 double secs;
@@ -159,7 +160,8 @@ void compactar(char* tabla){
 	list_iterate(bytes_por_particion,(void*)bloquesNecesariosPorParticion);
 
 	if(controlar_bloques_disponibles(cantidadBloquesNecesarios) == 0){
-		printf("Se excede la cantidad de bloques necesaria para compactar \n"); //esto se guarda en un log error? porque se pierte la info
+		log_error(logger,"Se excede la cantidad de bloques necesaria para compactar");
+
 		return;
 	}
 
@@ -190,7 +192,12 @@ void iniciar_compactacion(void *arg)
 		nanosleep(&tim, &tim_2);
 
 		if (!check_drop_on_table(p_comp->tabla)) {
-			log_info(compact_logger, "INICIO Comp. Tabla %s", p_comp->tabla);
+			char* textoALoggear = string_new();
+			string_append(&textoALoggear,"INICIA COMPACTACION TABLA ");
+			string_append(&textoALoggear,p_comp->tabla);
+
+			loggearMarron(logger, textoALoggear);
+			free(textoALoggear);
 //			modificar_op_control(p_comp->tabla, 5);
 			t_ini_compact = medir_tiempo();
 			sem_wait(&dump_semaphore);
@@ -200,7 +207,13 @@ void iniciar_compactacion(void *arg)
 			sem_post(&dump_semaphore);
 			sem_post(&compactar_semaphore);
 			t_fin_compact = medir_tiempo();
-			log_info(compact_logger, "FIN Comp. Tabla %s", p_comp->tabla);
+
+			textoALoggear = string_new();
+			string_append(&textoALoggear,"TERMINO COMPACTACION TABLA ");
+			string_append(&textoALoggear,p_comp->tabla);
+			loggearMarron(logger,textoALoggear);
+			free(textoALoggear);
+
 			secs = (double)(t_fin_compact - t_ini_compact) / CLOCKS_PER_SEC;
 //			modificar_op_control(p_comp->tabla, 6);
 			log_info(compact_logger, "Compactacion finalizada. Tiempo Bloqueo: %.16g milisegundos", secs * 1000.0);
@@ -243,7 +256,7 @@ void escribirEnBloquesParticion(t_list* registrosDeParticion, int numeroParticio
 	string_append(&arrayBloques,"[");
 
 	int nro_bloque = elegir_bloque_libre(cantidadBloques);
-	if (nro_bloque == -1){ printf("de la nada no hay bloques libres"); return; }
+	if (nro_bloque == -1){ log_error(logger,"De la nada no hay bloques libres"); return; }
 	char* pathBloque = generarNombreCompletoBloque(nro_bloque);
 	FILE* archivoBloque = fopen(pathBloque,"r+");
 
@@ -256,7 +269,7 @@ void escribirEnBloquesParticion(t_list* registrosDeParticion, int numeroParticio
 				fclose(archivoBloque);
 				free(pathBloque);
 				int nro_bloque = elegir_bloque_libre(cantidadBloques);
-				if (nro_bloque == -1){ printf("de la nada no hay bloques libres"); return; }
+				if (nro_bloque == -1){ log_error(logger,"De la nada no hay bloques libres"); return; }
 				pathBloque = generarNombreCompletoBloque(nro_bloque);
 				archivoBloque = fopen(pathBloque,"r+");
 				string_append(&arrayBloques,string_itoa(nro_bloque));

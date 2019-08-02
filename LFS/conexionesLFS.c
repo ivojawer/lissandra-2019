@@ -1,7 +1,6 @@
 #include "funcionesLFS.h"
 
 extern int tamanioValue;
-extern int retardo;
 extern t_log* logger;
 //int socket_memoria;
 //int socket_cliente;
@@ -44,13 +43,15 @@ void comunicacion_con_memoria(int socket_cliente) {
 		}
 		case JOURNAL: {
 			int i;
+
+			loggearAzulClaro(logger,"Se recibio un JOURNAL");
 			//int nr_registros = recibirInt(socket_cliente, logger);
 			//printf("cantidad de registros a recibir:%d\n",nr_registros);
 			t_list *lista_journal = recibirRequests(socket_cliente, logger); //lista de requests *
 			if (list_size(lista_journal) != 0) {
 //				request* primerRequest = (request*) lista_journal->head->data;
-				request* primerRequest = (request*) list_get(lista_journal, 0);
-				printf("primer request:%s\n", primerRequest->parametros);
+//				request* primerRequest = (request*) list_get(lista_journal, 0);
+//				printf("primer request:%s\n", primerRequest->parametros);
 				for (i = 0; i < list_size(lista_journal); i++) {
 //					request* request_procesar = malloc(sizeof(request)); -malloc sacado
 					request* request_procesar = list_get(lista_journal, i);
@@ -115,7 +116,7 @@ void aceptar_conexiones() {
 
 		switch (modulo) {
 		case MEMORIA: {
-			log_info(logger, "Se conecto una Memoria");
+			loggearAzulClaro(logger, "Se conecto una Memoria");
 			int socket_memoria = socket_cliente;
 
 			//struct para hilo

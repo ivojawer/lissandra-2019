@@ -5,6 +5,7 @@ extern void liberar_tabla(void *elemento);
 extern bool comparar_nombre(char *tabla, void *tabla_mt);
 extern char* puntoDeMontaje;
 extern t_list *memtable;
+extern t_log* logger;
 extern bool coincide_tabla(void *elemento, char *tabla);
 
 void iterar_busqueda_de_bloques(void (foo)(char *, int, int, t_list *),
@@ -85,8 +86,17 @@ void rutina_drop(void* parametros) {
 	char *comando = strdup(info->comando);
 	int socket_cliente = info->socket_cliente;
 
-	printf("Rutina DROP\n");
 	char *tabla = get_tabla(comando);
+
+	char* dropEnString = string_new();
+	string_append(&dropEnString,"DROP ");
+	string_append(&dropEnString,tabla);
+
+	char* textoALoggear = string_new();
+	string_append(&textoALoggear,"INICIA ");
+	string_append(&textoALoggear,dropEnString);
+	loggearCyanClaro(logger,textoALoggear);
+	free(textoALoggear);
 
 //	modificar_op_control(tabla, 3); //para no cruzarse con niguno
 	sem_wait(&dump_semaphore);
@@ -127,8 +137,13 @@ void rutina_drop(void* parametros) {
 			}
 
 		}
+		textoALoggear = string_new();
+		string_append(&textoALoggear,dropEnString);
+		string_append(&textoALoggear,": Se elimino la tabla");
+		loggearVerdeClaro(logger,textoALoggear);
+		free(textoALoggear);
 	} else {
-		printf("La tabla no se encuentra en el sistema\n");
+		log_error(logger,"%s: La tabla no existe");
 		if(socket_cliente != -1)
 		{
 			enviarIntConHeader(socket_cliente, TABLA_NO_EXISTE, RESPUESTA);
@@ -137,5 +152,6 @@ void rutina_drop(void* parametros) {
 	}
 	sem_post(&dump_semaphore);
 	sem_post(&compactar_semaphore);
+	free(dropEnString);
 //	modificar_op_control(strdup(tabla), 4);
 }

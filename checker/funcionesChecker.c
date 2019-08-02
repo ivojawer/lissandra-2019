@@ -71,7 +71,7 @@ void iniciar_variables(){
 	tot = 0;
 	cola_requests = list_create();
 	lista_metadatas = list_create();
-	struct inotify *st_inotify = malloc(sizeof(struct inotify));
+//	struct inotify *st_inotify = malloc(sizeof(struct inotify));
 
 	sem_init(&dump_semaphore, 1, 1);
 	sem_init(&op_control_semaphore, 1, 1);
@@ -84,9 +84,9 @@ void iniciar_variables(){
 	tamanioValue = config_get_int_value(config,"TAMAÑO_VALUE");
 	tiempoDump = config_get_int_value(config,"TIEMPO_DUMP");
 	sem_init(&refresh_config, 0, 1);
-	st_inotify->config_root = strdup("/home/utnso/workspace/tp-2019-1c-U-TN-Tecno/CONFIG/LFS.config");
+//	st_inotify->config_root = strdup("/home/utnso/workspace/tp-2019-1c-U-TN-Tecno/CONFIG/LFS.config");
 
-	pthread_create(&h_inotify, NULL, (void *)control_inotify, st_inotify);
+//	pthread_create(&h_inotify, NULL, (void *)control_inotify, st_inotify);
 
 	controlExistenciaLFS();
 

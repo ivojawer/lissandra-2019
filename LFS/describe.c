@@ -1,7 +1,7 @@
 #include "funcionesLFS.h"
 
-extern int socket_memoria;
 extern char* puntoDeMontaje;
+extern t_log* logger;
 t_list *lista_metadata_enviar;
 t_list *lista_describe;
 
@@ -73,7 +73,7 @@ void cargar_datos_tabla(char *tabla) {
 void mostrar_campos_describe(void *element) {
 //	struct describe * recv = malloc(sizeof(struct describe)); --malloc sacado
 	struct describe * recv  = (struct describe *) element;
-	printf(
+	log_info(logger,
 			"Tabla: %s\nConsistencia: %s\nParticiones: %d\nCompaction Time: %d\n\n",
 			recv->name, recv->consistency, recv->partitions,
 			recv->compaction_time);
@@ -154,7 +154,7 @@ void describe_particular(char *comando, int socket_cliente) {
 		struct_metadata->particiones = obtener_particiones_metadata(tabla);
 		char *consistency = strdup(obtener_consistencia_metadata(tabla));
 		struct_metadata->consistencia = stoint_consistencia(consistency);
-		printf(
+		log_info(logger,
 				"Nombre: %s\nConsistencia: %s\nParticiones: %d\nCompaction time: %d\n",
 				struct_metadata->nombre, consistency,
 				struct_metadata->particiones, struct_metadata->compactTime);
@@ -170,7 +170,7 @@ void describe_particular(char *comando, int socket_cliente) {
 		liberar_metadata_a_enviar(lista_metadata);
 
 	} else {
-		printf("La tabla no se encuentra en el sistema\n");
+		log_error(logger,"DESCRIBE %s: La tabla no existe");
 		if(socket_cliente != -1)
 		{
 			enviarIntConHeader(socket_cliente, TABLA_NO_EXISTE, RESPUESTA);
@@ -183,13 +183,26 @@ void describe_particular(char *comando, int socket_cliente) {
 }
 
 void rutina_describe(void* parametros) {
-	printf("Rutina DESCRIBE\n");
+
 
 	struct parametros *info = (struct parametros*) parametros;
 	char *comando = strdup(info->comando);
 	int socket_cliente = info->socket_cliente;
 
 	int tipo = tipo_describe(comando);
+
+	char* describeEnString = string_new();
+
+	string_append(&describeEnString,"DESCRIBE ");
+	string_append(&describeEnString,comando);
+
+	char*textoALoggear = string_new();
+	string_append(&textoALoggear,"INICIA ");
+	string_append(&textoALoggear,describeEnString);
+
+	loggearCyanClaro(logger,textoALoggear);
+	free(textoALoggear);
+
 	switch (tipo) {
 	case 0:
 		describe_full(socket_cliente);
@@ -200,4 +213,6 @@ void rutina_describe(void* parametros) {
 	default:
 		printf("Error en comando DESCRIBE.\n");
 	}
+
+	free(describeEnString);
 }

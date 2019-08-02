@@ -2,7 +2,6 @@
 
 extern t_log* logger;
 
-extern t_list* colaDeRequests;
 extern t_list* tablaGossiping;
 extern t_list* seedsConocidas;
 extern int nombreMemoria;
@@ -11,7 +10,6 @@ extern int socketKernel;
 extern sem_t sem_recepcionLFS;
 extern sem_t sem_LFSconectandose;
 extern sem_t sem_gossiping;
-extern sem_t requestsDisponibles;
 extern sem_t conexionMemoria;
 extern char* tablaSelect;
 extern char* dirConfig;
@@ -483,42 +481,42 @@ char* ponerComillas(char* string) {
 	return cadenaConComillas;
 }
 
-void enviarRegistroComoInsert(registro* registroAEnviar) {
-
-//	int lengthKey = snprintf( NULL, 0, "%d", registroAEnviar->key);
-//	char* keyEnString = malloc(lengthKey + 1);
-//	snprintf(keyEnString, lengthKey + 1, "%d", registroAEnviar->key);
-
-	int lengthTS = snprintf( NULL, 0, "%d", registroAEnviar->timestamp); //Cuando sea la hora habra que cambiar esto (probablemente por %llu)
-	char* tsEnString = malloc(lengthTS + 1);
-	snprintf(tsEnString, lengthTS + 1, "%d", registroAEnviar->timestamp);
-
-	request* insertAEnviar = malloc(sizeof(request));
-	insertAEnviar->requestEnInt = INSERT;
-
-	char* parametros = string_new();
-
-	char* tabla = "TablaRandom"; //TODO: No se especifica la tabla
-
-	string_append(&parametros, tabla);
-	string_append(&parametros, " ");
-	string_append(&parametros, string_itoa(registroAEnviar->key));
-	string_append(&parametros, " \"");
-	string_append(&parametros, registroAEnviar->value);
-	string_append(&parametros, "\" ");
-	string_append(&parametros, tsEnString);
-	free(tsEnString);
-
-	insertAEnviar->parametros = parametros;
-
-	requestConID* requestAEjecutar = malloc(sizeof(requestConID));
-
-	requestAEjecutar->laRequest = insertAEnviar;
-	requestAEjecutar->idKernel = 0;
-
-	ponerRequestEnColaDeEjecucion(requestAEjecutar);
-
-}
+//void enviarRegistroComoInsert(registro* registroAEnviar) {
+//
+////	int lengthKey = snprintf( NULL, 0, "%d", registroAEnviar->key);
+////	char* keyEnString = malloc(lengthKey + 1);
+////	snprintf(keyEnString, lengthKey + 1, "%d", registroAEnviar->key);
+//
+//	int lengthTS = snprintf( NULL, 0, "%d", registroAEnviar->timestamp); //Cuando sea la hora habra que cambiar esto (probablemente por %llu)
+//	char* tsEnString = malloc(lengthTS + 1);
+//	snprintf(tsEnString, lengthTS + 1, "%d", registroAEnviar->timestamp);
+//
+//	request* insertAEnviar = malloc(sizeof(request));
+//	insertAEnviar->requestEnInt = INSERT;
+//
+//	char* parametros = string_new();
+//
+//	char* tabla = "TablaRandom"; //TODO: No se especifica la tabla
+//
+//	string_append(&parametros, tabla);
+//	string_append(&parametros, " ");
+//	string_append(&parametros, string_itoa(registroAEnviar->key));
+//	string_append(&parametros, " \"");
+//	string_append(&parametros, registroAEnviar->value);
+//	string_append(&parametros, "\" ");
+//	string_append(&parametros, tsEnString);
+//	free(tsEnString);
+//
+//	insertAEnviar->parametros = parametros;
+//
+//	requestConID* requestAEjecutar = malloc(sizeof(requestConID));
+//
+//	requestAEjecutar->laRequest = insertAEnviar;
+//	requestAEjecutar->idKernel = 0;
+//
+//	ponerRequestEnColaDeEjecucion(requestAEjecutar);
+//
+//}
 
 int memoriaYaEstaConectada(int nombreMemoria) { //Sincronizar por afuera
 
