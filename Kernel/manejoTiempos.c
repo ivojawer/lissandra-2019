@@ -10,7 +10,7 @@ void insertarTiempo(time_t tiempoInicial, time_t tiempoFinal, int request) {
 
 	tiempoDeOperacion* tiempoOperacion = malloc(sizeof(tiempoOperacion));
 
-	tiempoOperacion->duracion = tiempoFinal - tiempoInicial;
+	tiempoOperacion->duracion = difftime(tiempoFinal,tiempoInicial);
 
 	tiempoOperacion->tiempoInicio = tiempoInicial;
 
@@ -57,13 +57,13 @@ t_list* filterCasero_esMasNuevoQue30Segundos(t_list* tiempos) {
 
 }
 
-int promedioDeTiemposDeOperaciones(t_list* tiempos) {
+float promedioDeTiemposDeOperaciones(t_list* tiempos) {
 
 	if (list_size(tiempos) == 0) {
 		return -1;
 	}
 
-	int sumaTotalTiempos = 0;
+	float sumaTotalTiempos = 0;
 
 	for (int i = 0; i < list_size(tiempos); i++) {
 		tiempoDeOperacion* tiempoOperacion = list_get(tiempos, i); //Hay que liberar esto?
@@ -71,7 +71,7 @@ int promedioDeTiemposDeOperaciones(t_list* tiempos) {
 		sumaTotalTiempos += tiempoOperacion->duracion;
 	}
 
-	int promedio = sumaTotalTiempos / list_size(tiempos);
+	float promedio = sumaTotalTiempos / list_size(tiempos);
 
 	return promedio;
 }

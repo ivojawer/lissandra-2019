@@ -84,6 +84,11 @@ void journal() {
 
 	sem_wait(&sem_borradoMemoria);
 
+	sem_wait(&sem_operacionesTotales);
+	operacionesTotales++;
+	sem_post(&sem_operacionesTotales);
+
+
 	for (int i = 0; i < list_size(memorias); i++) {
 		memoriaEnLista* unaMemoria = list_get(memorias, i);
 
@@ -91,8 +96,11 @@ void journal() {
 				{
 
 			if (unaMemoria->estaViva) {
-				unaMemoria->estadisticas.operacionesTotalesEnMemoria++;
 				enviarInt(unaMemoria->socket, OP_JOURNAL);
+				sem_wait(&sem_operacionesTotales);
+				unaMemoria->estadisticas.operacionesTotalesEnMemoria++;
+				sem_post(&sem_operacionesTotales);
+
 			}
 
 		}
@@ -113,9 +121,9 @@ int ejecutarRequest(request* requestAEjecutar, script* elScript) {
 	sleep(tiempoDeSleep); //TODO: Marca, el sleep esta al principio de la ejecucion
 
 	char* textoALoggear = string_new();
-	string_append(&textoALoggear,"Se va a ejecutar la request ");
-	string_append(&textoALoggear,requestStructAString(requestAEjecutar));
-	loggearCyanClaro(logger,textoALoggear);
+	string_append(&textoALoggear, "Se va a ejecutar la request ");
+	string_append(&textoALoggear, requestStructAString(requestAEjecutar));
+	loggearCyanClaro(logger, textoALoggear);
 	free(textoALoggear);
 
 	switch (requestAEjecutar->requestEnInt) {
@@ -152,10 +160,6 @@ int ejecutarRequest(request* requestAEjecutar, script* elScript) {
 			log_error(logger, "No se encontro la tabla %s.", tabla);
 			free(tabla);
 			return ERROR;
-		}
-
-		if (requestAEjecutar->requestEnInt == DROP) {
-			removerUnaMetadata(tabla);
 		}
 		free(tabla);
 
@@ -208,7 +212,11 @@ int ejecutarRequest(request* requestAEjecutar, script* elScript) {
 	enviarRequestConHeaderEId(laMemoria->socket, requestAEjecutar, REQUEST,
 			elScript->idScript);
 
+	sem_wait(&sem_operacionesTotales);
+	operacionesTotales++;
 	laMemoria->estadisticas.operacionesTotalesEnMemoria++;
+	sem_post(&sem_operacionesTotales);
+
 
 	list_add(laMemoria->scriptsEsperando, &elScript->idScript);
 
@@ -223,12 +231,16 @@ int ejecutarRequest(request* requestAEjecutar, script* elScript) {
 	int respuesta = manejarRespuestaDeMemoria(elScript, requestAEjecutar,
 			memoria);
 
+	respuesta = TODO_BIEN; //Si se llego a mandar la request, entonces no puede cortar el script
+
+	if (requestAEjecutar->requestEnInt == DROP) {
+		removerUnaMetadata(requestAEjecutar->parametros);
+
+	}
+
 	time_t tiempoFinal = time(NULL);
 
-	if (respuesta == TODO_BIEN) {
-		insertarTiempo(tiempoInicial, tiempoFinal,
-				requestAEjecutar->requestEnInt);
-	}
+	insertarTiempo(tiempoInicial, tiempoFinal, requestAEjecutar->requestEnInt);
 
 	return respuesta;
 }
@@ -240,8 +252,8 @@ void metrics(int loggear) {
 	t_list* tiemposInsertAux = filterCasero_esMasNuevoQue30Segundos(
 			tiemposInsert);
 
-	int promedioSelect = promedioDeTiemposDeOperaciones(tiemposSelectAux);
-	int promedioInsert = promedioDeTiemposDeOperaciones(tiemposInsertAux);
+	float promedioSelect = promedioDeTiemposDeOperaciones(tiemposSelectAux);
+	float promedioInsert = promedioDeTiemposDeOperaciones(tiemposInsertAux);
 
 	if (loggear) {
 
@@ -249,13 +261,13 @@ void metrics(int loggear) {
 		if (promedioSelect == -1) {
 			log_info(loggerSigiloso, "Read latency: ---");
 		} else {
-			log_info(loggerSigiloso, "Read latency: %i", promedioSelect);
+			log_info(loggerSigiloso, "Read latency: %f", promedioSelect);
 		}
 
 		if (promedioInsert == -1) {
 			log_info(loggerSigiloso, "Write latency: ---");
 		} else {
-			log_info(loggerSigiloso, "Write latency: %i", promedioInsert);
+			log_info(loggerSigiloso, "Write latency: %f", promedioInsert);
 		}
 
 		log_info(loggerSigiloso, "Reads: %i", list_size(tiemposSelectAux));
@@ -290,13 +302,13 @@ void metrics(int loggear) {
 		if (promedioSelect == -1) {
 			printf("\nRead latency: ---");
 		} else {
-			printf("\nRead latency: %i", promedioSelect);
+			printf("\nRead latency: %f", promedioSelect);
 		}
 
 		if (promedioInsert == -1) {
 			printf("\nWrite latency: ---");
 		} else {
-			printf("\nWrite latency: %i", promedioInsert);
+			printf("\nWrite latency: %f", promedioInsert);
 		}
 
 		printf("\nReads: %i", list_size(tiemposSelectAux));
@@ -414,9 +426,15 @@ int add(char* chocloDeCosas) {
 
 			memoriaEnLista* unaMemoria = list_get(memorias, i);
 
-			if (unaMemoria->consistencias[SHC] == SHC && unaMemoria->estaViva) {
-				unaMemoria->estadisticas.operacionesTotalesEnMemoria++;
+			if (unaMemoria->estaViva && unaMemoria->consistencias[SHC] == SHC) {
+
 				enviarInt(unaMemoria->socket, OP_JOURNAL);
+
+				sem_wait(&sem_operacionesTotales);
+				unaMemoria->estadisticas.operacionesTotalesEnMemoria++;
+				operacionesTotales++;
+				sem_post(&sem_operacionesTotales);
+
 
 			}
 
@@ -433,7 +451,6 @@ int add(char* chocloDeCosas) {
 			consistenciaYMemoriaEnArray[3]);
 
 	liberarArrayDeStrings(consistenciaYMemoriaEnArray);
-
 
 	sem_post(&sem_borradoMemoria);
 

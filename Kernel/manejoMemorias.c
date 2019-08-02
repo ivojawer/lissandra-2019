@@ -33,7 +33,6 @@ int manejarRespuestaDeMemoria(script* elScript, request* laRequest, int memoria)
 		}
 	}
 
-
 	int respuesta;
 	memcpy(&respuesta, elScript->resultadoDeEnvio, sizeof(int));
 
@@ -42,7 +41,7 @@ int manejarRespuestaDeMemoria(script* elScript, request* laRequest, int memoria)
 	case NO_EXISTE:
 	case TABLA_NO_EXISTE: {
 
-		log_error(errores,requestStructAString(laRequest));
+		log_error(errores, requestStructAString(laRequest));
 
 		agregarOperacionFallidaAMemoria(memoria, laRequest->requestEnInt);
 
@@ -65,7 +64,7 @@ int manejarRespuestaDeMemoria(script* elScript, request* laRequest, int memoria)
 		loggearAzulClaro(logger, textoALoggear);
 		free(textoALoggear);
 
-		journalAUnaMemoria(memoria);
+		journalAUnaMemoria(memoria); //TODO: Marca, el JOURNAL intermedio cuenta como una operacion mas
 
 		sem_wait(&sem_borradoMemoria);
 
@@ -83,12 +82,9 @@ int manejarRespuestaDeMemoria(script* elScript, request* laRequest, int memoria)
 		enviarRequestConHeaderEId(laMemoria->socket, laRequest, REQUEST,
 				elScript->idScript);
 
-		//TODO: Marca, el JOURNAL intermedio cuenta como una operacion mas (Esta suma de operacion es el JOURNAL, no de la request enviada).
-		sem_wait(&sem_operacionesTotales);
-		operacionesTotales++;
-		sem_post(&sem_operacionesTotales);
 
-		laMemoria->estadisticas.operacionesTotalesEnMemoria++;
+
+//		laMemoria->estadisticas.operacionesTotalesEnMemoria++;
 
 		list_add(laMemoria->scriptsEsperando, &elScript->idScript);
 
@@ -187,11 +183,8 @@ int manejarRespuestaDeMemoria(script* elScript, request* laRequest, int memoria)
 	if (elScript->resultadoDeEnvio != NULL) {
 		free(elScript->resultadoDeEnvio);
 	}
-	if (respuesta == ERROR) { //TODO: Marca, si se hace una operacion sobre una tabla que ya no existe, no se corta
-		return ERROR;
-	} else {
-		return TODO_BIEN; //Si la respuesta fuese NO_EXISTE, no se corta la ejecucion
-	}
+
+	return respuesta; //Esto es para el caso recursivo del INSERT, despues se toma la respuesta como TODO_BIEN porque nunca va a cortar la ejecucion
 
 }
 
@@ -594,8 +587,12 @@ void journalAUnaMemoria(int numeroMemoria) {
 				{
 
 			if (unaMemoria->estaViva) {
-				unaMemoria->estadisticas.operacionesTotalesEnMemoria++;
 				enviarInt(unaMemoria->socket, OP_JOURNAL);
+				sem_wait(&sem_operacionesTotales);
+				operacionesTotales++;
+				unaMemoria->estadisticas.operacionesTotalesEnMemoria++;
+				sem_post(&sem_operacionesTotales);
+
 			}
 
 		}

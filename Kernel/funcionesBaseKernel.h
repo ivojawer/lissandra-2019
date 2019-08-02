@@ -61,7 +61,6 @@ typedef struct {
 	sem_t sem_cambioScriptsEsperando;
 } memoriaEnLista;
 
-void journal();
 char* leerLinea(char* direccion, int lineaALeer);
 int removerScriptDeLista(int id, t_list* lista);
 script* encontrarScriptEnLista(int id, t_list* lista);
@@ -76,7 +75,7 @@ int crearArchivoParaRequest(script* script, request* requestAArchivo);
 int moverScript(int scriptID, t_list* listaOrigen, t_list* listaDestino);
 void mostrarListaScripts(t_list* lista);
 void limpiarListasTiempos();
-int promedioDeTiemposDeOperaciones(t_list* tiempos);
+float promedioDeTiemposDeOperaciones(t_list* tiempos);
 int esMasNuevoQue30Segundos(tiempoDeOperacion tiempoOperacion);
 void insertarTiempo(time_t tiempoInicial, time_t tiempoFinal, int request);
 t_list* filterCasero_esMasNuevoQue30Segundos(t_list* tiempos);
@@ -110,5 +109,6 @@ void agregarSelectCompletoAMemoria(int numeroMemoria);
 void journalAUnaMemoria(int numeroMemoria);
 void removerUnaMetadata(char* nombreMetadata);
 void removerMetadataDeUnRequest(request* unaRequest);
+void agregarOperacionFallidaAMemoria(int numeroMemoria, int operacion);
 
 #endif /* FUNCIONESBASEKERNEL_H_ */

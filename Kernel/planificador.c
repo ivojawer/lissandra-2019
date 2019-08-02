@@ -3,13 +3,12 @@
 extern sem_t sem_disponibleColaREADY;
 extern sem_t sem_multiprocesamiento;
 extern sem_t sem_refreshConfig;
-extern sem_t sem_operacionesTotales;
 extern t_list* colaREADY;
 extern t_list* listaEXEC;
 extern t_list* listaEXIT;
 extern t_log* logger;
 extern int quantum;
-extern int operacionesTotales;
+
 void planificadorREADYAEXEC() {
 
 	while (1) {
@@ -113,10 +112,6 @@ void planificadorEXEC(int idScript) {
 		}
 
 		int resultado = ejecutarRequest(requestAEjecutar, scriptEXEC);
-
-		sem_wait(&sem_operacionesTotales);
-		operacionesTotales++;
-		sem_post(&sem_operacionesTotales);
 
 		if (resultado == ERROR) {
 
