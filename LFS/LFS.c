@@ -24,6 +24,13 @@ int tamanioBloques;
 
 int main() {
 
+
+//	sem_t vec_sem[4];
+//	int in;
+//	for(in = 0; in < 4; in++){
+//		sem_init(&vec_sem[in], 1, 0);
+//	}
+
 	logger = log_create("LFS.log", "LFS", 1, 0);
 	dump_logger = log_create("Dump.log", "LFS", 0, 0);
 	compact_logger = log_create("Compactacion.log", "LFS", 0, 0);

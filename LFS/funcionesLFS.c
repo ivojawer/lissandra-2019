@@ -131,7 +131,7 @@ void iniciar_variables(){
 //	struct inotify *st_inotify = malloc(sizeof(struct inotify));
 
 	sem_init(&dump_semaphore, 1, 1);
-	sem_init(&op_control_semaphore, 1, 1);
+//	sem_init(&op_control_semaphore, 1, 1);
 	sem_init(&compactar_semaphore, 1, 1);
 	sem_init(&sem_refreshConfig,0,1);
 
@@ -536,6 +536,145 @@ void crear_bitarray(int nr_blocks){
 }
 
 
+void cargar_metadata_tablas()
+{
+	struct dirent *sd;
+	char* tablas = string_new();
+	string_append(&tablas, puntoDeMontaje);
+	string_append(&tablas, "Tablas/");
+	DIR* dir = opendir(tablas);
+	while ((sd = readdir(dir)) != NULL) {
+		if ((strcmp((sd->d_name), ".") != 0) &&
+			(strcmp((sd->d_name), "..") != 0)){
+			agregar_metadata_tabla(sd->d_name, obtener_consistencia_metadata(sd->d_name),
+					obtener_particiones_metadata(sd->d_name), obtener_tiempo_compactacion_metadata(sd->d_name));
+		}
+	}
+	if(dir != NULL)
+		closedir(dir);
+	free(tablas);
+}
+
+
+void compactacion_tablas_existentes()
+{
+		struct dirent *sd;
+		char* tablas = string_new();
+		string_append(&tablas, puntoDeMontaje);
+		string_append(&tablas, "Tablas");
+		DIR* dir = opendir(tablas);
+		while ((sd = readdir(dir)) != NULL) {
+			if ((strcmp((sd->d_name), ".") != 0) &&
+				(strcmp((sd->d_name), "..") != 0)){
+				crear_hilo_compactacion(sd->d_name,
+									obtener_tiempo_compactacion_metadata(sd->d_name));
+			}
+		}
+		if(dir != NULL)
+			closedir(dir);
+		free(tablas);
+}
+
+
+int contar_archivos_con_extension(char *root, char* extension) {
+	int cont = 0;
+	DIR * dir;
+	char *root_2 = malloc(strlen(root)*sizeof(char)+1);
+	strcpy(root_2, root);
+	dir = opendir(root_2);
+
+	struct dirent *entrada;
+	char **entrada_aux = NULL;
+	while ((entrada = readdir(dir)) != NULL) {
+		entrada_aux = string_split(entrada->d_name, ".");
+		if (entrada_aux[0] != NULL) {
+			if (strcmp(entrada_aux[1], extension) == 0) {
+				cont++;
+			}
+		}
+	}
+	if(dir != NULL)
+		closedir(dir);
+	free(root_2);
+	return cont;
+}
+
+int nr_particion_key(uint16_t key, int nr_particiones_metadata)
+{
+	return key%nr_particiones_metadata;
+}
+
+
+int controlar_bloques_disponibles(int cantArchivos)
+{
+	int i;
+	int cont = 0;
+	for (i = 0; i < cantidadBloques; i++){
+		if (bitarray_test_bit(bitarray, i) == 0)
+			cont++;
+	}
+	if(cont >= cantArchivos)
+		return 1;
+	return 0;
+}
+
+void desmarcar_bloque_bitmap(t_bloque *elemento) {
+
+	int block = atoi(elemento->name);
+	bitarray_clean_bit(bitarray, block);
+	guardar_bitarray(block);
+
+	char* block_root = string_new();
+	string_append(&block_root,puntoDeMontaje);
+	string_append(&block_root,"Bloques/bloque");
+	string_append(&block_root,string_itoa(block));
+	string_append(&block_root,".bin");
+	FILE *fp;
+	fp = fopen(block_root, "w+");
+	fclose(fp);
+
+	free(block_root);
+
+}
+
+t_bloque *crear_bloque_buscar(char *bloque)
+{
+	   t_bloque *new = malloc(sizeof(t_bloque));
+	   new->name=strdup(bloque);
+	   return new;
+}
+
+void bloque_destroy(t_bloque *self) {
+    free(self->name);
+    free(self);
+}
+
+void refreshConfig()
+{
+	char* direccionConfig = string_duplicate("/home/utnso/workspace/tp-2019-1c-U-TN-Tecno/CONFIG/LFS.config");
+
+	while (1) {
+		esperarModificacionDeArchivo(direccionConfig);
+
+		sem_wait(&sem_refreshConfig);
+
+		t_config* config = config_create(direccionConfig);
+
+		retardo = config_get_int_value(config, "RETARDO");
+		tiempoDump = config_get_int_value(config, "TIEMPO_DUMP");
+
+		config_destroy(config);
+
+		sem_post(&sem_refreshConfig);
+
+//		log_info(logger, "hice algo");
+	}
+}
+
+/*
+ * ------------------------VIEJO DISEÑO SINCRO--------------------------------------------
+ */
+
 void destroy_op_control(struct op_control *self)
 {
 	free(self->tabla);
@@ -562,28 +701,6 @@ void crear_control_op(char *tabla)
 	list_add(op_control_list, s_op_control);
 }
 
-
-void cargar_metadata_tablas()
-{
-	struct dirent *sd;
-	char* tablas = string_new();
-	string_append(&tablas, puntoDeMontaje);
-	string_append(&tablas, "Tablas/");
-	DIR* dir = opendir(tablas);
-	while ((sd = readdir(dir)) != NULL) {
-		if ((strcmp((sd->d_name), ".") != 0) &&
-			(strcmp((sd->d_name), "..") != 0)){
-			agregar_metadata_tabla(sd->d_name, obtener_consistencia_metadata(sd->d_name),
-					obtener_particiones_metadata(sd->d_name), obtener_tiempo_compactacion_metadata(sd->d_name));
-		}
-	}
-	if(dir != NULL)
-		closedir(dir);
-	free(tablas);
-}
-
-
-
 void cargar_op_control_tablas()
 {
 	struct dirent *sd;
@@ -601,30 +718,6 @@ void cargar_op_control_tablas()
 		closedir(dir);
 	free(tablas);
 }
-
-
-
-
-
-void compactacion_tablas_existentes()
-{
-		struct dirent *sd;
-		char* tablas = string_new();
-		string_append(&tablas, puntoDeMontaje);
-		string_append(&tablas, "Tablas");
-		DIR* dir = opendir(tablas);
-		while ((sd = readdir(dir)) != NULL) {
-			if ((strcmp((sd->d_name), ".") != 0) &&
-				(strcmp((sd->d_name), "..") != 0)){
-				crear_hilo_compactacion(sd->d_name,
-									obtener_tiempo_compactacion_metadata(sd->d_name));
-			}
-		}
-		if(dir != NULL)
-			closedir(dir);
-		free(tablas);
-}
-
 
 
 bool comparar_nombre_op_control(void *elemento, char *tabla)
@@ -750,99 +843,4 @@ void modificar_op_control(char *tabla, int mod_flag)
 	}
 }
 
-int contar_archivos_con_extension(char *root, char* extension) {
-	int cont = 0;
-	DIR * dir;
-	char *root_2 = malloc(strlen(root)*sizeof(char)+1);
-	strcpy(root_2, root);
-	dir = opendir(root_2);
 
-	struct dirent *entrada;
-	char **entrada_aux = NULL;
-	while ((entrada = readdir(dir)) != NULL) {
-		entrada_aux = string_split(entrada->d_name, ".");
-		if (entrada_aux[0] != NULL) {
-			if (strcmp(entrada_aux[1], extension) == 0) {
-				cont++;
-			}
-		}
-	}
-	if(dir != NULL)
-		closedir(dir);
-	free(root_2);
-	return cont;
-}
-
-int nr_particion_key(uint16_t key, int nr_particiones_metadata)
-{
-	return key%nr_particiones_metadata;
-}
-
-
-int controlar_bloques_disponibles(int cantArchivos)
-{
-	int i;
-	int cont = 0;
-	for (i = 0; i < cantidadBloques; i++){
-		if (bitarray_test_bit(bitarray, i) == 0)
-			cont++;
-	}
-	if(cont >= cantArchivos)
-		return 1;
-	return 0;
-}
-
-void desmarcar_bloque_bitmap(t_bloque *elemento) {
-
-	int block = atoi(elemento->name);
-	bitarray_clean_bit(bitarray, block);
-	guardar_bitarray(block);
-
-	char* block_root = string_new();
-	string_append(&block_root,puntoDeMontaje);
-	string_append(&block_root,"Bloques/bloque");
-	string_append(&block_root,string_itoa(block));
-	string_append(&block_root,".bin");
-	FILE *fp;
-	fp = fopen(block_root, "w+");
-	fclose(fp);
-
-	free(block_root);
-
-}
-
-t_bloque *crear_bloque_buscar(char *bloque)
-{
-	   t_bloque *new = malloc(sizeof(t_bloque));
-	   new->name=strdup(bloque);
-	   return new;
-}
-
-void bloque_destroy(t_bloque *self) {
-    free(self->name);
-    free(self);
-}
-
-void refreshConfig()
-{
-	char* direccionConfig = string_duplicate("/home/utnso/workspace/tp-2019-1c-U-TN-Tecno/CONFIG/LFS.config");
-
-	while (1) {
-		esperarModificacionDeArchivo(direccionConfig);
-
-		sem_wait(&sem_refreshConfig);
-
-		t_config* config = config_create(direccionConfig);
-
-		retardo = config_get_int_value(config, "RETARDO");
-		tiempoDump = config_get_int_value(config, "TIEMPO_DUMP");
-
-		config_destroy(config);
-
-		sem_post(&sem_refreshConfig);
-
-//		log_info(logger, "hice algo");
-	}
-
-
-}

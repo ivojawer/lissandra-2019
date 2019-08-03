@@ -127,8 +127,8 @@ void rutina_insert(void* parametros) {
 
 	uint16_t key = get_key(comando);
 
-	sem_wait(&dump_semaphore);
-	sem_wait(&compactar_semaphore);
+//	sem_wait(&dump_semaphore);
+//	sem_wait(&compactar_semaphore);
 
 	char* value = get_value(comando);
 
@@ -153,13 +153,15 @@ void rutina_insert(void* parametros) {
 		if (socket_cliente != -1) {
 			enviarIntConHeader(socket_cliente, ERROR, RESPUESTA);
 		}
-		sem_post(&dump_semaphore);
-		sem_post(&compactar_semaphore);
+//		sem_post(&dump_semaphore);
+//		sem_post(&compactar_semaphore);
 		return;
 	} else {
-//		modificar_op_control(tabla, 7);
 
 		unsigned long timestamp = get_timestamp(comando);
+
+		sem_wait(&dump_semaphore);
+		sem_wait(&compactar_semaphore);
 
 		if (existe_tabla(tabla)) {
 			int nr_particiones_metadata = obtener_particiones_metadata(tabla);
@@ -205,8 +207,8 @@ void rutina_insert(void* parametros) {
 				loggearVerdeClaro(logger, textoALoggear);
 				free(textoALoggear);
 //				modificar_op_control(tabla, 8);
-//				sem_post(&dump_semaphore);
-//				sem_post(&compactar_semaphore);
+				sem_post(&dump_semaphore);
+				sem_post(&compactar_semaphore);
 
 				if(!lista_vacia(tabla_encontrada)) {
 					list_destroy(tabla_encontrada);
@@ -223,18 +225,16 @@ void rutina_insert(void* parametros) {
 		} else {
 			log_error(logger,"%s: No se encontro la tabla",insertEnString);
 //			modificar_op_control(tabla, 8);
-//			sem_post(&dump_semaphore);
-//			sem_post(&compactar_semaphore);
-
-
+			sem_post(&dump_semaphore);
+			sem_post(&compactar_semaphore);
 			if (socket_cliente != -1) {
 				enviarIntConHeader(socket_cliente, TABLA_NO_EXISTE, RESPUESTA);
 			}
 		}
 	}
 //	liberar_tabla_encontrada(tabla_encontrada);
-	sem_post(&dump_semaphore);
-	sem_post(&compactar_semaphore);
+//	sem_post(&dump_semaphore);
+//	sem_post(&compactar_semaphore);
 	free(insertEnString);
 	free(comando);
 }
