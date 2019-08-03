@@ -270,6 +270,7 @@ void liberar_lista_bloques(t_list *lista_bloques_tmp) {
 
 void dump() {
 	err_flag = 0;
+	sem_wait(&dump_semaphore);
 	if(!lista_vacia(memtable)){
 		int i, j, k;
 		int table_change;
@@ -327,10 +328,13 @@ void dump() {
 				}
 			}
 		}
+		sem_post(&dump_semaphore);
 		if(siga_siga == 1){
 			guardar_bloques_metadata(lista_bloques_tmp);
 			liberar_lista_bloques(lista_bloques_tmp);
 		}
+	}else {
+		sem_post(&dump_semaphore);
 	}
 }
 
@@ -347,11 +351,11 @@ void ejecutar_dump()
 		sleep(sleepDump);
 		loggearAmarillo(logger, "Inicio Dump");
 
-		sem_wait(&dump_semaphore);
+//		sem_wait(&dump_semaphore);
 //		sem_wait(&compactar_semaphore);
 		dump();
 //		sem_post(&compactar_semaphore);
-		sem_post(&dump_semaphore);
+//		sem_post(&dump_semaphore);
 
 		loggearAmarillo(logger, "Fin Dump");
 //		sem_post(&refresh_config);

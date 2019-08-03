@@ -467,6 +467,10 @@ t_registro* buscar_en_todos_lados(char *tabla, uint16_t key,
 	buscar_bloques_particion(tabla, particion_buscar, 2, bloques_buscar); //Busca .tmpc
 	cargar_timestamp_value(bloques_buscar, timestamp_valor, key); //Lee en los bloques y carga los pares en lista "timestamp_valor"
 
+
+	sem_post(&compactar_semaphore);
+	sem_post(&dump_semaphore);
+
 	t_list *registros_encontrados = filtrar_registros_particion(
 			filtrar_particion_tabla(filtrar_tabla_memtable(tabla),
 					particion_buscar), key); /*Busca en la Memtable.
@@ -550,8 +554,8 @@ void rutina_select(void* parametros) {
 
 		t_registro* resultadoBusqueda = buscar_en_todos_lados(tabla, key, particion_buscar);
 
-		sem_post(&compactar_semaphore);
-		sem_post(&dump_semaphore);
+//		sem_post(&compactar_semaphore);
+//		sem_post(&dump_semaphore);
 
 		if(resultadoBusqueda != NULL)
 		{
