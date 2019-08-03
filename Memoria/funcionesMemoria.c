@@ -235,6 +235,7 @@ pagina* nuevoDato(t_list* tablaPaginas, int flagModificado, uint16_t key,unsigne
 		nuevaPagina->flagModificado = flagModificado;
 		asignoPaginaEnMarco(key, timestamp, value,getMarcoFromIndex(nroMarcoAlocar));
 		list_add(tablaPaginas, nuevaPagina);
+		printf("se agrego pagina a tabla\n");
 	}
 	return nuevaPagina;
 }
@@ -454,7 +455,6 @@ void insert(char* parametros) {
 
 }
 
-
 //si, esto es literalmente una copia de lo que esta arriba solo que sin las respuestas, con el timestamp por parametro Y LO AGREGA SIN EL FLAG MODIFICADO.
 void insertInterno(uint16_t key, char* value, char* tabla, unsigned long long timestamp){
 	segmento* tablaEncontrada = encuentroTablaPorNombre(tabla);
@@ -465,18 +465,21 @@ void insertInterno(uint16_t key, char* value, char* tabla, unsigned long long ti
 					timestamp, value);
 			if (nuevaPagina->nroMarco == MEM_LLENA) {
 				log_error(logger, "MEMORIA FULL");
+				loggearCyan(logger,"Paso a ejecutar JOURNAL");
+				journal();
+				insertInterno(key,value,tabla,timestamp);
 				return;
 			} else {
-				loggearVerde(logger, "Se pudo hacer el INSERT");
+				loggearVerde(logger, "Se pudo guardar el dato");
 				return;
 			}
 
 		} else {
 			pagina* datoEncontrado = encuentroDatoPorKey(tablaEncontrada, key);
 			if (datoEncontrado != NULL) {
-				log_info(logger, "Se va a actualizar el dato ya existente");
+				log_info(logger, "Se va a actualizar la key ya existente");
 				actualizoDato(datoEncontrado, value, timestamp);
-				loggearVerde(logger, "Se pudo hacer el INSERT");
+				loggearVerde(logger, "Se pudo guardar el dato");
 				return;
 			} else {
 				log_info(logger, "Se va a crear el dato");
@@ -484,15 +487,17 @@ void insertInterno(uint16_t key, char* value, char* tabla, unsigned long long ti
 				if (nuevaPagina->nroMarco == MEM_LLENA) {
 					log_error(logger, "MEMORIA FULL");
 					free(nuevaPagina);
+					loggearCyan(logger,"Paso a ejecutar JOURNAL");
+					journal();
+					insertInterno(key,value,tabla,timestamp);
 					return;
 				} else {
-					loggearVerde(logger, "Se pudo hacer el INSERT");
+					loggearVerde(logger, "Se pudo guardar el dato");
 					return;
 				}
 
 			}
 		}
-
 }
 
 void drop(char* parametro) {
