@@ -110,5 +110,6 @@ void journalAUnaMemoria(int numeroMemoria);
 void removerUnaMetadata(char* nombreMetadata);
 void removerMetadataDeUnRequest(request* unaRequest);
 void agregarOperacionFallidaAMemoria(int numeroMemoria, int operacion);
+void sobreescribirMetadata(metadataTablaLFS* unaMetadata);
 
 #endif /* FUNCIONESBASEKERNEL_H_ */
