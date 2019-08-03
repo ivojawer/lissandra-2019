@@ -464,7 +464,7 @@ t_registro* buscar_en_todos_lados(char *tabla, uint16_t key,
 	t_list *timestamp_valor = list_create();
 	buscar_bloques_particion(tabla, particion_buscar, 0, bloques_buscar); //Busca particion.bin
 	buscar_bloques_particion(tabla, particion_buscar, 1, bloques_buscar); //Busca .tmp
-//	buscar_bloques_particion(tabla, particion_buscar, 2, bloques_buscar); //Busca .tmpc
+	buscar_bloques_particion(tabla, particion_buscar, 2, bloques_buscar); //Busca .tmpc
 	cargar_timestamp_value(bloques_buscar, timestamp_valor, key); //Lee en los bloques y carga los pares en lista "timestamp_valor"
 
 	t_list *registros_encontrados = filtrar_registros_particion(
@@ -548,8 +548,10 @@ void rutina_select(void* parametros) {
 		int nr_particiones_metadata = obtener_particiones_metadata(tabla);
 		int particion_buscar = nr_particion_key(key, nr_particiones_metadata);
 
-//		t_registro* resultadoBusqueda = malloc(sizeof(t_registro)); -malloc sacado
 		t_registro* resultadoBusqueda = buscar_en_todos_lados(tabla, key, particion_buscar);
+
+		sem_post(&compactar_semaphore);
+		sem_post(&dump_semaphore);
 
 		if(resultadoBusqueda != NULL)
 		{
@@ -577,13 +579,14 @@ void rutina_select(void* parametros) {
 		}
 	} else {
 		log_error(logger,"%s: La tabla no existe",selectEnString);
+		sem_post(&compactar_semaphore);
+		sem_post(&dump_semaphore);
 		if (socket_cliente != -1) {
 //			log_info(logger,"Enviando ERROR a la memoria");
 			enviarIntConHeader(socket_cliente, TABLA_NO_EXISTE, RESPUESTA);
 		}
 	}
-//	modificar_op_control(tabla, 2);
-	sem_post(&compactar_semaphore);
-	sem_post(&dump_semaphore);
+//	sem_post(&compactar_semaphore);
+//	sem_post(&dump_semaphore);
 	free(selectEnString);
 }
