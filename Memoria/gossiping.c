@@ -164,7 +164,7 @@ int seedNoEstaConectada(seed* unaSeed) {
 
 void tratarDeConectarseASeeds() {
 
-	mostrarSeeds();
+//	mostrarSeeds();
 
 	t_list* seedsDesconectadas = list_filter(seedsConocidas,
 			(void*) seedNoEstaConectada);
@@ -172,8 +172,8 @@ void tratarDeConectarseASeeds() {
 	while (list_size(seedsDesconectadas) != 0) {
 		seed* seedAConectarse = list_remove(seedsDesconectadas, 0);
 		if (seedAConectarse->ip != NULL) {
-			log_info(logger, "Me estoy tratando de conectar a %s:%i",
-					seedAConectarse->ip, seedAConectarse->puerto);
+//			log_info(logger, "Me estoy tratando de conectar a %s:%i",
+//					seedAConectarse->ip, seedAConectarse->puerto);
 			conectarseAOtraMemoria(seedAConectarse);
 		}
 	}
