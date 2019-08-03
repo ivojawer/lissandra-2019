@@ -469,12 +469,16 @@ t_registro* buscar_en_todos_lados(char *tabla, uint16_t key,
 
 
 	sem_post(&compactar_semaphore);
-	sem_post(&dump_semaphore);
+
 
 	t_list *registros_encontrados = filtrar_registros_particion(
 			filtrar_particion_tabla(filtrar_tabla_memtable(tabla),
 					particion_buscar), key); /*Busca en la Memtable.
 			 Devuelve lista de registros que cumplen con la key*/
+
+	sem_post(&dump_semaphore);
+
+
 	int cant_registros = list_size(registros_encontrados);
 	int i;
 	if (cant_registros != 0) {

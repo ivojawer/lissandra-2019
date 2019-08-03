@@ -167,11 +167,13 @@ void compactar(char* tabla){
 		return;
 	}
 
-	sem_post(&compactar_semaphore);
+
 
 	escribirEnBloquesTabla(particionesEnChar,tabla);
 
 	destruirTmpc(tabla,cantidadTemporales);
+
+	sem_post(&compactar_semaphore);
 
 	void destruir_lista(void *elemento) {
 		return funcionDestroyerLista((t_list *)elemento);

@@ -88,7 +88,6 @@ void journal() {
 	operacionesTotales++;
 	sem_post(&sem_operacionesTotales);
 
-
 	for (int i = 0; i < list_size(memorias); i++) {
 		memoriaEnLista* unaMemoria = list_get(memorias, i);
 
@@ -165,6 +164,23 @@ int ejecutarRequest(request* requestAEjecutar, script* elScript) {
 
 	}
 
+	if (requestAEjecutar->requestEnInt == CREATE) {
+		char** parametros = string_split(requestAEjecutar->parametros, " ");
+		char* tabla = string_duplicate(parametros[0]);
+
+		liberarArrayDeStrings(parametros);
+
+		if (existeTabla(tabla)){
+
+			log_error(logger, "La tabla %s ya existe.", tabla);
+			free(tabla);
+			return TODO_BIEN;
+		}
+
+		free(tabla);
+
+	}
+
 	sem_wait(&sem_borradoMemoria);
 
 	if (unaMemoriaCualquiera() == -1) //No hay memorias
@@ -216,7 +232,6 @@ int ejecutarRequest(request* requestAEjecutar, script* elScript) {
 	operacionesTotales++;
 	laMemoria->estadisticas.operacionesTotalesEnMemoria++;
 	sem_post(&sem_operacionesTotales);
-
 
 	list_add(laMemoria->scriptsEsperando, &elScript->idScript);
 
@@ -434,7 +449,6 @@ int add(char* chocloDeCosas) {
 				unaMemoria->estadisticas.operacionesTotalesEnMemoria++;
 				operacionesTotales++;
 				sem_post(&sem_operacionesTotales);
-
 
 			}
 

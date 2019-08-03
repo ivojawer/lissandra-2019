@@ -145,7 +145,7 @@ int manejarRespuestaDeMemoria(script* elScript, request* laRequest, int memoria)
 			} else {
 				metadataTablaLFS* laMetadata = list_get(metadatas, 0);
 				describirUnaMetadata(laMetadata);
-				agregarUnaMetadata(laMetadata);
+				sobreescribirMetadata(laMetadata);
 
 				list_destroy(metadatas);
 			}

@@ -20,11 +20,44 @@ void removerMetadataDeUnRequest(request* unaRequest) {
 	liberarArrayDeStrings(parametrosDeLaRequest);
 }
 
+void sobreescribirMetadata(metadataTablaLFS* unaMetadata) {
+	sem_wait(&sem_actualizacionMetadatas);
+
+	for (int i = 0; i < list_size(listaTablas); i++) {
+		metadataTablaLFS* tabla = list_get(listaTablas, i);
+
+		if (!strcmp(tabla->nombre, unaMetadata->nombre)) {
+			free(tabla->nombre);
+			free(tabla);
+			tabla = unaMetadata;
+			sem_post(&sem_actualizacionMetadatas);
+			return;
+		}
+	}
+
+	list_add(listaTablas, unaMetadata);
+
+	sem_post(&sem_actualizacionMetadatas);
+}
+
 void agregarUnaMetadata(metadataTablaLFS* unaMetadata) {
-	if (!metadataExiste(unaMetadata->nombre)) {
-		sem_wait(&sem_actualizacionMetadatas);
+
+	int metadataExisteSinSincro() {
+		for (int i = 0; i < list_size(listaTablas); i++) {
+			metadataTablaLFS* tabla = list_get(listaTablas, i);
+
+			if (!strcmp(tabla->nombre, unaMetadata->nombre)) {
+				return 1;
+			}
+		}
+		return 0;
+	}
+
+	sem_wait(&sem_actualizacionMetadatas);
+
+	if (!metadataExisteSinSincro()) {
+
 		list_add(listaTablas, unaMetadata);
-		sem_post(&sem_actualizacionMetadatas);
 
 		char* textoALoggear = string_new();
 		string_append(&textoALoggear, "Se agrego la tabla ");
@@ -37,6 +70,8 @@ void agregarUnaMetadata(metadataTablaLFS* unaMetadata) {
 		free(unaMetadata->nombre);
 		free(unaMetadata);
 	}
+
+	sem_post(&sem_actualizacionMetadatas);
 }
 
 void removerUnaMetadata(char* nombreMetadata) {
