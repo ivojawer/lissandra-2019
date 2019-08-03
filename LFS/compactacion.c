@@ -75,6 +75,8 @@ void compactar(char* tabla){
 	t_list* tablaParticiones = list_create();
 	t_list* tablaTemporales = list_create();
 
+	sem_wait(&compactar_semaphore);
+
 	int particiones = obtener_particiones_metadata(tabla);
 
 	for(int i = 0; i < particiones; i++){
@@ -165,6 +167,8 @@ void compactar(char* tabla){
 		return;
 	}
 
+	sem_post(&compactar_semaphore);
+
 	escribirEnBloquesTabla(particionesEnChar,tabla);
 
 	destruirTmpc(tabla,cantidadTemporales);
@@ -206,11 +210,11 @@ void iniciar_compactacion(void *arg)
 //			modificar_op_control(p_comp->tabla, 5);
 			t_ini_compact = medir_tiempo();
 //			sem_wait(&dump_semaphore);
-			sem_wait(&compactar_semaphore);
+//			sem_wait(&compactar_semaphore);
 
 			compactar(p_comp->tabla);
 //			sem_post(&dump_semaphore);
-			sem_post(&compactar_semaphore);
+//			sem_post(&compactar_semaphore);
 			t_fin_compact = medir_tiempo();
 
 			textoALoggear = string_new();
