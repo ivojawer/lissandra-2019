@@ -205,11 +205,11 @@ void iniciar_compactacion(void *arg)
 			free(textoALoggear);
 //			modificar_op_control(p_comp->tabla, 5);
 			t_ini_compact = medir_tiempo();
-			sem_wait(&dump_semaphore);
+//			sem_wait(&dump_semaphore);
 			sem_wait(&compactar_semaphore);
 
 			compactar(p_comp->tabla);
-			sem_post(&dump_semaphore);
+//			sem_post(&dump_semaphore);
 			sem_post(&compactar_semaphore);
 			t_fin_compact = medir_tiempo();
 

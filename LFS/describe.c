@@ -84,12 +84,12 @@ void mostrar_descripciones_metadata(t_list *lista_describe) {
 }
 
 void agregar_tablas_a_describir() {
-	sem_wait(&dump_semaphore);
-	sem_wait(&compactar_semaphore);
 	struct dirent *sd;
 	char* tablas = string_new();
 	string_append(&tablas, puntoDeMontaje);
 	string_append(&tablas, "Tablas/");
+	sem_wait(&dump_semaphore);
+	sem_wait(&compactar_semaphore);
 	DIR* dir = opendir(tablas);
 
 	while ((sd = readdir(dir)) != NULL) {
@@ -101,9 +101,9 @@ void agregar_tablas_a_describir() {
 		}
 	}
 	closedir(dir);
-	free(tablas);
 	sem_post(&compactar_semaphore);
 	sem_post(&dump_semaphore);
+	free(tablas);
 }
 
 void transformar_y_agregar(struct describe *metadata,

@@ -136,6 +136,8 @@ void rutina_drop(void* parametros) {
 												 destruir_elemento_metadata);
 
 		}
+		sem_post(&dump_semaphore);
+		sem_post(&compactar_semaphore);
 		if(socket_cliente != -1)
 		{
 			enviarIntConHeader(socket_cliente, TODO_BIEN, RESPUESTA);
@@ -146,6 +148,8 @@ void rutina_drop(void* parametros) {
 		loggearVerdeClaro(logger,textoALoggear);
 		free(textoALoggear);
 	} else {
+		sem_post(&dump_semaphore);
+		sem_post(&compactar_semaphore);
 		log_error(logger,"%s: La tabla no existe");
 		if(socket_cliente != -1)
 		{
@@ -153,8 +157,6 @@ void rutina_drop(void* parametros) {
 		}
 
 	}
-	sem_post(&dump_semaphore);
-	sem_post(&compactar_semaphore);
 	free(dropEnString);
 //	modificar_op_control(strdup(tabla), 4);
 }

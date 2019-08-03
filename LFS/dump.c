@@ -348,9 +348,9 @@ void ejecutar_dump()
 		loggearAmarillo(logger, "Inicio Dump");
 
 		sem_wait(&dump_semaphore);
-		sem_wait(&compactar_semaphore);
+//		sem_wait(&compactar_semaphore);
 		dump();
-		sem_post(&compactar_semaphore);
+//		sem_post(&compactar_semaphore);
 		sem_post(&dump_semaphore);
 
 		loggearAmarillo(logger, "Fin Dump");
