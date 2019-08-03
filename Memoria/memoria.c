@@ -30,15 +30,19 @@ char* dirConfig;
 int main() {
 
 	printf("Insertar nombre config:\n");
-	char* nombreArchivoConfig = string_new();
-	string_append(&nombreArchivoConfig, readline("Nombre="));
-	dirConfig = string_duplicate(RAIZCONFIG);
-	string_append(&dirConfig, nombreArchivoConfig);
-	free(nombreArchivoConfig);
-
-	//string_append(&nombreArchivoConfig,".config");
-
-	t_config* config = config_create(dirConfig);
+	t_config* config;
+	while(1){
+		char* nombreArchivoConfig = string_new();
+		string_append(&nombreArchivoConfig, readline("Nombre="));
+		dirConfig = string_duplicate(RAIZCONFIG);
+		string_append(&dirConfig, nombreArchivoConfig);
+		free(nombreArchivoConfig);
+		config = config_create(dirConfig);
+		if(config != NULL)
+			break;
+		else
+			printf("Nombre config invalido, vuelva a ingresar:\n");
+	}
 
 	hilosEnEjecucion = list_create();
 	colaDeRequests = list_create();
