@@ -6,7 +6,7 @@
 void aceptar_conexiones();
 int crearConexion(int);
 void messageHandler(char*);
-
+void crearPuntoDeMontaje();
 struct socket_info{
 	int socket_memoria;
 };

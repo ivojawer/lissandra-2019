@@ -43,7 +43,7 @@ void consola() {
 		if (!strcmp(requestYParametros[0], "STATUS")) {
 			status();
 
-		} else if (!strcmp(requestYParametros[0], "JOURNAL")) {
+		} else if (!strcmp(requestYParametros[0], "JOURNAL") || !strcmp(requestYParametros[0], "FORCE JOURNAL") ) {
 			journal();
 		} else if (!strcmp(requestYParametros[0], "SLEEP")) {
 			if (requestYParametros[1] != NULL
